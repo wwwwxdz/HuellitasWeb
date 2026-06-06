@@ -1,0 +1,443 @@
+<app-navbar></app-navbar>
+
+<div class="ajustes-page">
+  <div class="ajustes-container">
+
+    <!-- Header de la página -->
+    <div class="page-header">
+      <div class="page-header__left">
+        <div class="page-header__icon">
+          <i class="material-icons">manage_accounts</i>
+        </div>
+        <div>
+          <h1>Ajustes de Cuenta</h1>
+          <p>Gestiona tu información personal y preferencias.</p>
+        </div>
+      </div>
+      <a routerLink="/perfil" class="btn-back">
+        <i class="material-icons">arrow_back</i>
+        Volver al perfil
+      </a>
+    </div>
+
+    <!-- Layout principal -->
+    <div class="ajustes-layout">
+
+      <!-- Sidebar izquierdo: avatar + navegación -->
+      <aside class="ajustes-sidebar">
+        <!-- Avatar -->
+        <div class="avatar-section">
+          <div class="avatar-wrapper" [class.uploading]="isUploadingPhoto()" (click)="!isUploadingPhoto() && fileInput.click()">
+            <img [src]="currentPhotoSrc" [alt]="usuario()?.nombre" />
+            <div class="avatar-overlay">
+              <i class="material-icons">photo_camera</i>
+              <span>Cambiar foto</span>
+            </div>
+            @if (isUploadingPhoto()) {
+              <div class="avatar-spinner">
+                <i class="material-icons spin-icon">sync</i>
+              </div>
+            }
+          </div>
+          <input #fileInput type="file" accept="image/*" (change)="onFileSelected($event)" hidden />
+          <div class="avatar-info">
+            <strong>{{ usuario()?.nombre || 'Usuario' }}</strong>
+            <span>{{ usuario()?.email }}</span>
+          </div>
+        </div>
+
+        <!-- Tabs de navegación -->
+        <nav class="sidebar-nav">
+          <button
+            class="nav-item"
+            [class.active]="activeTab() === 'perfil'"
+            (click)="setTab('perfil')"
+          >
+            <i class="material-icons">person</i>
+            <span>Información Personal</span>
+            <i class="material-icons nav-arrow">chevron_right</i>
+          </button>
+          <button
+            class="nav-item"
+            [class.active]="activeTab() === 'seguridad'"
+            (click)="setTab('seguridad')"
+          >
+            <i class="material-icons">lock</i>
+            <span>Seguridad</span>
+            <i class="material-icons nav-arrow">chevron_right</i>
+          </button>
+        </nav>
+
+        <!-- Peligro: cerrar sesión -->
+        <div class="sidebar-footer">
+          <a routerLink="/perfil" class="sidebar-link">
+            <i class="material-icons">grid_view</i>
+            Mis publicaciones
+          </a>
+        </div>
+      </aside>
+
+      <!-- Contenido derecho -->
+      <main class="ajustes-content">
+
+        <!-- Mensajes de feedback global -->
+        @if (saveSuccess()) {
+          <div class="alert alert-success">
+            <i class="material-icons">check_circle</i>
+            <span>{{ saveSuccess() }}</span>
+            <button (click)="clearMessages()" class="alert-close"><i class="material-icons">close</i></button>
+          </div>
+        }
+        @if (saveError()) {
+          <div class="alert alert-error">
+            <i class="material-icons">error</i>
+            <span>{{ saveError() }}</span>
+            <button (click)="clearMessages()" class="alert-close"><i class="material-icons">close</i></button>
+          </div>
+        }
+
+        <!-- ══ TAB: Información Personal ══════════════════════════ -->
+        @if (activeTab() === 'perfil') {
+          <section class="settings-section">
+            <div class="section-title">
+              <i class="material-icons">person</i>
+              <div>
+                <h2>Información Personal</h2>
+                <p>Gestiona tus datos de contacto y área geográfica para recibir alertas de mascotas.</p>
+              </div>
+            </div>
+
+            <form [formGroup]="perfilForm" (ngSubmit)="onSavePerfil()" class="settings-form">
+              <div class="settings-perfil-grid">
+                
+                <!-- Lado Izquierdo: Información Personal -->
+                <div class="profile-basic-column">
+                  <div class="form-grid" style="grid-template-columns: 1fr; gap: 16px;">
+                    <!-- ID Usuario (Lectura) -->
+                    <div class="form-field">
+                      <label>
+                        <i class="material-icons">key</i>
+                        ID Usuario (Lectura)
+                      </label>
+                      <input
+                        type="text"
+                        [value]="usuario()?.id_usuario || ''"
+                        disabled
+                        style="opacity: 0.65; cursor: not-allowed;"
+                      />
+                    </div>
+
+                    <!-- Nombre -->
+                    <div class="form-field" [class.has-error]="perfilForm.get('nombre')?.touched && perfilForm.get('nombre')?.invalid">
+                      <label for="nombre">
+                        <i class="material-icons">badge</i>
+                        Nombre Completo
+                        <span class="required">*</span>
+                      </label>
+                      <input
+                        id="nombre"
+                        type="text"
+                        formControlName="nombre"
+                        placeholder="Ej: Juan Pérez"
+                        autocomplete="name"
+                      />
+                      @if (getError(perfilForm, 'nombre')) {
+                        <span class="field-error">{{ getError(perfilForm, 'nombre') }}</span>
+                      }
+                    </div>
+
+                    <!-- Email -->
+                    <div class="form-field" [class.has-error]="perfilForm.get('email')?.touched && perfilForm.get('email')?.invalid">
+                      <label for="email">
+                        <i class="material-icons">alternate_email</i>
+                        Correo Electrónico
+                        <span class="required">*</span>
+                      </label>
+                      <input
+                        id="email"
+                        type="email"
+                        formControlName="email"
+                        placeholder="usuario@ejemplo.com"
+                        autocomplete="email"
+                      />
+                      @if (getError(perfilForm, 'email')) {
+                        <span class="field-error">{{ getError(perfilForm, 'email') }}</span>
+                      }
+                    </div>
+
+                    <!-- Teléfono -->
+                    <div class="form-field">
+                      <label for="telefono">
+                        <i class="material-icons">phone</i>
+                        Teléfono de Contacto
+                      </label>
+                      <input
+                        id="telefono"
+                        type="tel"
+                        formControlName="telefono"
+                        placeholder="+51 999 999 999"
+                        autocomplete="tel"
+                      />
+                    </div>
+                  </div>
+
+                  <!-- Bio -->
+                  <div class="form-field full-width" style="margin-top: 16px;" [class.has-error]="perfilForm.get('bio')?.touched && perfilForm.get('bio')?.invalid">
+                    <label for="bio">
+                      <i class="material-icons">notes</i>
+                      Biografía
+                      <span class="char-badge">{{ charCount }}/250</span>
+                    </label>
+                    <textarea
+                      id="bio"
+                      formControlName="bio"
+                      placeholder="Cuéntanos un poco sobre ti y tu amor por los animales..."
+                      rows="4"
+                    ></textarea>
+                    @if (getError(perfilForm, 'bio')) {
+                      <span class="field-error">{{ getError(perfilForm, 'bio') }}</span>
+                    }
+                  </div>
+                </div>
+
+                <!-- Lado Derecho: Ubicación y Mapa de Cobertura -->
+                <div class="profile-location-column">
+                  <div class="form-section">
+                    <h3 class="location-title">
+                      <i class="material-icons">map</i>
+                      Ubicación de Cobertura
+                    </h3>
+                    
+                    <div class="ubigeo-selectors-grid">
+                      <!-- Departamento -->
+                      <div class="form-field">
+                        <label for="departamento">
+                          <i class="material-icons">explore</i>
+                          Departamento
+                        </label>
+                        <div class="select-wrapper">
+                          <select id="departamento" formControlName="departamento">
+                            <option value="">Selecciona</option>
+                            @for (dept of departamentos(); track dept.value) {
+                              <option [value]="dept.value">{{ dept.label }}</option>
+                            }
+                          </select>
+                        </div>
+                      </div>
+
+                      <!-- Provincia -->
+                      <div class="form-field">
+                        <label for="provincia">
+                          <i class="material-icons">location_city</i>
+                          Provincia
+                        </label>
+                        <div class="select-wrapper">
+                          <select id="provincia" formControlName="provincia">
+                            <option value="">Selecciona</option>
+                            @for (prov of provincias(); track prov.value) {
+                              <option [value]="prov.value">{{ prov.label }}</option>
+                            }
+                          </select>
+                        </div>
+                      </div>
+
+                      <!-- Distrito -->
+                      <div class="form-field">
+                        <label for="distrito">
+                          <i class="material-icons">place</i>
+                          Distrito
+                        </label>
+                        <div class="select-wrapper">
+                          <select id="distrito" formControlName="distrito">
+                            <option value="">Selecciona</option>
+                            @for (dist of distritos(); track dist.value) {
+                              <option [value]="dist.value">{{ dist.label }}</option>
+                            }
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="form-divider" style="margin: 24px 0;"></div>
+
+                  <div class="form-section map-config-section">
+                    <h3 class="location-title">
+                      <i class="material-icons">radar</i>
+                      Radio de Notificaciones de Avistamientos
+                    </h3>
+                    <p class="section-desc">Define tu centro de búsqueda y el radio en metros para recibir notificaciones sobre mascotas en tu zona de cobertura.</p>
+
+                    <div class="map-wrapper-ajustes">
+                      <div class="map-container-ajustes">
+                        <app-map-component
+                          [center]="[perfilForm.get('latitud')?.value || -9.1214, perfilForm.get('longitud')?.value || -78.5308]"
+                          [radiusKm]="(perfilForm.get('radio')?.value || 10000) / 1000"
+                          [zoom]="13"
+                          [editable]="true"
+                          [showControls]="true"
+                          (mapClick)="onLocationChange($event)"
+                        ></app-map-component>
+                      </div>
+
+                      <!-- Control de Radio -->
+                      <div class="radius-control-card shadow-sm">
+                        <div class="radius-info">
+                          <div class="radius-label-group">
+                            <i class="material-icons text-cyan">radar</i>
+                            <span class="label">Radio de Búsqueda:</span>
+                          </div>
+                          <div class="radius-values-group">
+                            <span class="value">{{ (perfilForm.get('radio')?.value || 10000) / 1000 | number:'1.1-1' }} km</span>
+                            <span class="value-meters">({{ perfilForm.get('radio')?.value || 10000 | number:'1.0-0' }} metros)</span>
+                          </div>
+                        </div>
+                        <input 
+                          type="range" 
+                          min="500" 
+                          max="50000" 
+                          step="500" 
+                          [value]="perfilForm.get('radio')?.value || 10000"
+                          (input)="onRadiusInput($event)"
+                          class="radius-slider"
+                        >
+                      </div>
+
+                      <!-- Coordenadas -->
+                      <div class="coords-display-ajustes">
+                        <div class="coord-item">
+                          <span class="label">Latitud:</span>
+                          <span class="value">{{ perfilForm.get('latitud')?.value || -9.1214 }}</span>
+                        </div>
+                        <div class="coord-item">
+                          <span class="label">Longitud:</span>
+                          <span class="value">{{ perfilForm.get('longitud')?.value || -78.5308 }}</span>
+                        </div>
+                      </div>
+
+                      <!-- Dirección Descriptiva -->
+                      <div class="address-display-ajustes shadow-sm">
+                        <div class="address-header">
+                          <i class="material-icons text-cyan">place</i>
+                          <span class="label">Dirección Estimada de Cobertura:</span>
+                        </div>
+                        <p class="address-value">{{ currentAddress() }}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- Botón guardar -->
+              <div class="form-actions">
+                <button type="submit" class="btn-save" [disabled]="isSaving() || perfilForm.invalid">
+                  @if (isSaving()) {
+                    <i class="material-icons spin-icon">sync</i>
+                    Guardando...
+                  } @else {
+                    <i class="material-icons">save</i>
+                    Guardar Cambios
+                  }
+                </button>
+              </div>
+            </form>
+          </section>
+        }
+
+        <!-- ══ TAB: Seguridad ══════════════════════════════════════ -->
+        @if (activeTab() === 'seguridad') {
+          <section class="settings-section">
+            <div class="section-title">
+              <i class="material-icons">lock</i>
+              <div>
+                <h2>Seguridad</h2>
+                <p>Cambia tu contraseña para mantener tu cuenta segura.</p>
+              </div>
+            </div>
+
+            <form [formGroup]="seguridadForm" (ngSubmit)="onSavePassword()" class="settings-form">
+              <div class="security-info-banner">
+                <i class="material-icons">info</i>
+                <p>Usa una contraseña de al menos 6 caracteres con letras y números para mayor seguridad.</p>
+              </div>
+
+              <!-- Contraseña actual -->
+              <div class="form-field" [class.has-error]="seguridadForm.get('password_actual')?.touched && seguridadForm.get('password_actual')?.invalid">
+                <label for="password_actual">
+                  <i class="material-icons">key</i>
+                  Contraseña Actual
+                  <span class="required">*</span>
+                </label>
+                <input
+                  id="password_actual"
+                  type="password"
+                  formControlName="password_actual"
+                  placeholder="Tu contraseña actual"
+                  autocomplete="current-password"
+                />
+                @if (getError(seguridadForm, 'password_actual')) {
+                  <span class="field-error">{{ getError(seguridadForm, 'password_actual') }}</span>
+                }
+              </div>
+
+              <!-- Nueva contraseña -->
+              <div class="form-field" [class.has-error]="seguridadForm.get('password_nuevo')?.touched && seguridadForm.get('password_nuevo')?.invalid">
+                <label for="password_nuevo">
+                  <i class="material-icons">lock_reset</i>
+                  Nueva Contraseña
+                  <span class="required">*</span>
+                </label>
+                <input
+                  id="password_nuevo"
+                  type="password"
+                  formControlName="password_nuevo"
+                  placeholder="Mínimo 6 caracteres"
+                  autocomplete="new-password"
+                />
+                @if (getError(seguridadForm, 'password_nuevo')) {
+                  <span class="field-error">{{ getError(seguridadForm, 'password_nuevo') }}</span>
+                }
+              </div>
+
+              <!-- Confirmar nueva contraseña -->
+              <div class="form-field" [class.has-error]="seguridadForm.get('password_confirmar')?.touched && (seguridadForm.get('password_confirmar')?.invalid || seguridadForm.errors?.['noMatch'])">
+                <label for="password_confirmar">
+                  <i class="material-icons">verified</i>
+                  Confirmar Nueva Contraseña
+                  <span class="required">*</span>
+                </label>
+                <input
+                  id="password_confirmar"
+                  type="password"
+                  formControlName="password_confirmar"
+                  placeholder="Repite la nueva contraseña"
+                  autocomplete="new-password"
+                />
+                @if (seguridadForm.errors?.['noMatch'] && seguridadForm.get('password_confirmar')?.touched) {
+                  <span class="field-error">Las contraseñas no coinciden.</span>
+                }
+              </div>
+
+              <!-- Botón guardar -->
+              <div class="form-actions">
+                <button type="submit" class="btn-save" [disabled]="isSaving() || seguridadForm.invalid">
+                  @if (isSaving()) {
+                    <i class="material-icons spin-icon">sync</i>
+                    Actualizando...
+                  } @else {
+                    <i class="material-icons">lock</i>
+                    Actualizar Contraseña
+                  }
+                </button>
+              </div>
+            </form>
+          </section>
+        }
+
+      </main>
+    </div>
+  </div>
+</div>
+
+<app-footer></app-footer>

@@ -1,0 +1,279 @@
+<div class="auth-page-container">
+  <!-- Left Side: Hero -->
+  <div class="auth-hero-section">
+    <img src="/images/auth-hero.png" alt="Mascota Hero" class="hero-image" />
+    <div class="hero-content">
+      <a routerLink="/" class="brand-logo">
+        <img src="/images/HUELLITAS_LOGO.png" alt="Huellitas Logo" class="brand-logo-img" />
+        <span>Huellitas</span>
+      </a>
+      <div class="glass-info-card">
+        <span class="status-badge">COMUNIDAD ACTIVA</span>
+        <h1>Protegiendo a los que no tienen voz.</h1>
+        <p>Únete a la comunidad de guardianes y ayuda a reunir mascotas perdidas con sus familias.</p>
+      </div>
+      <div class="hero-footer">
+        <span>Huellitas &copy; 2026</span>
+        <span class="dot"></span>
+        <span>v1.0.0</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Side: Form -->
+  <div class="auth-form-section">
+    <div class="form-scroll-container">
+      <div class="form-card">
+        <!-- Mode Switcher -->
+        <div class="mode-switcher">
+          <button
+            type="button"
+            class="mode-btn"
+            [class.active]="mode() === 'login'"
+            (click)="setMode('login')"
+          >
+            Iniciar Sesión
+          </button>
+          <button
+            type="button"
+            class="mode-btn"
+            [class.active]="mode() === 'register'"
+            (click)="setMode('register')"
+          >
+            Crear Cuenta
+          </button>
+        </div>
+
+        <!-- Mensajes de estado -->
+        @if (error()) {
+          <div class="alert alert-error">
+            <i class="material-icons">error</i>
+            <span>{{ error() }}</span>
+          </div>
+        }
+        @if (successMessage()) {
+          <div class="alert alert-success">
+            <i class="material-icons">check_circle</i>
+            <span>{{ successMessage() }}</span>
+          </div>
+        }
+
+        <!-- ============ LOGIN FORM ============ -->
+        @if (mode() === 'login') {
+          <div class="form-header">
+            <h2>Bienvenido, Guardián</h2>
+            <p>Inicia sesión para reunir mascotas con sus familias.</p>
+          </div>
+
+          <form (ngSubmit)="onLogin()" #loginForm="ngForm">
+            <div class="form-group">
+              <label for="login-email">Correo Electrónico</label>
+              <div class="input-container">
+                <i class="material-icons">alternate_email</i>
+                <input
+                  type="email"
+                  id="login-email"
+                  name="email"
+                  [(ngModel)]="loginData.email"
+                  (keydown)="handleEmailKeyDown($event, loginData)"
+                  placeholder="guardian@huellitas.com"
+                  autocomplete="email"
+                  required
+                />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="login-password">Contraseña</label>
+              <div class="input-container">
+                <i class="material-icons">lock</i>
+                <input
+                  [type]="showPassword() ? 'text' : 'password'"
+                  id="login-password"
+                  name="password"
+                  [(ngModel)]="loginData.password"
+                  placeholder="••••••••••••"
+                  autocomplete="current-password"
+                  class="has-eye"
+                  required
+                />
+                <button type="button" class="btn-eye" (click)="showPassword.set(!showPassword())">
+                  <i class="material-icons">{{ showPassword() ? 'visibility_off' : 'visibility' }}</i>
+                </button>
+              </div>
+            </div>
+
+            <div class="forgot-password-link">
+              <a routerLink="/recover">¿Olvidaste tu contraseña?</a>
+            </div>
+
+            <button type="submit" class="btn-submit" [disabled]="isLoading()">
+              @if (isLoading()) {
+                <span class="spinner"></span>
+                <span>Ingresando...</span>
+              } @else {
+                <span>Entrar</span>
+                <i class="material-icons">arrow_forward</i>
+              }
+            </button>
+          </form>
+        }
+
+        <!-- ============ REGISTER FORM ============ -->
+        @if (mode() === 'register') {
+          <div class="form-header">
+            @if (registerStep() === 2) {
+              <div class="back-link" (click)="registerStep.set(1)" tabindex="0" role="button">
+                <i class="material-icons">arrow_back</i> Volver
+              </div>
+            }
+            <h2>Crear Cuenta</h2>
+            <p>
+              {{ registerStep() === 1
+                ? 'Ingresa tu correo para comenzar el registro.'
+                : 'Ingresa el código enviado a ' + registerData.email }}
+            </p>
+          </div>
+
+          <form (ngSubmit)="onRegister()" #registerForm="ngForm">
+            <!-- STEP 1: Email -->
+            @if (registerStep() === 1) {
+              <div class="form-group">
+                <label for="reg-email">Correo Electrónico</label>
+                <div class="input-container">
+                  <i class="material-icons">alternate_email</i>
+                  <input
+                    type="email"
+                    id="reg-email"
+                    name="email"
+                    [(ngModel)]="registerData.email"
+                    (keydown)="handleEmailKeyDown($event, registerData)"
+                    placeholder="tu@correo.com"
+                    autocomplete="email"
+                    required
+                  />
+                </div>
+              </div>
+
+              <button type="submit" class="btn-submit" [disabled]="isLoading()">
+                @if (isLoading()) {
+                  <span class="spinner"></span>
+                  <span>Enviando código...</span>
+                } @else {
+                  <span>Continuar</span>
+                  <i class="material-icons">arrow_forward</i>
+                }
+              </button>
+            }
+
+            <!-- STEP 2: Code + Data -->
+            @if (registerStep() === 2) {
+              <div class="code-container">
+                @for (digit of code; track $index) {
+                  <input
+                    #codeField
+                    type="text"
+                    maxlength="1"
+                    class="code-input"
+                    [(ngModel)]="code[$index]"
+                    [name]="'code-' + $index"
+                    (input)="onCodeInput($index, $event)"
+                    (keydown)="onCodeKeyDown($index, $event)"
+                    (paste)="onPaste($event)"
+                    required
+                  />
+                }
+              </div>
+
+              <div class="form-group">
+                <label for="reg-nombre">Nombre Completo</label>
+                <div class="input-container">
+                  <i class="material-icons">person</i>
+                  <input
+                    type="text"
+                    id="reg-nombre"
+                    name="nombre"
+                    [(ngModel)]="registerData.nombre"
+                    placeholder="Tu nombre"
+                    autocomplete="name"
+                    [disabled]="!isCodeValid()"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="reg-password">Contraseña</label>
+                <div class="input-container">
+                  <i class="material-icons">lock</i>
+                  <input
+                    [type]="showPassword() ? 'text' : 'password'"
+                    id="reg-password"
+                    name="password"
+                    [(ngModel)]="registerData.password"
+                    placeholder="Mínimo 6 caracteres"
+                    autocomplete="new-password"
+                    class="has-eye"
+                    [disabled]="!isCodeValid()"
+                    required
+                  />
+                  <button type="button" class="btn-eye" [disabled]="!isCodeValid()" (click)="showPassword.set(!showPassword())">
+                    <i class="material-icons">{{ showPassword() ? 'visibility_off' : 'visibility' }}</i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="reg-confirm">Confirmar Contraseña</label>
+                <div class="input-container">
+                  <i class="material-icons">lock_outline</i>
+                  <input
+                    [type]="showConfirmPassword() ? 'text' : 'password'"
+                    id="reg-confirm"
+                    name="confirmPassword"
+                    [(ngModel)]="registerData.confirmPassword"
+                    placeholder="Repite tu contraseña"
+                    autocomplete="new-password"
+                    class="has-eye"
+                    [disabled]="!isCodeValid()"
+                    required
+                  />
+                  <button type="button" class="btn-eye" [disabled]="!isCodeValid()" (click)="showConfirmPassword.set(!showConfirmPassword())">
+                    <i class="material-icons">{{ showConfirmPassword() ? 'visibility_off' : 'visibility' }}</i>
+                  </button>
+                </div>
+              </div>
+
+              <button type="submit" class="btn-submit" [disabled]="isLoading() || !isCodeValid()">
+                @if (isLoading()) {
+                  <span class="spinner"></span>
+                  <span>Registrando...</span>
+                } @else {
+                  <span>Finalizar Registro</span>
+                  <i class="material-icons">person_add</i>
+                }
+              </button>
+            }
+          </form>
+        }
+      </div>
+
+      <!-- Mostramos el toggle de ambiente para pruebas tanto en local como en remoto (Netlify) -->
+      @if (!configService.isProduction) {
+        <div class="env-toggle-wrapper">
+          <span class="env-label" [class.active]="configService.useLocalDev()">Local (PC)</span>
+          <div class="env-toggle-switch" (click)="configService.toggleEnvironment(!configService.useLocalDev())">
+            <div class="env-toggle-handle" [class.prod]="!configService.useLocalDev()"></div>
+          </div>
+          <span class="env-label" [class.active]="!configService.useLocalDev()">Remoto (Pruebas)</span>
+        </div>
+      }
+
+      <div class="auth-legal-footer">
+        <a href="#">Privacidad</a>
+        <a href="#">Términos</a>
+        <a href="#">Soporte</a>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,43 @@
+<app-modal
+  [isOpen]="isOpen()"
+  title="Denunciar contenido"
+  [showFooter]="true"
+  (closed)="closed.emit()"
+>
+  @if (target()) {
+    <div class="flag-modal-body">
+      <p class="flag-subtitle">Estás denunciando: <strong>{{ target()!.label }}</strong></p>
+      <p class="flag-label">¿Por qué quieres denunciar este contenido?</p>
+      <div class="flag-reasons">
+        @for (reason of FLAG_REASONS; track reason.value) {
+          <button
+            class="flag-reason-btn"
+            [class.selected]="motivo() === reason.value"
+            (click)="motivo.set(reason.value)"
+          >
+            <i class="material-icons">{{ reason.icon }}</i>
+            {{ reason.label }}
+          </button>
+        }
+      </div>
+      <div class="flag-desc-wrap">
+        <label for="flag-descripcion">Descripción adicional (opcional)</label>
+        <textarea
+          id="flag-descripcion"
+          [ngModel]="descripcion()"
+          (ngModelChange)="descripcion.set($event)"
+          placeholder="Cuéntanos más sobre el problema..."
+          rows="3"
+          class="flag-textarea"
+        ></textarea>
+      </div>
+    </div>
+  }
+  <div footer class="flag-modal-footer">
+    <button class="flag-cancel-btn" (click)="closed.emit()">Cancelar</button>
+    <button class="flag-submit-btn" (click)="confirmSubmit.emit()" [disabled]="isFlagging()">
+      <i class="material-icons">{{ isFlagging() ? 'hourglass_empty' : 'flag' }}</i>
+      {{ isFlagging() ? 'Enviando...' : 'Enviar denuncia' }}
+    </button>
+  </div>
+</app-modal>

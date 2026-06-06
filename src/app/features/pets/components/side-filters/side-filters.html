@@ -1,0 +1,180 @@
+<aside class="side-filters">
+  <!-- Header -->
+  <div class="filters-header">
+    <h3>
+      <i class="material-icons">tune</i>
+      Filtros
+    </h3>
+    <button class="clear-btn" id="btn-clear-filters" (click)="handleClear()">
+      Limpiar
+    </button>
+  </div>
+
+  <!-- ══ FILTROS PRINCIPALES ══════════════════════════════════ -->
+
+  <!-- Buscar nombre -->
+  <div class="filter-group">
+    <app-label forId="search-name" class="filter-label">Buscar nombre</app-label>
+    <div class="search-input-wrapper">
+      <i class="material-icons">search</i>
+      <input
+        id="search-name"
+        type="text"
+        placeholder="Ej. Max, Luna..."
+        class="filter-input"
+        [ngModel]="search()"
+        (ngModelChange)="onSearchChange($event)"
+      />
+    </div>
+  </div>
+
+  <!-- Especie -->
+  <div class="filter-group">
+    <app-label forId="filter-species" class="filter-label">Tipo de mascota</app-label>
+    @if (loadingEspecies()) {
+      <div class="loading-text">Cargando...</div>
+    } @else {
+      <app-select
+        id="filter-species"
+        [value]="idEspecie()"
+        (valueChange)="onEspecieChange($event)"
+        placeholder="Todos los animales"
+        [options]="$any(especies()) | appSelectOptions"
+      ></app-select>
+    }
+  </div>
+
+  <!-- Raza -->
+  <div class="filter-group">
+    <app-label forId="filter-breed" class="filter-label">
+      Raza
+      @if (razas().length > 0) {
+        <span class="count-badge">{{ razas().length }}</span>
+      }
+    </app-label>
+    <app-select
+      id="filter-breed"
+      [value]="idRaza()"
+      (valueChange)="onRazaChange($event)"
+      [disabled]="!idEspecie() || razas().length === 0"
+      placeholder="Todas las razas"
+      [options]="$any(razas()) | appSelectOptions"
+    ></app-select>
+  </div>
+
+  <!-- Color principal -->
+  <div class="filter-group">
+    <app-label class="filter-label">Color principal</app-label>
+    @if (loadingColores()) {
+      <div class="loading-text">Cargando colores...</div>
+    } @else {
+      <app-select
+        id="filter-color"
+        [value]="color()"
+        (valueChange)="onColorChange($event)"
+        placeholder="Todos los colores"
+        [options]="colorOptions()"
+      ></app-select>
+    }
+  </div>
+
+  <!-- Con recompensa -->
+  <div class="filter-group">
+    <div class="reward-row">
+      <div class="reward-label">
+        <i class="material-icons">paid</i>
+        <span>Con recompensa</span>
+      </div>
+      <label for="toggle-reward" class="toggle">
+        <input
+          id="toggle-reward"
+          type="checkbox"
+          [ngModel]="withReward()"
+          (ngModelChange)="onRewardChange($event)"
+        />
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <!-- ══ OPCIONES AVANZADAS (colapsable) ═══════════════════════ -->
+  <div class="advanced-section">
+    <button class="advanced-toggle" (click)="toggleAdvanced()">
+      <span class="advanced-toggle__left">
+        <i class="material-icons">settings_suggest</i>
+        Opciones avanzadas
+        @if (advancedActiveCount > 0) {
+          <span class="active-badge">{{ advancedActiveCount }}</span>
+        }
+      </span>
+      <i class="material-icons advanced-toggle__arrow" [class.rotated]="showAdvanced()">
+        expand_more
+      </i>
+    </button>
+
+    @if (showAdvanced()) {
+      <div class="advanced-content">
+
+        <!-- Tamaño -->
+        <div class="filter-group">
+          <app-label class="filter-label">Tamaño</app-label>
+          <div class="chip-row">
+            @for (t of tamanos; track t.value) {
+              <button
+                class="chip"
+                [class.selected]="tamano() === t.value"
+                (click)="onTamanoChange(tamano() === t.value ? '' : t.value)"
+              >{{ t.label }}</button>
+            }
+          </div>
+        </div>
+
+        <!-- Tipo de pelo -->
+        <div class="filter-group">
+          <app-label class="filter-label">Tipo de pelo</app-label>
+          <div class="chip-row">
+            @for (p of pelos; track p.value) {
+              <button
+                class="chip"
+                [class.selected]="pelo() === p.value"
+                (click)="onPeloChange(pelo() === p.value ? '' : p.value)"
+              >{{ p.label }}</button>
+            }
+          </div>
+        </div>
+
+        <!-- Color secundario -->
+        <div class="filter-group">
+          <app-label class="filter-label">Color secundario</app-label>
+          @if (loadingColores()) {
+            <div class="loading-text">Cargando colores...</div>
+          } @else {
+            <app-select
+              id="filter-color-sec"
+              [value]="colorSecundario()"
+              (valueChange)="onColor2Change($event)"
+              placeholder="Ninguno"
+              [options]="colorSecundarioOptions()"
+            ></app-select>
+          }
+        </div>
+
+        <!-- Collar -->
+        <div class="filter-group">
+          <app-label class="filter-label">Collar</app-label>
+          <div class="chip-row">
+            @for (op of opcionesCollar; track op.value) {
+              <button
+                class="chip"
+                [class.selected]="collar() === op.value"
+                (click)="onCollarChange(collar() === op.value ? '' : op.value)"
+              >{{ op.label }}</button>
+            }
+          </div>
+        </div>
+
+      </div>
+    }
+  </div>
+
+</aside>

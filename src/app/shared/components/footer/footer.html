@@ -1,0 +1,76 @@
+<footer class="footer">
+  <div class="footer-inner container">
+    <!-- Columna 1: Branding + descripción + redes sociales -->
+    <div class="footer-brand">
+      <a routerLink="/" class="footer-logo">
+        Huellitas al Rescate
+      </a>
+      <p class="footer-description">
+        Nuestra misión es utilizar la tecnología para unir a la comunidad y asegurar que ninguna mascota permanezca perdida. Una huella a la vez.
+      </p>
+
+      <!-- Iconos Sociales -->
+      <div class="footer-socials">
+        <a
+          href="https://instagram.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Instagram de Huellitas al Rescate"
+          class="social-btn"
+        >
+          <i class="material-icons">photo_camera</i>
+        </a>
+        <a
+          href="https://twitter.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Twitter/X de Huellitas al Rescate"
+          class="social-btn"
+        >
+          <i class="material-icons">share</i>
+        </a>
+        <a
+          href="mailto:hola@huellitas.app"
+          aria-label="Correo electrónico de Huellitas al Rescate"
+          class="social-btn"
+        >
+          <i class="material-icons">mail_outline</i>
+        </a>
+      </div>
+    </div>
+
+    <!-- Columna 2: Plataforma -->
+    <div class="footer-col">
+      <h4>Plataforma</h4>
+      <nav>
+        <a routerLink="/">Inicio</a>
+        <a routerLink="/pets/lost">Mascotas</a>
+        <a routerLink="/pets/map">Mapa</a>
+      </nav>
+    </div>
+
+    <!-- Columna 3: Compañía -->
+    <div class="footer-col">
+      <h4>Compañía</h4>
+      <nav>
+        <a routerLink="/about">Nosotros</a>
+        <a routerLink="/contact">Contacto</a>
+        <a routerLink="/volunteer">Voluntariado</a>
+      </nav>
+    </div>
+
+    <!-- Columna 4: Legal -->
+    <div class="footer-col">
+      <h4>Legal</h4>
+      <nav>
+        <a routerLink="/privacy">Privacidad</a>
+        <a routerLink="/terms">Términos</a>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Barra inferior de copyright -->
+  <div class="footer-bottom container">
+    <p>© {{ currentYear }} Huellitas al Rescate. Uniendo familias, una huella a la vez.</p>
+  </div>
+</footer>

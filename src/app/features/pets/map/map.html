@@ -1,0 +1,250 @@
+<app-navbar></app-navbar>
+
+<div class="map-page">
+  <div class="map-layout">
+    
+    <!-- BARRA LATERAL IZQUIERDA: Filtros y Configuración -->
+    <aside class="left-sidebar">
+      <div>
+        <h3>Buscar</h3>
+        <div class="search-box">
+          <i class="material-icons">search</i>
+          <input 
+            type="text" 
+            placeholder="Buscar por nombre o raza..."
+            [ngModel]="searchQuery()"
+            (ngModelChange)="searchQuery.set($event)"
+          />
+        </div>
+      </div>
+
+      <div class="filter-section">
+        <h3>Estados de Alerta</h3>
+        <div class="status-list">
+          <label class="status-checkbox perdido">
+            <input 
+              type="checkbox" 
+              [checked]="selectedStatuses().includes(2)"
+              (change)="toggleStatus(2)"
+            />
+            <span class="checkbox-custom">
+              <i class="material-icons">done</i>
+            </span>
+            Perdidos (Rojo)
+          </label>
+
+          <label class="status-checkbox encontrado">
+            <input 
+              type="checkbox" 
+              [checked]="selectedStatuses().includes(1)"
+              (change)="toggleStatus(1)"
+            />
+            <span class="checkbox-custom">
+              <i class="material-icons">done</i>
+            </span>
+            Encontrados (Azul)
+          </label>
+
+          <label class="status-checkbox avistado">
+            <input 
+              type="checkbox" 
+              [checked]="selectedStatuses().includes(3)"
+              (change)="toggleStatus(3)"
+            />
+            <span class="checkbox-custom">
+              <i class="material-icons">done</i>
+            </span>
+            Avistados (Naranja)
+          </label>
+
+          <label class="status-checkbox reunido">
+            <input 
+              type="checkbox" 
+              [checked]="selectedStatuses().includes(4)"
+              (change)="toggleStatus(4)"
+            />
+            <span class="checkbox-custom">
+              <i class="material-icons">done</i>
+            </span>
+            Reunidos (Gris)
+          </label>
+        </div>
+      </div>
+
+      <div class="range-slider">
+        <div class="slider-header">
+          <span>Radio de búsqueda</span>
+          <span>{{ radiusKm() }} km</span>
+        </div>
+        <input 
+          type="range" 
+          min="1" 
+          max="50" 
+          [value]="radiusKm()"
+          (input)="radiusKm.set(+$any($event.target).value)"
+        />
+      </div>
+
+      <!-- Caja para Suscribirse a Alertas Geográficas -->
+      <div class="alert-subscribe-box" (click)="suscribirAlertas()">
+        <i class="material-icons info-icon">notifications_active</i>
+        <div class="alert-content">
+          <span>Suscribirme a Alertas</span>
+          <p>Recibe notificaciones inmediatas si se reporta una mascota perdida en esta zona.</p>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ZONA CENTRAL: Mapa de Leaflet -->
+    <main class="map-center">
+      <!-- Barra superior flotante de filtros rápidos de especie -->
+      <div class="map-floating-bar">
+        <span class="bar-text">
+          <span class="red-dot"></span>
+          Alertas en tiempo real:
+        </span>
+        <button class="btn-pill" (click)="filtrarPorEspecie(null)">
+          <i class="material-icons">pets</i> Todos
+        </button>
+        <button class="btn-pill" (click)="filtrarPorEspecie('esp-dog-id')">
+          Dog
+        </button>
+        <button class="btn-pill" (click)="filtrarPorEspecie('esp-cat-id')">
+          Cat
+        </button>
+      </div>
+
+      <!-- Componente Leaflet customizado -->
+      <app-map-component
+        [reports]="filteredPoints()"
+        [center]="center()"
+        [zoom]="zoom()"
+        [radiusKm]="radiusKm()"
+        (mapClick)="onMapClick($event)"
+        (markerClick)="onMarkerClick($event)"
+      />
+    </main>
+
+    <!-- BARRA LATERAL DERECHA: Detalle del reporte seleccionado o lista de mascotas -->
+    <aside class="right-sidebar">
+      @if (selectedReport()) {
+        <!-- Vista de Detalle de Mascota Seleccionada -->
+        <div class="sidebar-header">
+          <h2>Detalle de Alerta</h2>
+          <button (click)="clearSelectedReport()" style="background: none; border: none; cursor: pointer; color: var(--text-muted);">
+            <i class="material-icons">close</i>
+          </button>
+        </div>
+
+        <div class="mini-pet-card" style="flex-direction: column; gap: 1rem; background-color: transparent; border: none; padding: 0;">
+          <div class="img-wrapper" style="width: 100%; height: 180px; border-radius: 16px;">
+            <img 
+              [src]="selectedReport()?.imagen_principal?.url || '/images/pet-max.png'" 
+              [alt]="selectedReport()?.nombre" 
+              style="border-radius: 16px;"
+            />
+            <div style="position: absolute; top: 12px; left: 12px;">
+              <span class="badge-status" [ngClass]="
+                selectedReport()?.estado === 1 ? 'encontrado' : 
+                selectedReport()?.estado === 2 ? 'perdido' : 
+                selectedReport()?.estado === 3 ? 'avistado' : 'reunido'
+              ">
+                {{ 
+                  selectedReport()?.estado === 1 ? 'Encontrado' : 
+                  selectedReport()?.estado === 2 ? 'Perdido' : 
+                  selectedReport()?.estado === 3 ? 'Avistado' : 'Reunido'
+                }}
+              </span>
+            </div>
+          </div>
+
+          <div class="card-info">
+            <div class="info-row">
+              <h4>{{ selectedReport()?.nombre || 'Sin nombre' }}</h4>
+            </div>
+            <p class="meta-text"><i class="material-icons">location_on</i> {{ getFormattedLocation(selectedReport()?.ubicacion) }}</p>
+            <p class="meta-text"><i class="material-icons">schedule</i> {{ selectedReport()?.creado_en | date:'short' }}</p>
+            <p class="meta-text"><i class="material-icons">pets</i> {{ selectedReport()?.tipo | titlecase }} - {{ selectedReport()?.raza }}</p>
+            @if (selectedReport()?.recompensa || $any(selectedReport()?.caracteristicas)?.recompensa) {
+              <div class="recompensa-label" style="display: flex; align-items: center; gap: 4px; color: #ea580c; font-weight: 700; font-size: 0.8rem; margin-top: 6px;">
+                <i class="material-icons" style="font-size: 1rem;">paid</i>
+                <span>Recompensa: S/. {{ selectedReport()?.monto_recompensa || $any(selectedReport()?.caracteristicas)?.monto_recompensa || 0 }}</span>
+              </div>
+            }
+            
+            <div style="margin-top: 12px; font-size: 0.85rem; color: var(--text-main); line-height: 1.4;">
+              <strong>Descripción:</strong> Cerca de avenidas principales. Lleva collar azul pero sin placa de identificación.
+            </div>
+          </div>
+        </div>
+
+        <!-- Avistamientos recientes -->
+        <div class="sightings-section">
+          <h3>Avistamientos Recientes</h3>
+          <div class="sightings-list">
+            @for (sighting of sightings(); track sighting.id) {
+              <div class="sighting-item">
+                <h5>{{ sighting.fecha }}</h5>
+                <p>{{ sighting.descripcion }}</p>
+                <p style="color: var(--primary-color); font-weight: 500;">
+                  <i class="material-icons" style="font-size: 0.75rem; vertical-align: middle;">location_on</i>
+                  {{ sighting.ubicacion }}
+                </p>
+              </div>
+            } @empty {
+              <p style="font-size: 0.8rem; color: var(--text-muted);">No se han reportado avistamientos de esta alerta aún.</p>
+            }
+          </div>
+        </div>
+      } @else {
+        <!-- Vista por defecto: Lista de Mascotas en el Radio de Búsqueda -->
+        <div class="sidebar-header">
+          <h2>Mascotas Cerca</h2>
+          <span class="result-count">{{ resultsList().length }} encontradas</span>
+        </div>
+
+        <div class="results-list">
+          @for (pet of resultsList(); track pet.id_reporte_mascota) {
+            <div class="mini-pet-card" (click)="onMarkerClick(pet.id_reporte_mascota)" style="cursor: pointer;">
+              <div class="img-wrapper">
+                <img 
+                  [src]="pet.imagen_principal?.url || '/images/pet-max.png'" 
+                  [alt]="pet.nombre" 
+                />
+              </div>
+              <div class="card-info">
+                <div class="info-row">
+                  <h4>{{ pet.nombre || 'Mascota' }}</h4>
+                  <span class="badge-status" [ngClass]="
+                    pet.estado === 1 ? 'encontrado' : 
+                    pet.estado === 2 ? 'perdido' : 
+                    pet.estado === 3 ? 'avistado' : 'reunido'
+                  ">
+                    {{ 
+                      pet.estado === 1 ? 'Encontrado' : 
+                      pet.estado === 2 ? 'Perdido' : 
+                      pet.estado === 3 ? 'Avistado' : 'Reunido'
+                    }}
+                  </span>
+                </div>
+                <p class="meta-text"><i class="material-icons">location_on</i> {{ getFormattedLocation(pet.ubicacion) }}</p>
+                <p class="meta-text"><i class="material-icons">pets</i> {{ pet.raza }}</p>
+                @if (pet.recompensa || $any(pet.caracteristicas)?.recompensa) {
+                  <div class="recompensa-label" style="display: flex; align-items: center; gap: 4px; color: #ea580c; font-weight: 700; font-size: 0.75rem; margin-top: 4px;">
+                    <i class="material-icons" style="font-size: 0.9rem;">paid</i>
+                    <span>Recompensa: S/. {{ pet.monto_recompensa || $any(pet.caracteristicas)?.monto_recompensa || 0 }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          } @empty {
+            <p style="text-align: center; color: var(--text-muted); font-size: 0.9rem; margin-top: 2rem;">
+              No hay mascotas reportadas en este radio. Intenta aumentar el rango.
+            </p>
+          }
+        </div>
+      }
+    </aside>
+
+  </div>
+</div>

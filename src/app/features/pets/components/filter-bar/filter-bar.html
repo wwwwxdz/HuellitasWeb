@@ -1,0 +1,97 @@
+<div class="filter-container">
+  <!-- Categorías -->
+  <div class="categories-group">
+    <button
+      id="cat-all"
+      class="cat-pill"
+      [class.active]="selectedEspecieId() === ''"
+      (click)="selectCategory('all')"
+    >
+      <i class="material-icons">grid_view</i>
+      <span>Todos</span>
+    </button>
+    
+    @if (perroEspecie()) {
+      <button
+        id="cat-perros"
+        class="cat-pill"
+        [class.active]="selectedEspecieId() !== '' && selectedEspecieId() === perroEspecie()?.id_especie"
+        (click)="selectCategory('perro')"
+      >
+        <i class="material-icons">pets</i>
+        <span>Perros</span>
+      </button>
+    }
+    
+    @if (gatoEspecie()) {
+      <button
+        id="cat-gatos"
+        class="cat-pill"
+        [class.active]="selectedEspecieId() !== '' && selectedEspecieId() === gatoEspecie()?.id_especie"
+        (click)="selectCategory('gato')"
+      >
+        <i class="material-icons">cruelty_free</i>
+        <span>Gatos</span>
+      </button>
+    }
+    
+    <button
+      id="cat-otros"
+      class="cat-pill"
+      [class.active]="selectedEspecieId() === 'otros'"
+      (click)="selectCategory('otros')"
+    >
+      <i class="material-icons">flutter_dash</i>
+      <span>Otros</span>
+    </button>
+  </div>
+
+  <!-- Controles Derecha (Ordenación y Filtros Rápidos) -->
+  <div class="controls-group">
+    <!-- Ordenación -->
+    <div class="sort-group">
+      <span class="sort-label">Ordenar:</span>
+      <div class="select-wrapper">
+        <select
+          id="sort-select"
+          [value]="selectedOrder()"
+          (change)="selectedOrder.set($any($event.target).value)"
+          class="sort-select"
+          aria-label="Ordenar reportes"
+        >
+          <option value="recent">Más recientes ▼</option>
+          <option value="oldest">Más antiguos ▲</option>
+        </select>
+        <i class="material-icons dropdown-icon">expand_more</i>
+      </div>
+    </div>
+
+    <!-- Filtros Rápidos -->
+    <div class="fast-filters-group">
+      <button
+        id="btn-filter-nearby"
+        class="toggle-pill"
+        [class.active]="radio() > 0"
+        (click)="toggleNearby()"
+      >
+        <i class="material-icons">place</i>
+        <span>Cerca de mí</span>
+        @if (radio() > 0) {
+          <span class="badge">{{ radio() }} km</span>
+        }
+      </button>
+
+      @if (showRewardOption()) {
+        <button
+          id="btn-filter-reward"
+          class="toggle-pill"
+          [class.active]="withReward()"
+          (click)="toggleReward()"
+        >
+          <i class="material-icons">paid</i>
+          <span>Con recompensa</span>
+        </button>
+      }
+    </div>
+  </div>
+</div>

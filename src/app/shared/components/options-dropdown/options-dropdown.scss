@@ -1,0 +1,107 @@
+.dropdown-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: var(--text-muted);
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  transition: var(--theme-transition);
+
+  i {
+    font-size: 20px;
+  }
+
+  &:hover, &.active {
+    color: var(--text-main);
+    background-color: var(--border-color);
+  }
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 180px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-main);
+  padding: 6px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: dropdownFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-sm);
+  font-weight: var(--weight-medium);
+  color: var(--text-main);
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: var(--theme-transition);
+
+  i {
+    font-size: 18px;
+    color: var(--text-muted);
+    transition: var(--theme-transition);
+  }
+
+  &:hover {
+    background-color: var(--bg-input);
+    color: var(--primary-color);
+
+    i {
+      color: var(--primary-color);
+    }
+  }
+
+  &.danger {
+    color: var(--danger);
+
+    i {
+      color: var(--danger);
+    }
+
+    &:hover {
+      background-color: rgba(239, 68, 68, 0.08);
+      color: var(--danger);
+
+      i {
+        color: var(--danger);
+      }
+    }
+  }
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

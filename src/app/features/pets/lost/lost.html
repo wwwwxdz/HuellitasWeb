@@ -1,0 +1,130 @@
+<app-navbar></app-navbar>
+
+<main class="lost-page">
+  <div class="container">
+    <!-- Título -->
+    <div class="page-header">
+      <div>
+        <h1>Mascotas Perdidas</h1>
+        <p>Explora los reportes más recientes y ayuda a reunirlos con sus familias.</p>
+      </div>
+      @if (!loading()) {
+        <span class="results-count">
+          {{ totalResults() }} resultado{{ totalResults() !== 1 ? 's' : '' }} encontrado{{ totalResults() !== 1 ? 's' : '' }}
+        </span>
+      }
+    </div>
+
+    <!-- Barra de filtros rápidos -->
+    <app-filter-bar 
+      [especies]="especies()" 
+      [(selectedEspecieId)]="selectedEspecieId"
+      [(selectedOrder)]="selectedOrder"
+      [(radio)]="radioFilter"
+      [(withReward)]="withRewardFilter"
+      (openMap)="openMapFilter()"
+    ></app-filter-bar>
+
+    <!-- Layout principal -->
+    <div class="main-layout">
+      <app-side-filters 
+        [currentFilters]="advancedFilters()" 
+        (applyFilters)="handleFiltersApply($event)"
+      ></app-side-filters>
+
+      <section class="content-area">
+        <!-- Banner Mini Mapa para búsqueda geográfica -->
+        <div class="mini-map" style="position: relative; width: 100%; height: 220px; border-radius: 20px; overflow: hidden; border: 1px solid var(--border-color); background-color: var(--bg-card); flex-shrink: 0; cursor: pointer;" (click)="openMapFilter()">
+          <app-map-component
+            [reports]="[]"
+            [center]="center()"
+            [zoom]="12"
+            [radiusKm]="0"
+            [showControls]="false"
+          />
+          <!-- Overlay para bloquear interacción del mapa y capturar el click del usuario -->
+          <div style="position: absolute; inset: 0; z-index: 500; cursor: pointer;"></div>
+          <button class="expand-map-btn" style="position: absolute; bottom: 12px; left: 12px; z-index: 1001; display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background-color: rgba(255, 255, 255, 0.92); border: none; border-radius: 100px; font-size: 0.85rem; font-weight: 700; color: #1e293b; cursor: pointer; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); pointer-events: none;">
+            <i class="material-icons" style="font-size: 1rem;">my_location</i>
+            @if (radioFilter() > 0) {
+              <span>Buscando en {{ radioFilter() }} KM</span>
+            } @else {
+              <span>Buscar cerca de mí</span>
+            }
+          </button>
+        </div>
+
+        <!-- Error Banner -->
+        @if (error()) {
+          <div class="error-banner">
+            <i class="material-icons">error_outline</i>
+            <span>{{ error() }}</span>
+            <button (click)="fetchReports(advancedFilters(), page(), false)">Reintentar</button>
+          </div>
+        }
+
+        <!-- Grid de Mascotas -->
+        <div class="pets-grid">
+          @if (loading()) {
+            <!-- Skeleton cards -->
+            @for (i of [1, 2, 3, 4]; track i) {
+              <div class="skeleton-card">
+                <div class="skeleton-img"></div>
+                <div class="skeleton-body">
+                  <div class="skeleton-line" style="width: 60%;"></div>
+                  <div class="skeleton-line" style="width: 80%;"></div>
+                  <div class="skeleton-line" style="width: 40%;"></div>
+                </div>
+              </div>
+            }
+          } @else if (reports().length === 0 && !error()) {
+            <!-- Estado vacío -->
+            <div class="empty-state">
+              <i class="material-icons">search_off</i>
+              <p>No se encontraron reportes con los filtros aplicados.</p>
+            </div>
+          } @else {
+            @for (r of reports(); track r.id_reporte_mascota) {
+              <app-pet-card
+                [id]="r.id_reporte_mascota"
+                [name]="r.nombre || 'Sin nombre'"
+                [image]="r.imagen_principal?.url ?? '/images/lost-max.png'"
+                [status]="getStatusLabel(r.estado)"
+                [timeAgo]="getTimeAgo(r.creado_en)"
+                [createdAt]="r.creado_en"
+                [location]="r.ubicacion || (r.distrito + ', ' + r.departamento)"
+                [tags]="getTags(r)"
+                [hasReward]="r.recompensa || !!(r.caracteristicas?.recompensa || r.descripcion?.toLowerCase()?.includes('recompensa'))"
+                [montoRecompensa]="r.monto_recompensa || 0"
+                [likesCount]="r.total_likes || 0"
+                [liked]="r.liked_por_usuario || false"
+              ></app-pet-card>
+            }
+          }
+        </div>
+
+        <!-- Paginación -->
+        @if (hasMore() && !loading()) {
+          <div class="load-more-container">
+            <button 
+              (click)="handleLoadMore()" 
+              class="load-more-btn"
+              [disabled]="loadingMore()"
+            >
+              {{ loadingMore() ? 'Cargando más...' : 'Cargar más mascotas' }}
+            </button>
+          </div>
+        }
+      </section>
+    </div>
+  </div>
+</main>
+
+<app-location-filter-modal
+  [isOpen]="isMapModalOpen()"
+  [initialCenter]="center()"
+  [initialRadius]="radioFilter() || 15"
+  [reports]="mapPoints()"
+  (closeModal)="closeMapFilter()"
+  (applyFilters)="handleMapFilterApply($event)"
+></app-location-filter-modal>

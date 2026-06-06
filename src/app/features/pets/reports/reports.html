@@ -1,0 +1,82 @@
+<app-navbar></app-navbar>
+
+<div class="reports-page-container">
+  <div class="reports-main-content">
+    
+
+
+    <!-- LISTADO DE REPORTES ESTILO RED SOCIAL (FEED) -->
+    <div class="feed-layout-container">
+      
+      @if (isLoading() && reports().length === 0) {
+        <!-- Skeleton Inicial de Carga -->
+        <div class="loading-state">
+          <div class="spinner-modern"></div>
+          <p>Cargando feed comunitario...</p>
+        </div>
+      } @else if (reports().length === 0) {
+        <!-- Estado Vacío -->
+        <div class="empty-state">
+          <i class="material-icons">explore_off</i>
+          <h3>No hay reportes disponibles</h3>
+          <p>Prueba a cambiar tus criterios de búsqueda o remueve algunos filtros.</p>
+        </div>
+      } @else {
+        
+        <!-- Listado de Tarjetas de Publicación -->
+        <div class="feed-posts-list">
+          @for (report of reports(); track report.id_reporte_mascota + '-' + $index) {
+            <app-post-card-social
+              [report]="report"
+              (reportChange)="onReportChange($event)"
+              (flagPost)="onFlagPost($event)"
+            ></app-post-card-social>
+          }
+        </div>
+
+        <!-- Indicador de Carga del Scroll Infinito -->
+        @if (isLoadingMore()) {
+          <div class="feed-loading-more">
+            <div class="spinner-modern-sm"></div>
+            <span>Cargando más publicaciones...</span>
+          </div>
+        }
+
+        <!-- Fin del Contenido -->
+        @if (!hasMore() && reports().length > 0) {
+          <div class="feed-end-message">
+            <i class="material-icons text-cyan">pets</i>
+            <h4>Has llegado al final de las alertas</h4>
+            <p>Gracias por estar alerta y colaborar con la comunidad.</p>
+          </div>
+        }
+
+      }
+
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL BÚSQUEDA GEOGRÁFICA -->
+<app-location-filter-modal
+  [isOpen]="isMapModalOpen()"
+  [initialCenter]="center()"
+  [initialRadius]="geoRadio() || 5"
+  [reports]="[]"
+  (closeModal)="closeGeoFilter()"
+  (applyFilters)="applyGeoFilter($event)"
+></app-location-filter-modal>
+
+<!-- MODAL DE REPORTES/DENUNCIAS -->
+<app-flag-modal
+  [isOpen]="isFlagModalOpen()"
+  [target]="flagTarget()"
+  [isFlagging]="isSendingFlag()"
+  [(motivo)]="flagMotivo"
+  [(descripcion)]="flagDescripcion"
+  (closed)="closeFlagModal()"
+  (confirmSubmit)="submitFlag()"
+></app-flag-modal>
+
+<app-footer></app-footer>

@@ -1,0 +1,63 @@
+<div class="viewer-overlay" (click)="onOverlayClick($event)" (mousemove)="onDrag($event)" (mouseup)="endDrag()" (mouseleave)="endDrag()">
+  <!-- Floating Controls -->
+  <div class="floating-controls shadow-xl">
+    <div class="info-group">
+      <i class="material-icons">visibility</i>
+      <span>Vista Previa</span>
+    </div>
+    
+    <div class="divider"></div>
+    
+    <div class="zoom-actions">
+      <button class="control-btn" (click)="zoomOut()" title="Alejar">
+        <i class="material-icons">remove</i>
+      </button>
+      <span class="zoom-label">{{ (scale() * 100).toFixed(0) }}%</span>
+      <button class="control-btn" (click)="zoomIn()" title="Acercar">
+        <i class="material-icons">add</i>
+      </button>
+    </div>
+
+    <div class="divider"></div>
+
+    <button class="control-btn" (click)="resetZoom()" title="Restablecer">
+      <i class="material-icons">restart_alt</i>
+    </button>
+
+    <div class="divider"></div>
+
+    <button class="control-btn close" (click)="close.emit()" title="Cerrar">
+      <i class="material-icons">close</i>
+    </button>
+  </div>
+
+  <!-- Main Canvas -->
+  <div class="viewport" 
+       (wheel)="onWheel($event)"
+       [class.grabbing]="isDragging()">
+    
+    <div class="image-wrapper"
+         [style.transform]="'translate(' + translateX() + 'px, ' + translateY() + 'px) scale(' + scale() + ')'"
+         (mousedown)="startDrag($event)">
+      <img 
+        #viewerImage
+        [src]="src()" 
+        alt="Mascota" 
+        class="main-image"
+        draggable="false"
+      >
+    </div>
+  </div>
+
+  <!-- Navigation Hints -->
+  <div class="hints">
+    <div class="hint">
+      <i class="material-icons">mouse</i>
+      <span>Rueda para zoom</span>
+    </div>
+    <div class="hint">
+      <i class="material-icons">drag_indicator</i>
+      <span>Arrastra para mover</span>
+    </div>
+  </div>
+</div>

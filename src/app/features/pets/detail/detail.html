@@ -1,0 +1,248 @@
+<app-navbar></app-navbar>
+
+<div class="pet-detail-page-container">
+  
+  @if (isLoading()) {
+    <div class="loading-state-box">
+      <div class="spinner-modern"></div>
+      <p>Cargando detalles del reporte...</p>
+    </div>
+  } @else if (!report()) {
+    <div class="empty-state-box">
+      <i class="material-icons">error_outline</i>
+      <h3>No se encontró el reporte</h3>
+      <button class="btn-back" (click)="goBack()">Volver al listado</button>
+    </div>
+  } @else {
+    
+    <div class="pet-detail-content-wrapper">
+      
+      <!-- Fila Superior de Navegación -->
+      <nav class="detail-navigation-bar">
+        <app-button
+          variant="outline"
+          icon="arrow_back"
+          (btnClick)="goBack()"
+        >
+          Volver a Alertas
+        </app-button>
+      </nav>
+
+      <!-- Grid Principal de Contenido -->
+      <div class="detail-main-grid">
+        
+        <!-- Columna Izquierda: Carrusel Multimedia Grande -->
+        <div class="detail-media-column">
+          <div class="media-card-box">
+            <app-image-carousel 
+              [images]="getImages(report()!)" 
+              [alt]="report()!.nombre || 'Mascota'"
+              (imageClick)="activeViewerImage.set($event)"
+            ></app-image-carousel>
+          </div>
+        </div>
+
+        <!-- Columna Derecha: Ficha Técnica e Información -->
+        <div class="detail-info-column">
+          
+          <!-- Cabecera del Detalle -->
+          <div class="pet-detail-card-header">
+            <div class="header-main-row">
+              <h1 class="pet-detail-name">
+                {{ report()!.nombre || 'Mascota sin nombre' }}
+              </h1>
+              <app-badge [status]="report()!.estado"></app-badge>
+            </div>
+            
+            <!-- Info del Reportero -->
+            <div class="detail-author-row">
+              <app-avatar
+                [src]="report()!.usuario.foto_perfil"
+                [name]="report()!.usuario.nombre"
+                [size]="44"
+                class="detail-author-avatar-wrapper"
+              ></app-avatar>
+              <div class="detail-author-meta">
+                <span class="author-name">Reportado por {{ report()!.usuario.nombre }}</span>
+                <span class="post-date">Publicado el {{ report()!.creado_en | date:'dd MMM yyyy, h:mm a' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-section-divider"></div>
+
+          <!-- Ficha de Detalles (Grid) -->
+          <div class="pet-specs-grid">
+            <div class="spec-card">
+              <span class="spec-label">Especie</span>
+              <span class="spec-value">{{ report()!.tipo | titlecase }}</span>
+            </div>
+            <div class="spec-card">
+              <span class="spec-label">Raza</span>
+              <span class="spec-value">{{ report()!.raza || 'Raza mixta' }}</span>
+            </div>
+            @if (report()!.caracteristicas?.color) {
+              <div class="spec-card">
+                <span class="spec-label">Color</span>
+                <span class="spec-value">{{ report()!.caracteristicas?.color }}</span>
+              </div>
+            }
+            @if (report()!.caracteristicas?.tamano) {
+              <div class="spec-card">
+                <span class="spec-label">Tamaño</span>
+                <span class="spec-value">{{ report()!.caracteristicas?.tamano | titlecase }}</span>
+              </div>
+            }
+            @if (report()!.caracteristicas?.collar) {
+              <div class="spec-card span-2">
+                <span class="spec-label">Collar</span>
+                <span class="spec-value">
+                  Lleva collar ({{ report()!.caracteristicas?.collar_color || 'Color no detallado' }})
+                </span>
+              </div>
+            }
+          </div>
+
+          @if (report()!.descripcion) {
+            <div class="detail-section-divider"></div>
+            <!-- Descripción / Observaciones -->
+            <div class="detail-description-section">
+              <h3>Descripción y Observaciones</h3>
+              <p class="description-text">{{ report()!.descripcion }}</p>
+            </div>
+          }
+
+          <div class="detail-section-divider"></div>
+
+          <!-- Barra de Interacciones Rápidas -->
+          <div class="detail-interaction-bar">
+            <button 
+              class="interaction-btn like-btn" 
+              [class.liked]="report()!.liked_por_usuario"
+              (click)="toggleLike()"
+            >
+              <i class="material-icons">{{ report()!.liked_por_usuario ? 'favorite' : 'favorite_border' }}</i>
+              <span>{{ report()!.total_likes || 0 }} Me gusta</span>
+            </button>
+            <div class="interaction-comments-count">
+              <i class="material-icons">forum</i>
+              <span>{{ report()!.total_comentarios || 0 }} Comentarios</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Fila Inferior: Mapa y Dirección -->
+      <div class="detail-bottom-section">
+        <div class="detail-map-section-card">
+          <div class="map-card-header">
+            <i class="material-icons">place</i>
+            <div class="map-header-meta">
+              <h3>Última ubicación registrada</h3>
+              <p>{{ report()!.ubicacion || 'Dirección no detallada' }}</p>
+              @if (report()!.distrito) {
+                <p class="map-address-sub">
+                  {{ report()!.distrito }}, {{ report()!.provincia }}, {{ report()!.departamento }}
+                </p>
+              }
+            </div>
+          </div>
+
+          <!-- Contenedor del Mapa Leaflet -->
+          @if (report()!.latitud && report()!.longitud) {
+            <div class="map-render-container">
+              <app-map-component
+                [center]="[report()!.latitud, report()!.longitud]"
+                [zoom]="15"
+                [editable]="false"
+                [radiusKm]="0"
+                [reports]="pawPoint()"
+              ></app-map-component>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Sección de Conversación Comunitaria (Comentarios) -->
+      <div class="detail-comments-section-wrapper">
+        <div class="comments-card-header">
+          <i class="material-icons">forum</i>
+          <h3>Conversación y Ayuda Comunitaria</h3>
+        </div>
+
+        <!-- Editor de Comentario Principal -->
+        <div class="main-comment-editor">
+          <input 
+            type="text"
+            class="main-comment-input-field"
+            placeholder="Aporta pistas, avistamientos o mensajes de apoyo..."
+            [ngModel]="commentInput()"
+            (ngModelChange)="commentInput.set($event)"
+            (keydown.enter)="onSendComment()"
+          />
+          <app-button
+            variant="primary"
+            [loading]="sendingComment()"
+            [disabled]="!commentInput().trim()"
+            icon="send"
+            (btnClick)="onSendComment()"
+          >
+            Comentar
+          </app-button>
+        </div>
+
+        <!-- Spinner de Comentarios -->
+        @if (isLoadingComments()) {
+          <div class="comments-loading-box">
+            <div class="spinner-modern-sm"></div>
+            <span>Cargando conversación...</span>
+          </div>
+        }
+
+        <!-- Flujo de Comentarios -->
+        <div class="comments-flow-container">
+          @for (c of comments(); track c.id_comentario) {
+            <app-comment-item
+              [comment]="c"
+              [reporteId]="report()!.id_reporte_mascota"
+              [depth]="0"
+              [commentLiked]="commentLikedSet()"
+              [commentLikeCounts]="commentLikeCounts()"
+              [replyingToId]="replyingToId()"
+              [sendingSet]="sendingReplySet()"
+              [replyInput]="replyInput()"
+              (replyInputChange)="replyInput.set($event)"
+              (deleteComment)="onDeleteComment($event)"
+              (toggleLike)="onToggleCommentLike($event)"
+              (startReply)="startReply($event)"
+              (cancelReply)="cancelReply()"
+              (sendReply)="onSendReply($event)"
+            ></app-comment-item>
+          } @empty {
+            @if (!isLoadingComments()) {
+              <div class="no-comments-box">
+                <i class="material-icons">chat_bubble_outline</i>
+                <p>Aún no hay comentarios sobre esta alerta. ¡Aporta la primera pista!</p>
+              </div>
+            }
+          }
+        </div>
+
+      </div>
+
+    </div>
+
+  }
+
+</div>
+
+@if (activeViewerImage()) {
+  <app-image-viewer
+    [src]="activeViewerImage()!"
+    (close)="activeViewerImage.set(null)"
+  ></app-image-viewer>
+}
+
+<app-footer></app-footer>

@@ -1,0 +1,164 @@
+<div class="auth-page-container">
+  <!-- Left Side: Hero -->
+  <div class="auth-hero-section">
+    <img src="/images/auth-hero.png" alt="Mascota Hero" class="hero-image" />
+    <div class="hero-content">
+      <a routerLink="/" class="brand-logo">
+        <img src="/images/HUELLITAS_LOGO.png" alt="Huellitas Logo" class="brand-logo-img" />
+        <span>Huellitas</span>
+      </a>
+      <div class="glass-info-card">
+        <span class="status-badge">RECUPERACIÓN DE CUENTA</span>
+        <h1>No te preocupes, te ayudamos.</h1>
+        <p>Recupera el acceso a tu cuenta en solo unos pasos. Tu compromiso con las mascotas es importante para nosotros.</p>
+      </div>
+      <div class="hero-footer">
+        <span>Huellitas &copy; 2026</span>
+        <span class="dot"></span>
+        <span>v1.0.0</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Side: Form -->
+  <div class="auth-form-section">
+    <div class="form-scroll-container">
+      <div class="form-card">
+
+        <!-- Mensajes -->
+        @if (error()) {
+          <div class="alert alert-error">
+            <i class="material-icons">error</i>
+            <span>{{ error() }}</span>
+          </div>
+        }
+        @if (successMessage()) {
+          <div class="alert alert-success">
+            <i class="material-icons">check_circle</i>
+            <span>{{ successMessage() }}</span>
+          </div>
+        }
+
+        <!-- ======== STEP 1: Ingreso de correo ======== -->
+        @if (step() === 1) {
+          <div class="form-header">
+            <h2>Recuperar Contraseña</h2>
+            <p>Ingresa tu correo electrónico para recibir un código de verificación.</p>
+          </div>
+
+          <form (ngSubmit)="onSendIdentifier()">
+            <div class="form-group">
+              <label for="recover-email">Correo Electrónico</label>
+              <div class="input-container">
+                <i class="material-icons">alternate_email</i>
+                <input
+                  type="email"
+                  id="recover-email"
+                  name="identifier"
+                  [(ngModel)]="identifier"
+                  placeholder="tu@correo.com"
+                  autocomplete="email"
+                  required
+                />
+              </div>
+            </div>
+
+            <button type="submit" class="btn-submit" [disabled]="isLoading()">
+              @if (isLoading()) {
+                <span class="spinner"></span>
+                <span>Enviando código...</span>
+              } @else {
+                <span>Enviar Código</span>
+                <i class="material-icons">send</i>
+              }
+            </button>
+          </form>
+        }
+
+        <!-- ======== STEP 2: Código + Nueva contraseña ======== -->
+        @if (step() === 2) {
+          <div class="form-header">
+            <div class="back-link" (click)="step.set(1)" tabindex="0" role="button">
+              <i class="material-icons">arrow_back</i> Volver
+            </div>
+            <h2>Nueva Contraseña</h2>
+            <p>Ingresa el código enviado a <strong>{{ identifier }}</strong> y elige una nueva contraseña.</p>
+          </div>
+
+          <form (ngSubmit)="onResetPassword()">
+            <div class="code-container">
+              @for (digit of code; track $index) {
+                <input
+                  #codeField
+                  type="text"
+                  maxlength="1"
+                  class="code-input"
+                  [(ngModel)]="code[$index]"
+                  [name]="'code-' + $index"
+                  (input)="onCodeInput($index, $event)"
+                  (keydown)="onCodeKeyDown($index, $event)"
+                  required
+                />
+              }
+            </div>
+
+            @if (codeValidated()) {
+              <div class="form-group">
+                <label for="new-password">Nueva Contraseña</label>
+                <div class="input-container">
+                  <i class="material-icons">lock</i>
+                  <input
+                    [type]="showPassword() ? 'text' : 'password'"
+                    id="new-password"
+                    name="newPassword"
+                    [(ngModel)]="newPassword"
+                    placeholder="Mínimo 6 caracteres"
+                    autocomplete="new-password"
+                    class="has-eye"
+                    required
+                  />
+                  <button type="button" class="btn-eye" (click)="showPassword.set(!showPassword())">
+                    <i class="material-icons">{{ showPassword() ? 'visibility_off' : 'visibility' }}</i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="confirm-password">Confirmar Contraseña</label>
+                <div class="input-container">
+                  <i class="material-icons">lock_outline</i>
+                  <input
+                    [type]="showPassword() ? 'text' : 'password'"
+                    id="confirm-password"
+                    name="confirmPassword"
+                    [(ngModel)]="confirmPassword"
+                    placeholder="Repite tu contraseña"
+                    autocomplete="new-password"
+                    required
+                  />
+                </div>
+              </div>
+
+              <button type="submit" class="btn-submit" [disabled]="isLoading()">
+                @if (isLoading()) {
+                  <span class="spinner"></span>
+                  <span>Actualizando...</span>
+                } @else {
+                  <span>Restablecer Contraseña</span>
+                  <i class="material-icons">vpn_key</i>
+                }
+              </button>
+            }
+          </form>
+        }
+
+        <div class="auth-footer-link">
+          <a routerLink="/login">
+            <i class="material-icons" style="font-size: 1rem; vertical-align: middle;">arrow_back</i>
+            Volver al inicio de sesión
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

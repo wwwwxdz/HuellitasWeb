@@ -1,0 +1,171 @@
+<article class="post-card-social">
+  @if (report().compartido_por_nombre) {
+    <div class="post-reposted-by">
+      <i class="material-icons">repeat</i>
+      <span>{{ report().compartido_por_nombre }} compartió este reporte</span>
+    </div>
+  }
+  
+  <!-- Cabecera del Post -->
+  <div class="post-header">
+    <div class="reporter-info">
+      <app-avatar
+        [src]="report().usuario.foto_perfil"
+        [name]="report().usuario.nombre || 'Guardián Anónimo'"
+        [size]="40"
+        class="reporter-avatar-wrapper"
+      ></app-avatar>
+      <div class="reporter-meta">
+        <span class="reporter-name">{{ report().usuario.nombre || 'Guardián Anónimo' }}</span>
+        <span class="post-date">{{ getTimeAgo(report().creado_en) }}</span>
+      </div>
+    </div>
+    
+    <div class="post-header-actions">
+      <app-badge [status]="report().estado"></app-badge>
+      <app-options-dropdown
+        [options]="REPORT_OPTIONS"
+        (optionSelected)="onReportOptionSelected($event)"
+      ></app-options-dropdown>
+    </div>
+  </div>
+
+  <!-- Descripción Breve arriba de la Imagen (Si existe) -->
+  @if (report().descripcion) {
+    <p class="post-description-text">{{ report().descripcion }}</p>
+  }
+
+  <!-- Contenedor Multimedia Grande con Carrusel (Aspect-Ratio 1:1) -->
+  <div class="post-media-box">
+    <app-image-carousel 
+      [images]="getImages()" 
+      [alt]="report().nombre || 'Mascota'"
+    ></app-image-carousel>
+  </div>
+
+  <!-- Cuerpo del Post -->
+  <div class="post-body-info">
+    <h3 class="pet-title-name">
+      {{ report().nombre || 'Mascota sin nombre (Avistado)' }}
+    </h3>
+    
+    <div class="post-meta-details">
+      <span class="meta-detail-item">
+        <i class="material-icons">pets</i>
+        <span>{{ report().raza || 'Raza mixta' }}</span>
+      </span>
+      <span class="meta-detail-item" *ngIf="report().ubicacion">
+        <i class="material-icons">place</i>
+        <span>{{ formattedLocation }}</span>
+      </span>
+    </div>
+  </div>
+
+  <!-- Fila de Acciones e Interacciones -->
+  <div class="post-action-bar">
+    <div class="action-buttons-group">
+      <!-- Botón Me Gusta (Corazón) -->
+      <button 
+        class="feed-action-btn like-btn" 
+        [class.liked]="report().liked_por_usuario"
+        (click)="onLikeClick()"
+        title="Me gusta"
+      >
+        <i class="material-icons">{{ report().liked_por_usuario ? 'favorite' : 'favorite_border' }}</i>
+        <span>{{ report().total_likes || 0 }}</span>
+      </button>
+
+      <!-- Botón Comentarios (Muestra Detalle) -->
+      <button 
+        class="feed-action-btn comment-btn"
+        [class.active]="openComments()"
+        (click)="toggleComments()"
+        title="Ver comentarios"
+      >
+        <i class="material-icons">chat_bubble_outline</i>
+        <span>{{ displayCommentCount() }}</span>
+      </button>
+    </div>
+
+    <div class="action-buttons-group">
+      <!-- Botón Compartir -->
+      <button 
+        class="feed-action-btn share-btn" 
+        [class.shared]="report().esta_compartido"
+        (click)="onShareClick($event)"
+        title="Compartir publicación"
+      >
+        <i class="material-icons">repeat</i>
+        <span>{{ report().total_compartidos || 0 }}</span>
+      </button>
+
+      <!-- Detalle -->
+      <a class="feed-action-btn detail-btn" [routerLink]="['/pets/reports/detail', report().id_reporte_mascota]">
+        <i class="material-icons">launch</i>
+        <span>Detalles</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Área de Comentarios Desplegable -->
+  @if (openComments()) {
+    <div class="post-comments-section" (click)="$event.stopPropagation()">
+      
+      <!-- Editor de comentario principal -->
+      <div class="comment-input-container">
+        <input 
+          type="text" 
+          class="main-comment-input" 
+          placeholder="Escribe un comentario..." 
+          [value]="commentInput()"
+          (input)="updateCommentInput($any($event.target).value)"
+          (keydown.enter)="onSendComment()"
+        />
+        <button 
+          class="btn-send-main-comment" 
+          (click)="onSendComment()"
+          [disabled]="!commentInput().trim() || isSendingComment()"
+        >
+          <i class="material-icons">
+            {{ isSendingComment() ? 'sync' : 'send' }}
+          </i>
+        </button>
+      </div>
+
+      <!-- Spinner de carga -->
+      @if (isLoadingComments()) {
+        <div class="comments-loading-indicator">
+          <div class="spinner-modern-sm"></div>
+          <span>Cargando comentarios...</span>
+        </div>
+      }
+
+      <!-- Lista de comentarios -->
+      <div class="comments-flow-list">
+        @for (c of comments(); track c.id_comentario) {
+          <app-comment-item
+            [comment]="c"
+            [reporteId]="report().id_reporte_mascota!"
+            [depth]="0"
+            [commentLiked]="commentLikedSet()"
+            [commentLikeCounts]="commentLikeCounts()"
+            [replyingToId]="replyingToId()"
+            [sendingSet]="sendingReplySet()"
+            [replyInput]="replyInput()"
+            (replyInputChange)="updateReplyInput($event)"
+            (deleteComment)="onDeleteComment($event.commentId)"
+            (toggleLike)="onToggleCommentLike($event)"
+            (startReply)="startReply($event)"
+            (cancelReply)="cancelReply()"
+            (sendReply)="onSendReply($event)"
+          ></app-comment-item>
+        } @empty {
+          @if (!isLoadingComments()) {
+            <p class="no-comments-yet-text">Aún no hay comentarios. ¡Sé el primero en comentar!</p>
+          }
+        }
+      </div>
+    </div>
+  }
+
+</article>

@@ -1,0 +1,344 @@
+<app-navbar></app-navbar>
+
+<div class="perfil-page">
+  <div class="perfil-container">
+    
+    <!-- BARRA LATERAL: Info de Perfil -->
+    <aside class="profile-card">
+      <div 
+        class="profile-avatar" 
+        [class.is-uploading]="isUploadingAvatar()"
+        (click)="!isUploadingAvatar() && fileInput.click()"
+        title="Cambiar foto de perfil"
+      >
+        <img 
+          [src]="usuario()?.foto_perfil || '/images/avatar-maria.png'" 
+          [alt]="usuario()?.nombre"
+          onerror="this.src='https://ui-avatars.com/api/?name=User&background=3c818a&color=fff'"
+        />
+        
+        <!-- Overlay al hacer hover -->
+        <div class="avatar-overlay">
+          <i class="material-icons">photo_camera</i>
+          <span>Cambiar</span>
+        </div>
+
+        <!-- Spinner al subir -->
+        @if (isUploadingAvatar()) {
+          <div class="avatar-spinner">
+            <i class="material-icons loading-spin">sync</i>
+          </div>
+        }
+      </div>
+
+      <!-- Input de archivo oculto -->
+      <input 
+        type="file" 
+        #fileInput 
+        (change)="onAvatarSelected($event)" 
+        accept="image/*" 
+        style="display: none;" 
+      />
+
+      <div class="profile-info">
+        <h3>{{ usuario()?.nombre || 'Guardián Activo' }}</h3>
+        <p>{{ usuario()?.email }}</p>
+        @if (usuario()?.telefono) {
+          <p style="font-size: 0.8rem; margin-top: 4px; display: flex; align-items: center; justify-content: center; gap: 4px;">
+            <i class="material-icons" style="font-size: 0.95rem;">phone</i>
+            {{ usuario()?.telefono }}
+          </p>
+        }
+      </div>
+
+      <!-- Estadísticas -->
+      <div class="profile-stats">
+        <div class="stat-item">
+          <span class="stat-val">{{ userReports().length }}</span>
+          <span class="stat-lbl">Alertas</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-val" style="color: var(--success, #10b981);">
+            {{ userReports().filter(r => r.estado === 4).length }}
+          </span>
+          <span class="stat-lbl">Reunidos</span>
+        </div>
+      </div>
+
+      <!-- Acciones de Perfil -->
+      <div style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
+        <button class="btn btn-primary" (click)="crearReporte()" style="width: 100%;">
+          <i class="material-icons">add</i> Reportar Mascota
+        </button>
+        <a routerLink="/pets/reports" class="btn btn-outline" style="width: 100%; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; box-sizing: border-box;">
+          <i class="material-icons">explore</i> Explorar Alertas
+        </a>
+        <a routerLink="/ajustes" class="btn btn-outline" style="width: 100%; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; box-sizing: border-box;">
+          <i class="material-icons">manage_accounts</i> Ajustes
+        </a>
+        <button class="btn btn-outline" (click)="logout()" style="width: 100%;">
+          <i class="material-icons">logout</i> Cerrar Sesión
+        </button>
+      </div>
+    </aside>
+
+    <!-- CONTENIDO CENTRAL: Gestión de Alertas -->
+    <main class="perfil-content">
+      
+      <!-- Pestañas (Tabs) de Selección -->
+      <div class="profile-tabs">
+        <button 
+          class="tab-btn" 
+          [class.active]="activeTab() === 'creados'" 
+          (click)="setTab('creados')"
+        >
+          <i class="material-icons">pets</i>
+          <span>Mis Publicaciones</span>
+          <span class="tab-badge">{{ userReports().length }}</span>
+        </button>
+        <button 
+          class="tab-btn" 
+          [class.active]="activeTab() === 'likes'" 
+          (click)="setTab('likes')"
+        >
+          <i class="material-icons">favorite</i>
+          <span>Me Gusta</span>
+          <span class="tab-badge">{{ likedReports().length }}</span>
+        </button>
+        <button 
+          class="tab-btn" 
+          [class.active]="activeTab() === 'compartidos'" 
+          (click)="setTab('compartidos')"
+        >
+          <i class="material-icons">share</i>
+          <span>Compartidos</span>
+          <span class="tab-badge">{{ sharedReports().length }}</span>
+        </button>
+      </div>
+
+      <!-- Spinner global de Carga -->
+      @if (isLoading()) {
+        <div class="loading-state-wrapper">
+          <i class="material-icons loading-spin-large">sync</i>
+          <p>Cargando información...</p>
+        </div>
+      } @else {
+        
+        <!-- ══ PESTAÑA: PUBLICACIONES PROPIAS ════════════════════ -->
+        @if (activeTab() === 'creados') {
+          <div class="reports-grid">
+            @for (report of userReports(); track report.id_reporte_mascota) {
+              <div class="user-report-card">
+                
+                <div class="card-img-wrapper">
+                  <img 
+                    [src]="report.imagen_principal?.url || '/images/pet-max.png'" 
+                    [alt]="report.nombre || 'Mascota'" 
+                    onerror="this.src='/images/pet-max.png'"
+                  />
+                  <span class="badge-status" [ngClass]="
+                    report.estado === 1 ? 'encontrado' : 
+                    report.estado === 2 ? 'perdido' : 
+                    report.estado === 3 ? 'avistado' : 'reunido'
+                  ">
+                    {{ 
+                      report.estado === 1 ? 'Encontrado' : 
+                      report.estado === 2 ? 'Perdido' : 
+                      report.estado === 3 ? 'Avistado' : 'Reunido'
+                    }}
+                  </span>
+                </div>
+
+                <div class="card-details">
+                  <h4>{{ report.nombre || 'Sin nombre (Avistado)' }}</h4>
+                  <div class="card-meta">
+                    <i class="material-icons">location_on</i>
+                    <span>{{ report.ubicacion }}</span>
+                  </div>
+                  <div class="card-meta">
+                    <i class="material-icons">schedule</i>
+                    <span>Publicado: {{ report.creado_en | date:'shortDate' }}</span>
+                  </div>
+                  <div class="card-meta">
+                    <i class="material-icons">pets</i>
+                    <span>{{ report.raza || 'Raza mixta' }}</span>
+                  </div>
+                </div>
+
+                <div class="card-actions">
+                  @if (report.estado !== 4) {
+                    <button class="btn-action-primary" (click)="marcarComoReunido(report.id_reporte_mascota)">
+                      <i class="material-icons">sentiment_very_satisfied</i> ¡Reunido!
+                    </button>
+                  } @else {
+                    <button class="btn-action-primary" style="opacity: 0.5; cursor: default;" disabled>
+                      <i class="material-icons">check</i> Finalizado
+                    </button>
+                  }
+                  <a [routerLink]="['/pets/reports/detail', report.id_reporte_mascota]" class="btn-action-outline" title="Ver Detalles">
+                    <i class="material-icons">visibility</i>
+                  </a>
+                  <button class="btn-action-danger" (click)="eliminarReporte(report.id_reporte_mascota)" title="Eliminar Alerta">
+                    <i class="material-icons">delete</i>
+                  </button>
+                </div>
+
+              </div>
+            } @empty {
+              <div class="empty-state-card">
+                <i class="material-icons">pets</i>
+                <h3>No tienes alertas creadas</h3>
+                <p>Publica una alerta para reportar una mascota perdida, encontrada o avistada en la calle.</p>
+                <button class="btn btn-primary" (click)="crearReporte()">
+                  Crear mi primer Reporte
+                </button>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- ══ PESTAÑA: POSTS LIKEADOS ═══════════════════════════ -->
+        @if (activeTab() === 'likes') {
+          <div class="reports-grid">
+            @for (report of likedReports(); track report.id_reporte_mascota) {
+              <div class="user-report-card">
+                
+                <div class="card-img-wrapper">
+                  <img 
+                    [src]="report.imagen_principal?.url || '/images/pet-max.png'" 
+                    [alt]="report.nombre || 'Mascota'" 
+                    onerror="this.src='/images/pet-max.png'"
+                  />
+                  <span class="badge-status" [ngClass]="
+                    report.estado === 1 ? 'encontrado' : 
+                    report.estado === 2 ? 'perdido' : 
+                    report.estado === 3 ? 'avistado' : 'reunido'
+                  ">
+                    {{ 
+                      report.estado === 1 ? 'Encontrado' : 
+                      report.estado === 2 ? 'Perdido' : 
+                      report.estado === 3 ? 'Avistado' : 'Reunido'
+                    }}
+                  </span>
+                </div>
+
+                <div class="card-details">
+                  <h4>{{ report.nombre || 'Sin nombre (Avistado)' }}</h4>
+                  <div class="card-meta">
+                    <i class="material-icons">location_on</i>
+                    <span>{{ report.ubicacion }}</span>
+                  </div>
+                  <div class="card-meta">
+                    <i class="material-icons">person</i>
+                    <span>Por: {{ report.usuario.nombre || 'Guardián' }}</span>
+                  </div>
+                  <div class="card-meta">
+                    <i class="material-icons">pets</i>
+                    <span>{{ report.raza || 'Raza mixta' }}</span>
+                  </div>
+                </div>
+
+                <div class="card-actions-single">
+                  <a [routerLink]="['/pets/reports/detail', report.id_reporte_mascota]" class="btn btn-primary" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%;">
+                    <i class="material-icons" style="font-size: 1.15rem;">visibility</i>
+                    Ver Publicación
+                  </a>
+                  @if (esDueno(report)) {
+                    <button class="btn-action-danger-small" (click)="eliminarReporte(report.id_reporte_mascota)" title="Eliminar Alerta">
+                      <i class="material-icons">delete</i>
+                    </button>
+                  }
+                </div>
+
+              </div>
+            } @empty {
+              <div class="empty-state-card">
+                <i class="material-icons">favorite_border</i>
+                <h3>No has dado "Me gusta" todavía</h3>
+                <p>Las alertas que te gusten o quieras apoyar se guardarán en esta pestaña.</p>
+                <a routerLink="/pets/reports" class="btn btn-primary" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
+                  <i class="material-icons">explore</i> Explorar Alertas
+                </a>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- ══ PESTAÑA: POSTS COMPARTIDOS ════════════════════════ -->
+        @if (activeTab() === 'compartidos') {
+          <div class="reports-grid">
+            @for (report of sharedReports(); track report.id_reporte_mascota) {
+              <div class="user-report-card">
+                
+                <div class="card-img-wrapper">
+                  <img 
+                    [src]="report.imagen_principal?.url || '/images/pet-max.png'" 
+                    [alt]="report.nombre || 'Mascota'" 
+                    onerror="this.src='/images/pet-max.png'"
+                  />
+                  <span class="badge-status" [ngClass]="
+                    report.estado === 1 ? 'encontrado' : 
+                    report.estado === 2 ? 'perdido' : 
+                    report.estado === 3 ? 'avistado' : 'reunido'
+                  ">
+                    {{ 
+                      report.estado === 1 ? 'Encontrado' : 
+                      report.estado === 2 ? 'Perdido' : 
+                      report.estado === 3 ? 'Avistado' : 'Reunido'
+                    }}
+                  </span>
+                </div>
+
+                <div class="card-details">
+                  <h4>{{ report.nombre || 'Sin nombre (Avistado)' }}</h4>
+                  <div class="card-meta">
+                    <i class="material-icons">location_on</i>
+                    <span>{{ report.ubicacion }}</span>
+                  </div>
+                  <div class="card-meta">
+                    <i class="material-icons">person</i>
+                    <span>Por: {{ report.usuario.nombre || 'Guardián' }}</span>
+                  </div>
+                  <div class="card-meta">
+                    <i class="material-icons">pets</i>
+                    <span>{{ report.raza || 'Raza mixta' }}</span>
+                  </div>
+                </div>
+
+                <div class="card-actions">
+                  <a [routerLink]="['/pets/reports/detail', report.id_reporte_mascota]" class="btn-action-primary" style="flex: 1; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
+                    <i class="material-icons">visibility</i>
+                    Ver
+                  </a>
+                  <button class="btn-action-danger" (click)="quitarCompartido(report.id_reporte_mascota, $event)" title="Quitar de compartidos">
+                    <i class="material-icons">share_off</i>
+                  </button>
+                  @if (esDueno(report)) {
+                    <button class="btn-action-danger" (click)="eliminarReporte(report.id_reporte_mascota)" title="Eliminar Alerta">
+                      <i class="material-icons">delete</i>
+                    </button>
+                  }
+                </div>
+
+              </div>
+            } @empty {
+              <div class="empty-state-card">
+                <i class="material-icons">share</i>
+                <h3>No tienes alertas compartidas</h3>
+                <p>Comparte alertas en el feed de la comunidad y aparecerán aquí para realizar su seguimiento.</p>
+                <a routerLink="/pets/reports" class="btn btn-primary" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
+                  <i class="material-icons">explore</i> Explorar Alertas
+                </a>
+              </div>
+            }
+          </div>
+        }
+
+      }
+
+    </main>
+
+  </div>
+</div>
+
+<app-footer></app-footer>

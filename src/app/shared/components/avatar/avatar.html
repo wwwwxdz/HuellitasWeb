@@ -1,0 +1,22 @@
+<div 
+  class="avatar-container" 
+  [style.width.px]="size()" 
+  [style.height.px]="size()"
+>
+  @if (showFallback()) {
+    <div 
+      class="avatar-fallback"
+      [style.font-size.px]="size() * 0.4"
+      [style]="backgroundStyle()"
+    >
+      {{ initials() }}
+    </div>
+  } @else {
+    <img 
+      [src]="src()" 
+      [alt]="name()" 
+      class="avatar-img"
+      (error)="onImageError()"
+    />
+  }
+</div>

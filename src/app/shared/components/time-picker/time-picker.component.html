@@ -1,0 +1,60 @@
+<div 
+  class="time-picker-wrapper" 
+  [class.open]="isOpen()" 
+  (click)="toggle()"
+  (keydown.enter)="toggle()"
+  tabindex="0"
+  role="button"
+>
+  <i class="material-icons icon-left">schedule</i>
+
+  <span class="display-value" [class.placeholder]="!displayValue()">
+    {{ displayValue() || '--:--' }}
+  </span>
+
+  <i class="material-icons icon-right">expand_more</i>
+</div>
+
+@if (isOpen()) {
+  <div 
+    class="time-dropdown" 
+    (click)="$event.stopPropagation()"
+    (keydown.enter)="$event.stopPropagation()"
+    tabindex="-1"
+    role="dialog"
+  >
+    <div class="columns">
+      <!-- Horas -->
+      <div class="col">
+        <span class="col-label">Hora</span>
+        <div class="scroll-list">
+          @for (h of hours; track h) {
+            <button
+              type="button"
+              class="time-item"
+              [class.active]="h === selectedHour()"
+              (click)="selectHour(h)"
+            >{{ h }}</button>
+          }
+        </div>
+      </div>
+
+      <div class="divider">:</div>
+
+      <!-- Minutos -->
+      <div class="col">
+        <span class="col-label">Min</span>
+        <div class="scroll-list minutes">
+          @for (m of minutes; track m) {
+            <button
+              type="button"
+              class="time-item"
+              [class.active]="m === selectedMinute()"
+              (click)="selectMinute(m)"
+            >{{ m }}</button>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+}

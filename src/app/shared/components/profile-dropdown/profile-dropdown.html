@@ -1,0 +1,53 @@
+<div class="profile-dropdown-wrapper">
+  <!-- Botón Disparador (Avatar del Usuario) -->
+  <button 
+    class="profile-avatar-trigger" 
+    (click)="toggleDropdown($event)"
+    [attr.aria-expanded]="isDropdownOpen()"
+    aria-label="Menú de perfil de usuario"
+  >
+    <app-avatar
+      [src]="auth.usuario()?.foto_perfil"
+      [name]="auth.usuario()?.nombre || 'Usuario'"
+      [size]="40"
+      class="profile-avatar-wrapper"
+    ></app-avatar>
+    <i class="material-icons dropdown-arrow-icon" [style.transform]="isDropdownOpen() ? 'rotate(180deg)' : 'none'">keyboard_arrow_down</i>
+  </button>
+
+  <!-- Menú Desplegable -->
+  @if (isDropdownOpen()) {
+    <div class="profile-dropdown-menu" (click)="$event.stopPropagation()">
+      <div class="dropdown-header">
+        <span class="user-display-name">{{ auth.usuario()?.nombre }}</span>
+        <span class="user-display-email">{{ auth.usuario()?.email }}</span>
+      </div>
+      
+      <div class="dropdown-divider"></div>
+      
+      <a routerLink="/perfil" class="dropdown-item" (click)="closeDropdown()">
+        <i class="material-icons">person</i>
+        <span>Mi Perfil</span>
+      </a>
+
+      <a routerLink="/ajustes" class="dropdown-item" (click)="closeDropdown()">
+        <i class="material-icons">manage_accounts</i>
+        <span>Ajustes</span>
+      </a>
+
+      <button class="dropdown-item" (click)="toggleTheme()">
+        <i class="material-icons">
+          {{ themeService.theme() === 'light' ? 'dark_mode' : 'light_mode' }}
+        </i>
+        <span>Tema {{ themeService.theme() === 'light' ? 'Oscuro' : 'Claro' }}</span>
+      </button>
+
+      <div class="dropdown-divider"></div>
+
+      <button class="dropdown-item logout" (click)="logout()">
+        <i class="material-icons">logout</i>
+        <span>Cerrar Sesión</span>
+      </button>
+    </div>
+  }
+</div>

@@ -1,0 +1,68 @@
+<article class="pet-card" [attr.id]="'pet-card-' + id()">
+  <!-- Imagen y Badges -->
+  <div class="card-image">
+    <img
+      [src]="image()"
+      [alt]="status() + ' - ' + name()"
+      class="pet-img"
+    />
+    
+    <!-- Badge de estado con tiempo transcurrido -->
+    <span class="status-badge" [class]="statusColorClass">
+      <i class="material-icons">{{ statusIcon }}</i>
+      {{ formattedTimeAgo }}
+    </span>
+
+    <!-- Badge de recompensa -->
+    @if (hasReward()) {
+      <span class="reward-badge">
+        <i class="material-icons">paid</i>
+        @if (montoRecompensa() > 0) {
+          S/. {{ montoRecompensa() }}
+        } @else {
+          Recompensa
+        }
+      </span>
+    }
+  </div>
+
+  <!-- Contenido -->
+  <div class="card-content">
+    <!-- Nombre -->
+    <div class="card-title-row">
+      <h3>{{ name() }}</h3>
+    </div>
+
+    <!-- Ubicación -->
+    <p class="card-location">
+      <i class="material-icons">place</i>
+      {{ formattedLocation }}
+    </p>
+
+    <!-- Tags -->
+    <div class="card-tags">
+      @for (tag of tags(); track tag) {
+        <span class="tag">{{ tag }}</span>
+      }
+    </div>
+
+    <!-- Acciones -->
+    <div class="card-actions">
+      <button [attr.id]="'btn-share-' + id()" class="icon-btn" (click)="handleShare()" aria-label="Compartir">
+        <i class="material-icons">share</i>
+      </button>
+      <button [attr.id]="'btn-save-' + id()" class="icon-btn" (click)="handleSave()" aria-label="Guardar">
+        <i class="material-icons">bookmark_border</i>
+      </button>
+      <button class="icon-btn like-btn" [class.liked]="localLiked()" (click)="handleLike()" aria-label="Me gusta">
+        <i class="material-icons">{{ localLiked() ? 'favorite' : 'favorite_border' }}</i>
+        @if (localLikesCount() > 0) {
+          <span class="like-count" style="font-size: 0.8rem; font-weight: 600;">{{ localLikesCount() }}</span>
+        }
+      </button>
+      <button [attr.id]="'btn-contact-' + id()" class="btn-contact" (click)="handleContact()">
+        Contactar
+      </button>
+    </div>
+  </div>
+</article>

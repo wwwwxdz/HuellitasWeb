@@ -1,0 +1,60 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(4px);
+  border: 1px solid transparent;
+}
+
+/* Encontrado - Verde suave / Esmeralda */
+.status-encontrado {
+  background-color: hsla(142, 70%, 45%, 0.15);
+  color: hsl(142, 70%, 40%);
+  border-color: hsla(142, 70%, 45%, 0.25);
+  box-shadow: 0 2px 8px -2px hsla(142, 70%, 45%, 0.2);
+}
+
+/* Perdido - Rojo suave / Coral */
+.status-perdido {
+  background-color: hsla(350, 80%, 55%, 0.15);
+  color: hsl(350, 80%, 45%);
+  border-color: hsla(350, 80%, 55%, 0.25);
+  box-shadow: 0 2px 8px -2px hsla(350, 80%, 55%, 0.2);
+}
+
+/* Avistado - Ámbar / Amarillo suave */
+.status-avistado {
+  background-color: hsla(38, 92%, 50%, 0.15);
+  color: hsl(38, 92%, 40%);
+  border-color: hsla(38, 92%, 50%, 0.25);
+  box-shadow: 0 2px 8px -2px hsla(38, 92%, 50%, 0.2);
+}
+
+/* Reunido - Indigo / Violeta suave */
+.status-reunido {
+  background-color: hsla(250, 84%, 60%, 0.15);
+  color: hsl(250, 84%, 55%);
+  border-color: hsla(250, 84%, 60%, 0.25);
+  box-shadow: 0 2px 8px -2px hsla(250, 84%, 60%, 0.2);
+}
+
+/* Por defecto */
+.status-default {
+  background-color: hsla(210, 10%, 50%, 0.15);
+  color: hsl(210, 10%, 40%);
+  border-color: hsla(210, 10%, 50%, 0.25);
+}
+
+.status-adopcion {
+  background-color: hsla(90, 100%, 50%, 0.15);
+  color: hsl(270, 84%, 55%);
+  border-color: hsla(270, 84%, 60%, 0.25);
+  box-shadow: 0 2px 8px -2px hsla(270, 84%, 60%, 0.2);
+}

@@ -1,0 +1,107 @@
+<div class="comment-item-box" [class.is-reply]="depth() > 0">
+  <!-- Avatar -->
+  <app-avatar
+    [src]="comment().usuario.foto_perfil"
+    [name]="comment().usuario.nombre"
+    [size]="depth() > 0 ? 32 : 40"
+    class="comment-avatar-wrapper"
+  ></app-avatar>
+
+  <div class="comment-bubble-wrapper">
+    <div class="comment-bubble">
+      <!-- Cabecera: Autor y Fecha -->
+      <div class="comment-header">
+        <span class="comment-author">{{ comment().usuario.nombre }}</span>
+        <span class="comment-date">{{ getTimeAgo(comment().creado_en) }}</span>
+        
+        <!-- Acciones Rápidas (Borrar) -->
+        @if (canDelete()) {
+          <button class="btn-delete-comment" (click)="onDelete()" title="Eliminar comentario">
+            <i class="material-icons">delete_outline</i>
+          </button>
+        }
+      </div>
+
+      <!-- Contenido -->
+      <p class="comment-content-text">{{ comment().contenido }}</p>
+    </div>
+
+    <!-- Barra de Acciones del Comentario -->
+    <div class="comment-actions">
+      <!-- Botón Me Gusta -->
+      <button
+        class="comment-action-btn like-comment-btn"
+        [class.liked]="commentLiked().has(comment().id_comentario!)"
+        (click)="toggleLike.emit(comment().id_comentario!)"
+        title="Me gusta"
+      >
+        <i class="material-icons">
+          {{ commentLiked().has(comment().id_comentario!) ? 'favorite' : 'favorite_border' }}
+        </i>
+        <span>{{ commentLikeCounts()[comment().id_comentario!] || 0 }}</span>
+      </button>
+
+      <!-- Botón Responder (Limitado a profundidad < 2) -->
+      @if (depth() < 2) {
+        <button class="comment-action-btn reply-btn" (click)="startReply.emit(comment().id_comentario!)">
+          <i class="material-icons">reply</i>
+          <span>Responder</span>
+        </button>
+      }
+    </div>
+
+    <!-- Editor de Respuesta (Si se está respondiendo a este comentario) -->
+    @if (replyingToId() === comment().id_comentario) {
+      <div class="reply-editor-box">
+        <input
+          type="text"
+          class="reply-text-input"
+          placeholder="Escribe una respuesta..."
+          [(ngModel)]="replyInput"
+          (keydown.enter)="onSendReply()"
+          autofocus
+        />
+        <div class="reply-editor-actions">
+          <button 
+            class="btn-send-reply" 
+            (click)="onSendReply()" 
+            [disabled]="!replyInput().trim() || isSending()"
+            title="Enviar respuesta"
+          >
+            <i class="material-icons">{{ isSending() ? 'sync' : 'send' }}</i>
+          </button>
+          <button 
+            class="btn-cancel-reply" 
+            (click)="cancelReply.emit()" 
+            title="Cancelar"
+          >
+            <i class="material-icons">close</i>
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- Contenedor recursivo para las respuestas -->
+@if (comment().respuestas?.length) {
+  <div class="replies-list-container">
+    @for (reply of comment().respuestas; track reply.id_comentario) {
+      <app-comment-item
+        [comment]="reply"
+        [reporteId]="reporteId()"
+        [depth]="depth() + 1"
+        [commentLiked]="commentLiked()"
+        [commentLikeCounts]="commentLikeCounts()"
+        [replyingToId]="replyingToId()"
+        [sendingSet]="sendingSet()"
+        [(replyInput)]="replyInput"
+        (deleteComment)="deleteComment.emit($event)"
+        (toggleLike)="toggleLike.emit($event)"
+        (startReply)="startReply.emit($event)"
+        (cancelReply)="cancelReply.emit()"
+        (sendReply)="sendReply.emit($event)"
+      ></app-comment-item>
+    }
+  </div>
+}

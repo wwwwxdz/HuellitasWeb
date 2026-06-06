@@ -1,0 +1,22 @@
+<button
+  [type]="type()"
+  [disabled]="disabled() || loading()"
+  [class]="'btn btn-' + variant() + ' btn-' + size()"
+  (click)="onClick($event)"
+>
+  @if (loading()) {
+    <span class="spinner"></span>
+  } @else {
+    @if (icon() && iconPosition() === 'left') {
+      <span class="material-icons btn-icon">{{ icon() }}</span>
+    }
+  }
+
+  <span class="btn-content">
+    <ng-content></ng-content>
+  </span>
+
+  @if (!loading() && icon() && iconPosition() === 'right') {
+    <span class="material-icons btn-icon">{{ icon() }}</span>
+  }
+</button>

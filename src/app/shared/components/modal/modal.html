@@ -1,0 +1,26 @@
+<div 
+  class="modal-overlay" 
+  [class.open]="isOpen()" 
+  (click)="onOverlayClick($event)"
+  (keydown.escape)="closed.emit()"
+  tabindex="0"
+  role="dialog"
+  aria-modal="true"
+>
+  <div class="modal-content" [class.open]="isOpen()" [class]="size()" role="document">
+    <div class="modal-header">
+      <h3 class="modal-title">{{ title() }}</h3>
+      <button class="modal-close" (click)="onClose()" aria-label="Close modal">
+        <i class="material-icons">close</i>
+      </button>
+    </div>
+    <div class="modal-body" [class.allow-overflow]="allowOverflow()">
+      <ng-content></ng-content>
+    </div>
+    @if (showFooter()) {
+      <div class="modal-footer">
+        <ng-content select="[footer]"></ng-content>
+      </div>
+    }
+  </div>
+</div>

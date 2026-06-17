@@ -56,6 +56,10 @@
   object-fit: cover;
   display: block;
   transition: transform 0.3s ease;
+  cursor: default;
+}
+
+.carousel-container.zoomable .carousel-slide img {
   cursor: zoom-in;
 }
 

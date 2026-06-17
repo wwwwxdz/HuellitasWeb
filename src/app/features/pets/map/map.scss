@@ -517,3 +517,34 @@
   font-size: 0.75rem;
   color: var(--text-muted);
 }
+
+.btn-view-detail {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px;
+  background-color: var(--primary-color);
+  color: #fff !important;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+
+  i {
+    font-size: 1.1rem;
+  }
+
+  &:hover {
+    background-color: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(60, 129, 138, 0.2);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}

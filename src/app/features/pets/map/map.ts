@@ -1,17 +1,18 @@
 import { Component, OnInit, signal, computed, inject, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { PetService } from '../../../core/services/pet.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { UserService } from '../../../core/services/user.service';
 import { MapComponent as LeafletMapComponent } from '../components/map-component/map-component';
 import { Navbar } from '../../../shared/components/navbar/navbar';
-import { ReporteMascotaPuntoMapa, PetReport } from '../../../core/models/pet.model';
+import { ReporteMascotaPuntoMapa, PetReport, Especie } from '../../../core/models/pet.model';
 
 @Component({
   selector: 'app-pet-map-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, LeafletMapComponent, Navbar],
+  imports: [CommonModule, FormsModule, LeafletMapComponent, Navbar, RouterModule],
   templateUrl: './map.html',
   styleUrl: './map.scss',
 })
@@ -25,6 +26,11 @@ export class MapComponent implements OnInit {
   selectedStatuses = signal<number[]>([1, 2, 3]); // 1=encontrado, 2=perdido, 3=avistado, 4=reunido
   radiusKm = signal<number>(10);
   selectedEspecie = signal<string | null>(null);
+  
+  // Especies dinámicas del catálogo
+  especies = signal<Especie[]>([]);
+  idPerro = signal<string | null>(null);
+  idGato = signal<string | null>(null);
   
   // Ubicación del mapa
   center = signal<[number, number]>([-9.1214, -78.5308]); // Por defecto Nuevo Chimbote
@@ -57,31 +63,75 @@ export class MapComponent implements OnInit {
       const lat = this.center()[0];
       const lng = this.center()[1];
       const rad = this.radiusKm();
-      const especieId = this.selectedEspecie();
+      const especieFiltro = this.selectedEspecie();
+      
+      // Determinar qué enviar a la API
+      let apiEspecieId: string | undefined = undefined;
+      
+      if (especieFiltro === this.idPerro()) {
+        apiEspecieId = this.idPerro() || undefined;
+      } else if (especieFiltro === this.idGato()) {
+        apiEspecieId = this.idGato() || undefined;
+      } else if (especieFiltro && especieFiltro !== 'otros') {
+        apiEspecieId = especieFiltro;
+      }
       
       // Cargar marcadores de puntos en el mapa
       const ptsResponse = await this.petService.getMapPoints({
         lat,
         lng,
         radio: rad,
-        id_especie: especieId || undefined
+        id_especie: apiEspecieId
       });
-      this.points.set(ptsResponse.data);
+      let pts = ptsResponse.data || [];
 
       // Cargar lista detallada de mascotas en la vecindad
       const reportsResponse = await this.petService.getReportes({
         lat,
         lng,
         radio: rad,
-        id_especie: especieId || undefined,
+        id_especie: apiEspecieId,
         search: this.searchQuery()
       });
-      this.resultsList.set(reportsResponse.data);
+      let reports = reportsResponse.data || [];
+      
+      // Si el filtro es 'otros', excluir localmente perro y gato
+      if (especieFiltro === 'otros') {
+        const perroId = this.idPerro();
+        const gatoId = this.idGato();
+        pts = pts.filter(pt => pt.id_especie !== perroId && pt.id_especie !== gatoId);
+        reports = reports.filter(r => r.id_especie !== perroId && r.id_especie !== gatoId);
+      }
+
+      this.points.set(pts);
+      this.resultsList.set(reports);
     });
   }
 
   async ngOnInit(): Promise<void> {
+    await this.cargarEspecies();
     await this.cargarUbicacionInicial();
+  }
+
+  // Cargar catálogo de especies del backend
+  async cargarEspecies(): Promise<void> {
+    try {
+      const listaEspecies = await this.petService.getEspecies();
+      this.especies.set(listaEspecies || []);
+      
+      // Encontrar los IDs de perro y gato
+      const perro = listaEspecies.find(e => 
+        e.nombre.toLowerCase().includes('perr') || e.nombre.toLowerCase().includes('dog')
+      );
+      const gato = listaEspecies.find(e => 
+        e.nombre.toLowerCase().includes('gat') || e.nombre.toLowerCase().includes('cat')
+      );
+      
+      if (perro) this.idPerro.set(perro.id_especie);
+      if (gato) this.idGato.set(gato.id_especie);
+    } catch (err) {
+      console.warn('Error al cargar catálogo de especies:', err);
+    }
   }
 
   // Cargar ubicación basada en la prioridad de preferencias de usuario

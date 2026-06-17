@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, signal, computed, effect } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, effect, untracked, computed } from '@angular/core';
 import { Navbar } from '../../../shared/components/navbar/navbar';
 import { FilterBar } from '../components/filter-bar/filter-bar';
 import { SideFilters, FilterValues } from '../components/side-filters/side-filters';
@@ -8,7 +8,7 @@ import { MapComponent } from '../components/map-component/map-component';
 import { PetService } from '../../../core/services/pet.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { UserService } from '../../../core/services/user.service';
-import { PetReport, Especie, ReporteMascotaPuntoMapa } from '../../../core/models/pet.model';
+import { PetReport, Especie } from '../../../core/models/pet.model';
 
 @Component({
   selector: 'app-lost',
@@ -33,14 +33,27 @@ export class LostComponent implements OnInit, OnDestroy {
   isMapModalOpen = signal<boolean>(false);
   especies = signal<Especie[]>([]);
 
-  center = signal<[number, number]>([-9.1214, -78.5308]); // Nuevo Chimbote
+  /** Centro actual del mapa (para el mini-map preview) */
+  center = signal<[number, number]>([-9.1214, -78.5308]);
   initialLocationLoaded = signal<boolean>(false);
-  mapPoints = signal<ReporteMascotaPuntoMapa[]>([]);
+  userRadioLimit = signal<number>(15);
+
+  /**
+   * Filtro geográfico unificado — igual al patrón del panel administrativo (PetReportsStore).
+   * Se actualiza ATÓMICAMENTE para evitar que el effect se dispare con estados inconsistentes.
+   */
+  geoFilter = signal<{ lat: number; lng: number; radio: number; active: boolean }>({
+    lat: -9.1214,
+    lng: -78.5308,
+    radio: 15,
+    active: false
+  });
 
   // Señales individuales para la barra de filtros rápidos
   selectedEspecieId = signal<string>('');
-  selectedOrder = signal<'recent' | 'oldest'>('recent');
+  selectedOrder = signal<'asc' | 'desc'>('desc'); // 'desc'=más recientes, 'asc'=más antiguos
   withRewardFilter = signal<boolean>(false);
+  /** Espejo del radio para el filter-bar (bidireccional). Se sincroniza con geoFilter. */
   radioFilter = signal<number>(0);
 
   // Señal consolidada para la barra lateral y filtrado avanzado
@@ -53,62 +66,64 @@ export class LostComponent implements OnInit, OnDestroy {
   });
 
   constructor() {
-    // Sincronización bidireccional entre la barra lateral (advancedFilters) y las señales de la barra de filtros
+    // Sincronización: advancedFilters → señales de la barra de filtros
     effect(() => {
       const adv = this.advancedFilters();
-      
       if (this.selectedEspecieId() !== adv.id_especie) {
         this.selectedEspecieId.set(adv.id_especie || '');
-      }
-      if (this.radioFilter() !== adv.radio) {
-        this.radioFilter.set(adv.radio || 0);
       }
       if (this.withRewardFilter() !== adv.withReward) {
         this.withRewardFilter.set(adv.withReward || false);
       }
-    }, { allowSignalWrites: true });
+    });
 
+    // Sincronización: señales de filtros → advancedFilters
     effect(() => {
       const esp = this.selectedEspecieId();
-      const rad = this.radioFilter();
       const rew = this.withRewardFilter();
 
       this.advancedFilters.update(prev => {
-        if (prev.id_especie === esp && prev.radio === rad && prev.withReward === rew) {
-          return prev;
-        }
-        return {
-          ...prev,
-          id_especie: esp,
-          radio: rad,
-          withReward: rew
-        };
+        if (prev.id_especie === esp && prev.withReward === rew) return prev;
+        return { ...prev, id_especie: esp, withReward: rew };
       });
-    }, { allowSignalWrites: true });
+    });
 
-    // Escuchar cualquier cambio en los filtros y volver a consultar la página 1
+    // Sincronización: radioFilter (del filter-bar) → geoFilter.radio
     effect(() => {
-      if (!this.initialLocationLoaded()) {
-        return;
-      }
-      
-      // Suscribirse de manera reactiva a los cambios
-      this.selectedEspecieId();
-      this.selectedOrder();
-      this.radioFilter();
-      this.withRewardFilter();
+      const r = this.radioFilter();
+      this.geoFilter.update(g => {
+        if (g.radio === r) return g;
+        return { ...g, radio: r };
+      });
+    });
+
+    /**
+     * Effect principal de consulta.
+     * Solo se dispara cuando cambian los filtros de búsqueda O el geoFilter (atómico).
+     * El uso de untracked() evita que lecturas internas recreen dependencias innecesarias.
+     */
+    effect(() => {
+      if (!this.initialLocationLoaded()) return;
+
+      // Dependencias reactivas explícitas
+      const geo = this.geoFilter();
+      const especie = this.selectedEspecieId();
+      const order = this.selectedOrder();
+      const reward = this.withRewardFilter();
       const adv = this.advancedFilters();
 
-      this.page.set(1);
-      this.fetchReports(adv, 1, false);
-      this.fetchMapPoints(adv);
-    }, { allowSignalWrites: true });
+      // Ejecutar la consulta sin leer más señales dentro
+      untracked(() => {
+        this.page.set(1);
+        this.fetchReports(adv, especie, order, reward, geo, 1, false);
+      });
+    });
   }
 
   async ngOnInit(): Promise<void> {
     this.loadEspecies();
     await this.cargarUbicacionInicial();
-    
+
     if (typeof window !== 'undefined') {
       window.addEventListener('pet-report-created', this.handleReportCreated);
     }
@@ -120,13 +135,8 @@ export class LostComponent implements OnInit, OnDestroy {
         const pref = await this.userService.getGeoPreferences();
         if (pref && typeof pref.lat === 'number' && typeof pref.lng === 'number') {
           this.center.set([pref.lat, pref.lng]);
-          if (pref.radio_km && pref.radio_km > 0) {
-            this.radioFilter.set(pref.radio_km);
-            this.advancedFilters.update((prev) => ({
-              ...prev,
-              radio: pref.radio_km
-            }));
-          }
+          this.userRadioLimit.set(pref.radio_km || 15);
+          this.geoFilter.set({ lat: pref.lat, lng: pref.lng, radio: pref.radio_km || 15, active: false });
           return;
         }
       }
@@ -143,7 +153,10 @@ export class LostComponent implements OnInit, OnDestroy {
       if (typeof navigator !== 'undefined' && navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (pos) => {
-            this.center.set([pos.coords.latitude, pos.coords.longitude]);
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            this.center.set([lat, lng]);
+            this.geoFilter.update(g => ({ ...g, lat, lng }));
             resolve();
           },
           (err) => {
@@ -165,7 +178,9 @@ export class LostComponent implements OnInit, OnDestroy {
   }
 
   private handleReportCreated = (): void => {
-    this.fetchReports(this.advancedFilters(), 1, false);
+    const geo = this.geoFilter();
+    const adv = this.advancedFilters();
+    this.fetchReports(adv, this.selectedEspecieId(), this.selectedOrder(), this.withRewardFilter(), geo, 1, false);
   };
 
   private async loadEspecies(): Promise<void> {
@@ -177,7 +192,15 @@ export class LostComponent implements OnInit, OnDestroy {
     }
   }
 
-  async fetchReports(f: FilterValues, pageNum: number, append: boolean): Promise<void> {
+  async fetchReports(
+    f: FilterValues,
+    especieId: string,
+    order: string,
+    withReward: boolean,
+    geo: { lat: number; lng: number; radio: number; active: boolean },
+    pageNum: number,
+    append: boolean
+  ): Promise<void> {
     if (append) {
       this.loadingMore.set(true);
     } else {
@@ -186,52 +209,54 @@ export class LostComponent implements OnInit, OnDestroy {
     }
 
     try {
-      const especieId = this.selectedEspecieId();
       const apiEspecieId = (especieId && especieId !== 'otros') ? especieId : undefined;
-      const radioVal = this.radioFilter();
+
+      console.info('[LOST FETCH] Parámetros geográficos:', {
+        lat: geo.active ? geo.lat : undefined,
+        lng: geo.active ? geo.lng : undefined,
+        radio: geo.active ? geo.radio : undefined,
+        active: geo.active
+      });
 
       const response = await this.petService.getReportes({
         search: f.search || undefined,
         id_especie: apiEspecieId,
         id_raza: f.id_raza || undefined,
-        lat: radioVal && radioVal > 0 ? this.center()[0] : undefined,
-        lng: radioVal && radioVal > 0 ? this.center()[1] : undefined,
-        radio: radioVal && radioVal > 0 ? radioVal : undefined,
+        lat: geo.active ? geo.lat : undefined,
+        lng: geo.active ? geo.lng : undefined,
+        radio: geo.active ? geo.radio : undefined,
+        order: order as 'asc' | 'desc',
         page: pageNum,
         limit: 12
       });
 
-      // Filtrar sólo Perdidos (2) y Avistados (3)
+      // Filtrar solo Perdidos (2) y Avistados (3)
       let newData = response.data || [];
       newData = newData.filter(r => r.estado === 2 || r.estado === 3);
 
-      // Filtrar por especie 'Otros' (excluyendo perro y gato)
+      // Filtrar por especie 'Otros'
       if (especieId === 'otros') {
         const perro = this.especies().find(e => e.nombre.toLowerCase().includes('perro') || e.nombre.toLowerCase().includes('can'));
         const gato = this.especies().find(e => e.nombre.toLowerCase().includes('gato') || e.nombre.toLowerCase().includes('felin'));
         newData = newData.filter(r => r.id_especie !== perro?.id_especie && r.id_especie !== gato?.id_especie);
       }
 
-      // Filtrar por recompensa en cliente de forma inteligente
-      if (this.withRewardFilter()) {
+      // Filtrar por recompensa
+      if (withReward) {
         newData = newData.filter(r => {
           const c = r.caracteristicas as any;
           const descLower = r.descripcion?.toLowerCase() || '';
-          return (c && (c.recompensa || c.has_reward || c.monto_recompensa)) || 
-                 descLower.includes('recompensa') || 
+          return (c && (c.recompensa || c.has_reward || c.monto_recompensa)) ||
+                 descLower.includes('recompensa') ||
                  descLower.includes('ofrezco');
         });
       }
 
-      // Filtrado en cliente por características avanzadas (color, tamaño, collar...)
+      // Filtrado por características avanzadas
       newData = this.aplicarFiltrosCaracteristicas(newData, f);
 
-      // Ordenación local
-      if (this.selectedOrder() === 'recent') {
-        newData.sort((a, b) => new Date(b.creado_en).getTime() - new Date(a.creado_en).getTime());
-      } else {
-        newData.sort((a, b) => new Date(a.creado_en).getTime() - new Date(b.creado_en).getTime());
-      }
+      // El backend ya ordena por fecha según el parámetro 'order'
+      // Solo se aplica sort local si hay filtros de características que redujeron el set
 
       this.hasMore.set(response.hasMore);
       this.totalResults.set(newData.length);
@@ -257,12 +282,36 @@ export class LostComponent implements OnInit, OnDestroy {
   handleLoadMore(): void {
     const nextPage = this.page() + 1;
     this.page.set(nextPage);
-    this.fetchReports(this.advancedFilters(), nextPage, true);
+    const geo = this.geoFilter();
+    this.fetchReports(this.advancedFilters(), this.selectedEspecieId(), this.selectedOrder(), this.withRewardFilter(), geo, nextPage, true);
   }
 
-  handleMapFilterApply(event: { center: [number, number]; radius: number }): void {
+  /**
+   * Recibe el evento del modal del mapa y actualiza el geoFilter ATÓMICAMENTE.
+   * Esto garantiza que el effect se dispare una sola vez con el estado completo y correcto.
+   */
+  handleMapFilterApply(event: { center: [number, number]; radius: number; active: boolean }): void {
+    // Actualizar el centro visual del mini-mapa
     this.center.set(event.center);
-    this.radioFilter.set(event.radius);
+    // Actualizar el radio en el filter-bar
+    this.radioFilter.set(event.active ? event.radius : 0);
+    // Actualizar geoFilter de forma atómica — dispara el effect UNA sola vez
+    this.geoFilter.set({
+      lat: event.center[0],
+      lng: event.center[1],
+      radio: event.radius,
+      active: event.active
+    });
+  }
+
+  handleClearGeoFilter(): void {
+    this.radioFilter.set(0);
+    this.geoFilter.set({
+      lat: this.center()[0],
+      lng: this.center()[1],
+      radio: 0,
+      active: false
+    });
   }
 
   openMapFilter(): void {
@@ -272,6 +321,15 @@ export class LostComponent implements OnInit, OnDestroy {
   closeMapFilter(): void {
     this.isMapModalOpen.set(false);
   }
+
+  /** Wrapper para el botón Reintentar del template */
+  reloadReports(): void {
+    const geo = this.geoFilter();
+    this.fetchReports(this.advancedFilters(), this.selectedEspecieId(), this.selectedOrder(), this.withRewardFilter(), geo, this.page(), false);
+  }
+
+  /** Indica si el filtro geográfico está activo (para el template) */
+  geoFilterActive = computed(() => this.geoFilter().active);
 
   getStatusLabel(estado: number): 'perdido' | 'avistado' | 'encontrado' {
     if (estado === 2) return 'perdido';
@@ -284,6 +342,7 @@ export class LostComponent implements OnInit, OnDestroy {
     const mins = Math.floor(diff / 60000);
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
+    if (mins < 1) return 'Hace un momento';
     if (mins < 60) return `Hace ${mins}m`;
     if (hours < 24) return `Hace ${hours}h`;
     return `Hace ${days}d`;
@@ -291,34 +350,6 @@ export class LostComponent implements OnInit, OnDestroy {
 
   getTags(r: PetReport): string[] {
     return [r.raza, r.tipo].filter(Boolean);
-  }
-
-  async fetchMapPoints(f: FilterValues): Promise<void> {
-    try {
-      const especieId = this.selectedEspecieId();
-      const apiEspecieId = (especieId && especieId !== 'otros') ? especieId : undefined;
-      const radioVal = this.radioFilter();
-
-      const response = await this.petService.getMapPoints({
-        lat: this.center()[0],
-        lng: this.center()[1],
-        radio: radioVal && radioVal > 0 ? radioVal : undefined,
-        id_especie: apiEspecieId
-      });
-      
-      let pts = response.data || [];
-      pts = pts.filter((p) => p.estado === 2 || p.estado === 3);
-
-      if (especieId === 'otros') {
-        const perro = this.especies().find(e => e.nombre.toLowerCase().includes('perro') || e.nombre.toLowerCase().includes('can'));
-        const gato = this.especies().find(e => e.nombre.toLowerCase().includes('gato') || e.nombre.toLowerCase().includes('felin'));
-        pts = pts.filter(p => p.id_especie !== perro?.id_especie && p.id_especie !== gato?.id_especie);
-      }
-
-      this.mapPoints.set(pts);
-    } catch (err) {
-      console.error('Error al cargar puntos del mapa en perdidos:', err);
-    }
   }
 
   private deduplicar(list: PetReport[]): PetReport[] {

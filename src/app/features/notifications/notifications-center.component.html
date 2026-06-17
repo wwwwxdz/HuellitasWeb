@@ -1,0 +1,55 @@
+<div class="notifications-page">
+  <header class="page-header">
+    <div class="header-content">
+      <h1>Notificaciones</h1>
+      <p>Mantente al día con lo que sucede en tu comunidad</p>
+    </div>
+    <div class="header-actions" style="display: flex; gap: 12px;">
+      <button class="btn-text" (click)="markAllRead()" [disabled]="!hasNotifications()">
+        <i class="material-icons">done_all</i>
+        Marcar todas como leídas
+      </button>
+      <button class="btn-text btn-danger-custom" (click)="clearAll()" [disabled]="!hasNotifications()">
+        <i class="material-icons">delete_sweep</i>
+        Borrar todas
+      </button>
+    </div>
+  </header>
+
+  <div class="notifications-container shadow-xl">
+    @if (isLoading() && !hasNotifications()) {
+      <div class="loading-state">
+        <div class="spinner-mini"></div>
+        <p>Cargando tus notificaciones...</p>
+      </div>
+    } @else {
+      <div class="notifications-list custom-scroll">
+        @for (n of notifications(); track n.id_notificacion) {
+          <app-notification-item
+            [notification]="n"
+            [showDelete]="true"
+            (clicked)="markAsRead($event)"
+            (delete)="deleteNotification($event)"
+          />
+        }
+ @empty {
+          <div class="empty-state">
+            <div class="empty-icon">
+              <i class="material-icons">notifications_none</i>
+            </div>
+            <h3>No hay notificaciones</h3>
+            <p>Cuando alguien interactúe contigo, aparecerá aquí.</p>
+          </div>
+        }
+
+        @if (canLoadMore()) {
+          <div class="load-more-container">
+            <button class="btn-load-more" (click)="loadMore()" [disabled]="isLoading()">
+              {{ isLoading() ? 'Cargando...' : 'Cargar más notificaciones' }}
+            </button>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

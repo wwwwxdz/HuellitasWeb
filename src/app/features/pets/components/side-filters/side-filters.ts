@@ -82,6 +82,22 @@ export class SideFilters implements OnInit, OnDestroy {
     }));
   });
 
+  especieOptions = computed<SelectOption[]>(() => {
+    const list = this.especies();
+    const capitalize = (text: string) => {
+      if (!text) return '';
+      return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
+    };
+    const opts: SelectOption[] = list.map(e => ({
+      value: e.id_especie,
+      label: capitalize(e.nombre)
+    }));
+    if (list.length > 0) {
+      opts.push({ value: 'otros', label: 'Otros' });
+    }
+    return opts;
+  });
+
   colorSecundarioOptions = computed<SelectOption[]>(() => {
     const primary = this.color();
     return this.coloresList()
@@ -168,7 +184,6 @@ export class SideFilters implements OnInit, OnDestroy {
     if (!idEspecieId) {
       this.razas.set([]);
       this.idRaza.set('');
-      this.triggerChange();
       return;
     }
     try {
@@ -176,7 +191,6 @@ export class SideFilters implements OnInit, OnDestroy {
       this.razas.set(list);
       const current = this.idRaza();
       if (!list.some(r => r.id_raza === current)) this.idRaza.set('');
-      this.triggerChange();
     } catch (err) {
       console.error('Error al cargar razas:', err);
     }
@@ -184,7 +198,7 @@ export class SideFilters implements OnInit, OnDestroy {
 
   // ── Handlers de cambio ───────────────────────────────────────
 
-  onEspecieChange(v: string): void   { this.idEspecie.set(v);  this.idRaza.set(''); this.loadRazas(v); }
+  onEspecieChange(v: string): void   { this.idEspecie.set(v);  this.idRaza.set(''); this.loadRazas(v); this.triggerChange(); }
   onRazaChange(v: string): void      { this.idRaza.set(v);     this.triggerChange(); }
   onSearchChange(v: string): void    { this.search.set(v);     this.triggerChange(); }
   onRewardChange(v: boolean): void   { this.withReward.set(v); this.triggerChange(); }

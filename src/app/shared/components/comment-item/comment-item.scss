@@ -46,25 +46,8 @@
   color: var(--text-muted, #94a3b8);
 }
 
-.btn-delete-comment {
+.comment-options-dropdown-wrapper {
   margin-left: auto;
-  background: none;
-  border: none;
-  color: var(--text-muted, #94a3b8);
-  cursor: pointer;
-  padding: 4px;
-  border-radius: 50%;
-  display: inline-flex;
-  transition: all 0.2s ease;
-}
-
-.btn-delete-comment:hover {
-  background-color: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
-}
-
-.btn-delete-comment i {
-  font-size: 1.05rem;
 }
 
 .comment-content-text {

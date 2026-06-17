@@ -10,6 +10,8 @@ export interface PetUser {
   id_usuario: string;
   nombre: string;
   foto_perfil: string;
+  telefono?: string;
+  email?: string;
 }
 
 export interface PetReport {
@@ -43,6 +45,8 @@ export interface PetReport {
   imagenes?: PetImage[];
   recompensa?: boolean;
   monto_recompensa?: number;
+  radio?: number;
+  avistamientos?: Avistamiento[];
 }
 
 export interface PetCaracteristicas {
@@ -54,6 +58,8 @@ export interface PetCaracteristicas {
   pelo?: string;
   caracteristicas_especiales?: string;
   recompensa?: boolean;
+  sexo?: string;
+  edad?: string;
 }
 
 export interface ReporteMascotaPuntoMapa {
@@ -102,6 +108,7 @@ export interface GetReportesFilters {
   lat?: number;
   lng?: number;
   radio?: number;
+  order?: 'asc' | 'desc'; // 'desc' = más recientes (default), 'asc' = más antiguos
   page?: number;
   limit?: number;
 }
@@ -155,4 +162,45 @@ export interface UpdateReporteMascotaRequest {
   collar_color?: string;
   recompensa?: boolean;
   monto_recompensa?: number;
+}
+
+export interface ImagenAvistamiento {
+  id_imagen_avistamiento?: string;
+  id_avistamiento: string;
+  url: string;
+  creado_en?: string;
+}
+
+export interface Avistamiento {
+  id_avistamiento?: string;
+  id_reporte_mascota: string;
+  id_usuario_informante: string;
+  latitud: number;
+  longitud: number;
+  radio: number;
+  fecha_avistamiento: string;
+  hora_avistamiento?: string;
+  ubicacion: string;
+  descripcion?: string;
+  estado: 1 | 2 | 3; // 1=aceptado, 2=pendiente, 3=rechazado
+  creado_en?: string;
+  actualizado_en?: string;
+  usuario_informante?: {
+    nombre: string;
+    email?: string;
+    foto_perfil?: string;
+    id_usuario: string;
+  };
+  imagenes?: ImagenAvistamiento[];
+}
+
+export interface CreateAvistamientoRequest {
+  latitud: number;
+  longitud: number;
+  radio: number;
+  fecha_avistamiento: string;
+  hora_avistamiento?: string;
+  ubicacion: string;
+  descripcion?: string;
+  imagenes?: string[];
 }

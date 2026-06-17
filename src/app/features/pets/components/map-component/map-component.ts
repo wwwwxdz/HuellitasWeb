@@ -1,4 +1,4 @@
-import { Component, input, output, OnInit, OnDestroy, AfterViewInit, ElementRef, viewChild, PLATFORM_ID, inject, effect } from '@angular/core';
+import { Component, input, output, OnInit, OnDestroy, AfterViewInit, ElementRef, viewChild, PLATFORM_ID, inject, effect, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { ReporteMascotaPuntoMapa } from '../../../../core/models/pet.model';
 
@@ -102,14 +102,18 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
 
   mapClick = output<[number, number]>();
   markerClick = output<string>();
+  sightingsTrajectory = input<any[]>([]);
 
   // Leaflet refs
   private map: any;
   private markerGroup: any;
+  private sightingGroup: any;
+  private polyline: any;
   private circle: any;
   private searchMarker: any;
   private isBrowser = false;
   private isDragging = false;
+  mapReady = signal<boolean>(false);
 
   constructor() {
     this.isBrowser = isPlatformBrowser(this.platformId);
@@ -118,8 +122,9 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
     effect(() => {
       const c = this.center();
       const r = this.radiusKm();
+      const ready = this.mapReady();
       
-      if (this.isBrowser && this.map && L) {
+      if (this.isBrowser && ready && this.map && L) {
         if (this.circle) {
           this.circle.setLatLng(c);
           this.circle.setRadius(r * 1000);
@@ -133,13 +138,17 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
         if (this.searchMarker && !this.isDragging) {
           this.searchMarker.setLatLng(c);
         }
+        if (!this.isDragging) {
+          this.map.setView(c, this.map.getZoom(), { animate: true });
+        }
       }
     });
 
     // Efecto reactivo para actualizar los marcadores de reportes
     effect(() => {
       const pts = this.reports();
-      if (this.isBrowser && this.markerGroup && L) {
+      const ready = this.mapReady();
+      if (this.isBrowser && ready && this.markerGroup && L) {
         this.markerGroup.clearLayers();
         
         pts.forEach((report) => {
@@ -154,6 +163,78 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
 
           marker.addTo(this.markerGroup);
         });
+      }
+    });
+
+    // Efecto reactivo para dibujar la trayectoria de los avistamientos (Ruta Espacio-Temporal)
+    effect(() => {
+      const traj = this.sightingsTrajectory();
+      const c = this.center();
+      const ready = this.mapReady();
+      
+      if (this.isBrowser && ready && this.sightingGroup && L) {
+        this.sightingGroup.clearLayers();
+        if (this.polyline) {
+          this.polyline.remove();
+          this.polyline = null;
+        }
+
+        if (traj.length === 0) return;
+
+        // Ordenar cronológicamente
+        const sorted = [...traj].sort((a, b) => this.parseSightingDateTime(a) - this.parseSightingDateTime(b));
+
+        // Construir coordenadas para la polyline
+        const coords: [number, number][] = [[c[0], c[1]]];
+        
+        sorted.forEach((s, idx) => {
+          if (!s.latitud || !s.longitud) return;
+          
+          const lat = s.latitud;
+          const lng = s.longitud;
+          coords.push([lat, lng]);
+
+          // Dibujar marcador de avistamiento
+          const markerIcon = this.createSightingIcon(s, idx);
+          const marker = L.marker([lat, lng], { icon: markerIcon });
+          
+          // Popup informativo premium
+          const formattedDate = s.fecha_avistamiento ? new Date(s.fecha_avistamiento + 'T00:00:00').toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }) : '';
+          const timeText = s.hora_avistamiento ? ` a las ${s.hora_avistamiento}` : '';
+          const descText = s.descripcion ? `<br/><em style="color: #64748b;">"${s.descripcion}"</em>` : '';
+          
+          marker.bindPopup(`
+            <div style="font-family: system-ui, sans-serif; font-size: 13px; padding: 4px; line-height: 1.4; color: #1e293b;">
+              <strong style="color: #06b6d4; font-size: 14px;">Avistamiento #${idx + 1}</strong><br/>
+              <span style="color: #475569; font-weight: 700;">${formattedDate}${timeText}</span><br/>
+              <span style="color: #64748b; font-size: 11px;">${s.ubicacion || 'Sin dirección'}</span>
+              ${descText}
+            </div>
+          `, { closeButton: false });
+
+          marker.addTo(this.sightingGroup);
+        });
+
+        // Dibujar la Polyline si hay coordenadas
+        if (coords.length > 1 && this.map) {
+          this.polyline = L.polyline(coords, {
+            color: '#06b6d4',
+            weight: 3.5,
+            opacity: 0.8,
+            dashArray: '8, 12',
+            lineJoin: 'round'
+          }).addTo(this.map);
+          
+          // Ajustar bounds si no es editable
+          if (!this.editable()) {
+            setTimeout(() => {
+              if (this.map && this.sightingGroup) {
+                const bounds = L.latLngBounds(coords);
+                this.map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
+              }
+            }, 200);
+          }
+        }
       }
     });
   }
@@ -191,6 +272,7 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
 
       // Crear grupo para reportes
       this.markerGroup = L.featureGroup().addTo(this.map);
+      this.sightingGroup = L.featureGroup().addTo(this.map);
 
       // Círculo de búsqueda (estilo cian premium del panel administrativo)
       this.circle = L.circle(this.center(), {
@@ -243,6 +325,7 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
             const bounds = this.circle.getBounds();
             this.map.fitBounds(bounds, { padding: [20, 20] });
           }
+          this.mapReady.set(true);
         }
       }, 100);
     } catch (err) {
@@ -323,6 +406,107 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
+  private parseSightingDateTime(s: any): number {
+    if (!s.fecha_avistamiento) return 0;
+    const dateStr = s.fecha_avistamiento; // YYYY-MM-DD
+    const timeStr = s.hora_avistamiento || '00:00'; // HH:MM
+    return new Date(`${dateStr}T${timeStr}`).getTime();
+  }
+
+  private createSightingIcon(s: any, index: number) {
+    const photoUrl = s.imagenes && s.imagenes.length > 0 ? s.imagenes[0].url : '';
+    const numberBadge = index + 1;
+    
+    if (photoUrl) {
+      return L.divIcon({
+        html: `
+          <div class="sighting-route-marker has-photo animate-scale-in" style="position: relative; width: 38px; height: 45px;">
+            <div class="sighting-number" style="
+              position: absolute;
+              top: -6px;
+              right: -6px;
+              background-color: #06b6d4;
+              color: white;
+              font-size: 11px;
+              font-weight: 800;
+              width: 18px;
+              height: 18px;
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              border: 1.5px solid white;
+              box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+              z-index: 10;
+            ">${numberBadge}</div>
+            <div class="sighting-photo-frame" style="
+              width: 38px;
+              height: 38px;
+              border-radius: 50%;
+              border: 2.5px solid #06b6d4;
+              overflow: hidden;
+              background-color: white;
+              box-shadow: 0 4px 10px rgba(6, 182, 212, 0.3);
+            ">
+              <img src="${photoUrl}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='https://ui-avatars.com/api/?name=S&background=06b6d4&color=fff'">
+            </div>
+            <div class="marker-sighting-arrow" style="
+              width: 0;
+              height: 0;
+              border-left: 5px solid transparent;
+              border-right: 5px solid transparent;
+              border-top: 5px solid #06b6d4;
+              position: absolute;
+              bottom: 3px;
+              left: 50%;
+              transform: translateX(-50%);
+            "></div>
+          </div>
+        `,
+        className: 'sighting-div-icon',
+        iconSize: [38, 45],
+        iconAnchor: [19, 42],
+      });
+    } else {
+      return L.divIcon({
+        html: `
+          <div class="sighting-route-marker animate-scale-in" style="
+            position: relative;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: #ffffff;
+            border: 2.5px solid #06b6d4;
+            box-shadow: 0 4px 10px rgba(6, 182, 212, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          ">
+            <span style="
+              color: #06b6d4;
+              font-size: 13px;
+              font-weight: 800;
+            ">${numberBadge}</span>
+            <div class="marker-sighting-arrow" style="
+              width: 0;
+              height: 0;
+              border-left: 4px solid transparent;
+              border-right: 4px solid transparent;
+              border-top: 4px solid #06b6d4;
+              position: absolute;
+              bottom: -4px;
+              left: 50%;
+              transform: translateX(-50%);
+            "></div>
+          </div>
+        `,
+        className: 'sighting-div-icon',
+        iconSize: [32, 38],
+        iconAnchor: [16, 36],
+      });
+    }
+  }
+
   handleZoomIn(): void {
     this.map?.zoomIn();
   }
@@ -332,15 +516,22 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   handleRecenter(): void {
-    if (typeof navigator !== 'undefined' && navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const lat = pos.coords.latitude;
-          const lng = pos.coords.longitude;
-          this.map?.setView([lat, lng], 14);
-          this.mapClick.emit([lat, lng]);
-        }
-      );
+    if (this.map) {
+      if (this.editable() && typeof navigator !== 'undefined' && navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            this.map?.setView([lat, lng], 14);
+            this.mapClick.emit([lat, lng]);
+          },
+          () => {
+            this.map?.setView(this.center(), this.zoom());
+          }
+        );
+      } else {
+        this.map?.setView(this.center(), this.zoom());
+      }
     }
   }
 }

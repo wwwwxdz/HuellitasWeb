@@ -1,4 +1,4 @@
-import { Component, input, output, model, HostListener, ElementRef, inject, PLATFORM_ID, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, input, output, model, HostListener, ElementRef, inject, PLATFORM_ID, OnDestroy, OnInit, ChangeDetectionStrategy, effect } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 
 @Component({
@@ -21,6 +21,19 @@ export class ModalComponent implements OnInit, OnDestroy {
 
   closed = output<void>();
 
+  constructor() {
+    if (isPlatformBrowser(this.platformId)) {
+      effect(() => {
+        const open = this.isOpen();
+        if (open) {
+          document.body.classList.add('modal-open');
+        } else {
+          document.body.classList.remove('modal-open');
+        }
+      });
+    }
+  }
+
   ngOnInit() {
     if (isPlatformBrowser(this.platformId)) {
       document.body.appendChild(this.el.nativeElement);
@@ -29,6 +42,7 @@ export class ModalComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     if (isPlatformBrowser(this.platformId)) {
+      document.body.classList.remove('modal-open');
       if (this.el.nativeElement.parentNode === document.body) {
         document.body.removeChild(this.el.nativeElement);
       }

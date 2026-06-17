@@ -3,7 +3,26 @@
 <div class="report-page">
   <div class="report-container">
     
-    @if (!isSubmitted()) {
+    @if (!isUserVerified()) {
+      <div class="verification-warning-screen">
+        <div class="warning-icon animate-scale-in">
+          <i class="material-icons">verified_user</i>
+        </div>
+        <h2 class="form-title">Verificación Requerida</h2>
+        <p class="form-subtitle">
+          Para garantizar la seguridad de la comunidad y evitar reportes falsos, necesitas verificar tu cuenta antes de poder reportar una mascota perdida, encontrada o avistada.
+        </p>
+
+        <div class="warning-actions" style="display: flex; gap: 1rem; margin-top: 1.5rem; justify-content: center;">
+          <a class="btn btn-outline" href="/pets/reports">
+            <i class="material-icons">arrow_back</i> Volver a Reportes
+          </a>
+          <a class="btn btn-primary" href="/ajustes">
+            <i class="material-icons">verified</i> Verificar mi Cuenta
+          </a>
+        </div>
+      </div>
+    } @else if (!isSubmitted()) {
       <div class="single-page-form">
         <h2 class="form-title">Reportar una Mascota</h2>
         <p class="form-subtitle">Completa los detalles de la mascota y la ubicación para publicar la alerta en tiempo real</p>
@@ -18,15 +37,30 @@
               <h3 style="margin: 0; font-size: 1.25rem; font-weight: 700; color: var(--text-main);">1. Detalles de la Mascota</h3>
             </div>
 
-            <!-- Selector del Estado (Tabs Globales) -->
-            <div class="form-group" style="margin-bottom: 2rem;">
+            <!-- Selector del Estado (Tabs en Desktop, Select en Móvil) -->
+            <div class="form-group estado-selector-group" style="margin-bottom: 2rem;">
               <app-label>¿Qué sucedió con la mascota?</app-label>
-              <app-tabs
-                [options]="estadoOptions()"
-                [value]="estado()"
-                (valueChange)="estado.set($event)"
-                variant="full-width"
-              ></app-tabs>
+              
+              <!-- Pestañas para pantallas grandes -->
+              <div class="desktop-only-tabs">
+                <app-tabs
+                  [options]="estadoOptions()"
+                  [value]="estado()"
+                  (valueChange)="estado.set($event)"
+                  variant="full-width"
+                ></app-tabs>
+              </div>
+
+              <!-- Selector desplegable para pantallas móviles -->
+              <div class="mobile-only-select">
+                <app-select
+                  id="estadoSelect"
+                  [options]="estadoSelectOptions()"
+                  [value]="estado().toString()"
+                  (valueChange)="estado.set(+$event)"
+                  placeholder="Seleccionar Estado..."
+                ></app-select>
+              </div>
             </div>
 
             <!-- Especie y Raza -->
@@ -214,6 +248,7 @@
               <app-label forId="descripcion">Descripción adicional / señas particulares</app-label>
               <textarea 
                 id="descripcion" 
+                mentionInput
                 class="form-control" 
                 placeholder="Menciona si es asustadizo, si cojea de alguna patita, o cualquier dato que ayude a identificarle..."
                 [ngModel]="descripcion()"
@@ -221,35 +256,6 @@
               ></textarea>
             </div>
 
-            <!-- Subida de Fotos -->
-            <div class="form-group" style="margin-top: 1.5rem; margin-bottom: 1.5rem;">
-              <app-label>Fotos de la Mascota</app-label>
-              <div class="photo-dropzone" (click)="fileInput.click()">
-                <i class="material-icons">cloud_upload</i>
-                <p>Haz clic para subir fotos</p>
-                <span>Formatos aceptados: PNG, JPG (Máx. 4 fotos)</span>
-                <input 
-                  #fileInput 
-                  type="file" 
-                  multiple 
-                  accept="image/*" 
-                  style="display: none;" 
-                  (change)="onFileSelected($event)"
-                />
-              </div>
-
-              <!-- Previsualización de Fotos Subidas -->
-              @if (uploadedImages().length > 0) {
-                <div class="preview-grid">
-                  @for (img of uploadedImages(); track img; let idx = $index) {
-                    <div class="preview-item">
-                      <img [src]="img" alt="Vista previa de mascota">
-                      <span class="remove-btn" (click)="removeImage(idx)">×</span>
-                    </div>
-                  }
-                </div>
-              }
-            </div>
           </div>
 
           <!-- COLUMNA DERECHA: Ubicación y Avistamiento -->
@@ -305,12 +311,23 @@
                   [center]="mapCenter()"
                   [zoom]="14"
                   [radiusKm]="+radio() / 1000.0"
+                  [editable]="true"
                   (mapClick)="onMapClick($event)"
                 />
               </div>
-              <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 4px; margin-bottom: 1.5rem;">
-                <i class="material-icons" style="font-size: 1rem; color: var(--primary-color);">info</i>
-                <span>Coordenadas seleccionadas: {{ latitud().toFixed(5) }}, {{ longitud().toFixed(5) }}</span>
+              <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; gap: 4px; margin-bottom: 1.5rem; flex-wrap: wrap;">
+                <span style="display: flex; align-items: center; gap: 4px;">
+                  @if (locationSelected()) {
+                    <i class="material-icons" style="font-size: 1.1rem; color: #10b981;">check_circle</i>
+                    <span style="color: #10b981; font-weight: 600;">Ubicación establecida</span>
+                  } @else {
+                    <i class="material-icons" style="font-size: 1.1rem; color: var(--danger-color, #ef4444);">warning</i>
+                    <span style="color: var(--danger-color, #ef4444); font-weight: 600;">Selección de ubicación requerida</span>
+                  }
+                </span>
+                @if (locationSelected()) {
+                  <span style="font-size: 0.7rem; color: var(--text-muted);">Coordenadas: {{ latitud().toFixed(5) }}, {{ longitud().toFixed(5) }}</span>
+                }
               </div>
             </div>
 
@@ -343,6 +360,36 @@
                 />
                 <span style="font-size: 0.95rem; font-weight: 700; color: var(--primary-color); min-width: 90px; text-align: right;">{{ radio() }} m</span>
               </div>
+            </div>
+
+            <!-- Subida de Fotos -->
+            <div class="form-group" style="margin-top: 1.5rem; margin-bottom: 1.5rem;">
+              <app-label>Fotos de la Mascota</app-label>
+              <div class="photo-dropzone" (click)="fileInput.click()">
+                <i class="material-icons">cloud_upload</i>
+                <p>Haz clic para subir fotos</p>
+                <span>Formatos aceptados: PNG, JPG (Máx. 4 fotos)</span>
+                <input 
+                  #fileInput 
+                  type="file" 
+                  multiple 
+                  accept="image/*" 
+                  style="display: none;" 
+                  (change)="onFileSelected($event)"
+                />
+              </div>
+
+              <!-- Previsualización de Fotos Subidas -->
+              @if (uploadedImages().length > 0) {
+                <div class="preview-grid">
+                  @for (img of uploadedImages(); track img; let idx = $index) {
+                    <div class="preview-item">
+                      <img [src]="img" alt="Vista previa de mascota">
+                      <span class="remove-btn" (click)="removeImage(idx)">×</span>
+                    </div>
+                  }
+                </div>
+              }
             </div>
           </div>
 

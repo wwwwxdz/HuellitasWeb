@@ -15,11 +15,14 @@ import { LocationService } from '../../../core/services/location.service';
 import { DatePicker } from '../../../shared/components/date-picker/date-picker';
 import { CheckboxComponent } from '../../../shared/components/checkbox/checkbox';
 import { TimePickerComponent } from '../../../shared/components/time-picker/time-picker.component';
+import { CloudinaryService } from '../../../core/services/cloudinary.service';
+import { MentionInputDirective } from '../../../shared/directives/mention-input.directive';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-report-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, MapComponent, Navbar, Footer, Select, LabelComponent, Tabs, DatePicker, CheckboxComponent, TimePickerComponent],
+  imports: [CommonModule, FormsModule, MapComponent, Navbar, Footer, Select, LabelComponent, Tabs, DatePicker, CheckboxComponent, TimePickerComponent, MentionInputDirective],
   templateUrl: './report.html',
   styleUrl: './report.scss'
 })
@@ -28,14 +31,23 @@ export class ReportComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly locationService = inject(LocationService);
+  private readonly cloudinaryService = inject(CloudinaryService);
+  private readonly toastService = inject(ToastService);
 
   isSubmitted = signal<boolean>(false);
   isLoading = signal<boolean>(false);
+  isUserVerified = signal<boolean>(true);
 
   estadoOptions = computed<TabOption[]>(() => [
     { value: 2, label: 'Se Perdió', icon: 'error_outline' },
     { value: 1, label: 'La Encontré', icon: 'check_circle_outline' },
     { value: 3, label: 'La Avisté', icon: 'visibility' }
+  ]);
+
+  estadoSelectOptions = computed<SelectOption[]>(() => [
+    { value: '2', label: 'Se Perdió' },
+    { value: '1', label: 'La Encontré' },
+    { value: '3', label: 'La Avisté' }
   ]);
 
   // Listas de catálogo
@@ -113,7 +125,8 @@ export class ReportComponent implements OnInit {
   caracteristicasTags = signal<string[]>([]);
   currentTagInput = signal<string>('');
   descripcion = signal<string>('');
-  uploadedImages = signal<string[]>([]); // URLs base64 de fotos cargadas
+  uploadedImages = signal<string[]>([]); // URLs base64 de fotos cargadas para previsualizar
+  uploadedFiles = signal<File[]>([]); // Archivos reales cargados
   radio = signal<number>(500);
 
   // --- Datos del Paso 2 ---
@@ -134,8 +147,16 @@ export class ReportComponent implements OnInit {
   latitud = signal<number>(-9.1214);
   longitud = signal<number>(-78.5308);
   mapCenter = signal<[number, number]>([-9.1214, -78.5308]);
+  locationSelected = signal<boolean>(false);
 
   async ngOnInit(): Promise<void> {
+    // Validar si el usuario está verificado
+    const user = this.authService.usuario();
+    if (user && user.is_verificado === false) {
+      this.isUserVerified.set(false);
+      return; // Detener carga adicional
+    }
+
     // Cargar Catálogos
     try {
       const espList = await this.petService.getEspecies();
@@ -157,12 +178,24 @@ export class ReportComponent implements OnInit {
 
     // Inicializar con ubicación actual si está disponible
     if (typeof navigator !== 'undefined' && navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((pos) => {
+      navigator.geolocation.getCurrentPosition(async (pos) => {
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
         this.latitud.set(lat);
         this.longitud.set(lng);
         this.mapCenter.set([lat, lng]);
+        this.locationSelected.set(true);
+
+        try {
+          const res = await this.locationService.reverse(lat, lng);
+          if (res && res.display_name) {
+            this.direccion.set(res.display_name);
+          }
+        } catch (err) {
+          console.error('Error al realizar geocodificación de GPS inicial:', err);
+        }
+      }, (err) => {
+        console.info('No se otorgaron permisos de GPS al inicio, el usuario deberá seleccionar manualmente en el mapa.');
       });
     }
   }
@@ -186,11 +219,14 @@ export class ReportComponent implements OnInit {
   onFileSelected(event: any): void {
     const files = event.target.files;
     if (files && files.length > 0) {
+      const newFiles = Array.from(files) as File[];
+      this.uploadedFiles.update(prev => [...prev, ...newFiles]);
+
       for (let i = 0; i < files.length; i++) {
         const reader = new FileReader();
         reader.onload = (e: any) => {
           const base64 = e.target.result;
-          this.uploadedImages.set([...this.uploadedImages(), base64]);
+          this.uploadedImages.update(prev => [...prev, base64]);
         };
         reader.readAsDataURL(files[i]);
       }
@@ -198,8 +234,8 @@ export class ReportComponent implements OnInit {
   }
 
   removeImage(index: number): void {
-    const current = this.uploadedImages();
-    this.uploadedImages.set(current.filter((_, i) => i !== index));
+    this.uploadedImages.update(current => current.filter((_, i) => i !== index));
+    this.uploadedFiles.update(current => current.filter((_, i) => i !== index));
   }
 
   // Control del Mapa en el Paso 2
@@ -207,6 +243,7 @@ export class ReportComponent implements OnInit {
     this.latitud.set(coords[0]);
     this.longitud.set(coords[1]);
     this.mapCenter.set(coords);
+    this.locationSelected.set(true);
 
     try {
       const res = await this.locationService.reverse(coords[0], coords[1]);
@@ -221,11 +258,23 @@ export class ReportComponent implements OnInit {
   // Envío final del formulario
   async submitReport(): Promise<void> {
     if (!this.selectedEspecieId()) {
-      alert('Por favor selecciona una especie.');
+      this.toastService.warning('Por favor selecciona una especie.');
       return;
     }
     if (this.estado() === 2 && !this.nombre().trim()) {
-      alert('Las mascotas perdidas requieren ingresar un nombre.');
+      this.toastService.warning('Las mascotas perdidas requieren ingresar un nombre.');
+      return;
+    }
+    if (this.uploadedFiles().length === 0) {
+      this.toastService.warning('Por favor agrega al menos una foto de la mascota.');
+      return;
+    }
+    if (!this.locationSelected() || this.latitud() === null || this.longitud() === null) {
+      this.toastService.warning('Por favor, selecciona una ubicación exacta en el mapa haciendo clic o usando el botón de GPS.');
+      return;
+    }
+    if (!this.direccion().trim()) {
+      this.toastService.warning('Por favor, ingresa una dirección física aproximada o haz clic en el mapa para autocompletarla.');
       return;
     }
 
@@ -234,6 +283,21 @@ export class ReportComponent implements OnInit {
     // Obtener ID del usuario autenticado
     const user = this.authService.usuario();
     const idUsuario = user?.id_usuario || 'usr-anonimo';
+
+    // 1. Subir imágenes a Cloudinary antes de enviar el reporte al backend
+    let imageUrls: string[] = [];
+    try {
+      const idReporteTemp = crypto.randomUUID();
+      const folder = `usuarios/${idUsuario}/reportes/${idReporteTemp}`;
+      imageUrls = await Promise.all(
+        this.uploadedFiles().map(file => this.cloudinaryService.uploadImage(file, folder))
+      );
+    } catch (cloudinaryErr) {
+      console.error('Error al subir imágenes a Cloudinary:', cloudinaryErr);
+      this.toastService.error('Hubo un error al subir las imágenes a la nube. Por favor inténtalo de nuevo.');
+      this.isLoading.set(false);
+      return;
+    }
 
     // Generar características extendidas
     const caracteristicas = {
@@ -275,7 +339,7 @@ export class ReportComponent implements OnInit {
       departamento: 'Ancash',
       provincia: 'Santa',
       distrito: 'Nuevo Chimbote',
-      imagenes: this.uploadedImages(),
+      imagenes: imageUrls,
       collar: this.collar(),
       collar_color: this.collar() ? this.collarColor().trim() : '',
       recompensa: this.recompensa(),
@@ -285,9 +349,10 @@ export class ReportComponent implements OnInit {
     try {
       await this.petService.createReporte(request);
       this.isSubmitted.set(true);
+      this.toastService.success('¡Alerta de mascota publicada exitosamente!');
     } catch (err) {
       console.error('Error al guardar reporte:', err);
-      alert('Hubo un error al guardar el reporte. Inténtalo de nuevo.');
+      this.toastService.error('Hubo un error al guardar el reporte. Inténtalo de nuevo.');
     } finally {
       this.isLoading.set(false);
     }

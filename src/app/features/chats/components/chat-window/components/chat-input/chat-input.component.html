@@ -1,0 +1,17 @@
+<div class="chat-input-bar">
+  <textarea
+    class="msg-input"
+    placeholder="Escribe un mensaje..."
+    [ngModel]="inputText()"
+    (ngModelChange)="inputText.set($event)"
+    (keydown)="onKeydown($event)"
+    rows="1"
+  ></textarea>
+  <button
+    class="send-btn"
+    (click)="sendMessage()"
+    [disabled]="!inputText().trim()"
+  >
+    <i class="material-icons">send</i>
+  </button>
+</div>

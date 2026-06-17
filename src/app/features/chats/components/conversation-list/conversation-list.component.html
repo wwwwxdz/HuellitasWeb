@@ -1,0 +1,95 @@
+<div class="conv-list">
+  <!-- Search -->
+  <div class="conv-search">
+    <div class="search-wrapper">
+      <i class="material-icons">search</i>
+      <input type="text" placeholder="Buscar conversación..." [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)" />
+    </div>
+  </div>
+
+  <!-- Skeleton -->
+  @if (isLoading()) {
+    @for (i of [1, 2, 3, 4, 5]; track i) {
+      <div class="conv-item skeleton">
+        <div class="sk-avatar"></div>
+        <div class="sk-body">
+          <div class="sk-line wide"></div>
+          <div class="sk-line short"></div>
+        </div>
+      </div>
+    }
+  } @else if (filteredChats().length === 0) {
+    <div class="conv-empty">
+      <i class="material-icons">chat_bubble_outline</i>
+      <p>Sin conversaciones</p>
+    </div>
+  } @else {
+    @for (chat of filteredChats(); track trackByChat($index, chat)) {
+      <div
+        class="conv-item"
+        [class.active]="selectedChatId() === chat.id_chat"
+        [class.unread]="hasUnread(chat)"
+        (click)="chatSelected.emit(chat)"
+        (keydown.enter)="chatSelected.emit(chat)"
+        tabindex="0"
+        role="button"
+      >
+        <div class="conv-avatar-wrap">
+          <img
+            [src]="getAvatar(getOtherUser(chat).nombre, getOtherUser(chat).foto_perfil)"
+            [alt]="getOtherUser(chat).nombre"
+            class="conv-avatar"
+          />
+          <span class="status-dot" [class.online]="getOtherUser(chat).activo"></span>
+          @if (hasUnread(chat)) {
+            <span class="unread-dot"></span>
+          }
+        </div>
+        <div class="conv-body">
+          <div class="conv-top">
+            <span class="conv-name">{{ getOtherUser(chat).nombre }}</span>
+            @if (chat.ultimo_mensaje) {
+              <span class="conv-time">{{ chat.ultimo_mensaje.creado_en | date: 'HH:mm' }}</span>
+            }
+          </div>
+          <div class="conv-bottom">
+            <p class="conv-preview">
+              {{ chat.ultimo_mensaje?.contenido || 'Sin mensajes aún' }}
+            </p>
+            <button class="btn-delete-chat" (click)="onDelete($event, chat)" title="Ocultar chat">
+              <i class="material-icons">delete_outline</i>
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  }
+</div>
+
+<!-- Modal de Confirmación de Borrado -->
+<app-modal
+  [(isOpen)]="isDeleteModalOpen"
+  title="Ocultar Chat"
+  [showFooter]="false"
+  size="sm"
+  (closed)="closeDeleteModal()"
+>
+  @if (chatToDelete()) {
+    <div class="delete-chat-modal">
+      <p>
+        ¿Estás seguro de que deseas ocultar la conversación con
+        <strong>{{ getOtherUser(chatToDelete()!).nombre }}</strong
+        >?
+      </p>
+      <p class="text-muted" style="font-size: 0.85rem; margin-bottom: 20px">
+        Esta acción solo eliminará el chat de tu lista. El otro usuario aún podrá verlo y si envía
+        un nuevo mensaje, el chat reaparecerá.
+      </p>
+
+      <div style="display: flex; justify-content: flex-end; gap: 12px">
+        <app-button variant="outline" (btnClick)="closeDeleteModal()">Cancelar</app-button>
+        <app-button variant="danger" (btnClick)="confirmDelete()">Ocultar chat</app-button>
+      </div>
+    </div>
+  }
+</app-modal>

@@ -39,7 +39,7 @@
         [value]="idEspecie()"
         (valueChange)="onEspecieChange($event)"
         placeholder="Todos los animales"
-        [options]="$any(especies()) | appSelectOptions"
+        [options]="especieOptions()"
       ></app-select>
     }
   </div>
@@ -76,25 +76,6 @@
         [options]="colorOptions()"
       ></app-select>
     }
-  </div>
-
-  <!-- Con recompensa -->
-  <div class="filter-group">
-    <div class="reward-row">
-      <div class="reward-label">
-        <i class="material-icons">paid</i>
-        <span>Con recompensa</span>
-      </div>
-      <label for="toggle-reward" class="toggle">
-        <input
-          id="toggle-reward"
-          type="checkbox"
-          [ngModel]="withReward()"
-          (ngModelChange)="onRewardChange($event)"
-        />
-        <span class="toggle-slider"></span>
-      </label>
-    </div>
   </div>
 
   <!-- ══ OPCIONES AVANZADAS (colapsable) ═══════════════════════ -->

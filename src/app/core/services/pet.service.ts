@@ -41,6 +41,7 @@ export class PetService {
     if (filters.radio)      params = params.set('radio', String(filters.radio));
     if (filters.id_especie) params = params.set('id_especie', filters.id_especie);
     if (filters.id_raza)    params = params.set('id_raza', filters.id_raza);
+    if (filters.order)      params = params.set('order', filters.order);
     if (filters.page)       params = params.set('page', String(filters.page));
     if (filters.limit)      params = params.set('limit', String(filters.limit));
 
@@ -53,6 +54,7 @@ export class PetService {
     }
 
     try {
+      console.info(`[PET SERVICE] HTTP GET a: ${this.apiUrl}/reportes con params:`, params.toString());
       const response = await firstValueFrom(
         this.http.get<PaginatedResponse>(`${this.apiUrl}/reportes`, { params })
       );
@@ -539,6 +541,59 @@ export class PetService {
       );
     } catch (error) {
       console.error(`Error al descompartir reporte ${id}:`, error);
+    }
+  }
+
+  /**
+   * Obtiene todos los avistamientos de un reporte.
+   * Endpoint: GET /api/v1/reportes/{id}/avistamientos
+   */
+  async getSightings(reportId: string): Promise<import('../models/pet.model').Avistamiento[]> {
+    try {
+      return await firstValueFrom(
+        this.http.get<import('../models/pet.model').Avistamiento[]>(`${this.apiUrl}/reportes/${reportId}/avistamientos`)
+      );
+    } catch (error) {
+      console.error(`Error al obtener avistamientos del reporte ${reportId}:`, error);
+      return [];
+    }
+  }
+
+  /**
+   * Crea un nuevo avistamiento para un reporte.
+   * Endpoint: POST /api/v1/reportes/{id}/avistamientos
+   */
+  async createSighting(reportId: string, data: import('../models/pet.model').CreateAvistamientoRequest): Promise<import('../models/pet.model').Avistamiento> {
+    return firstValueFrom(
+      this.http.post<import('../models/pet.model').Avistamiento>(`${this.apiUrl}/reportes/${reportId}/avistamientos`, data)
+    );
+  }
+
+  /**
+   * Actualiza el estado de un avistamiento (aceptar/rechazar).
+   * Endpoint: PUT /api/v1/avistamientos/{id}/estado
+   */
+  async updateSightingStatus(sightingId: string, estado: number): Promise<void> {
+    await firstValueFrom(
+      this.http.put<void>(`${this.apiUrl}/avistamientos/${sightingId}/estado`, { estado })
+    );
+  }
+
+  /**
+   * Obtiene el historial de cambios de un reporte.
+   * Endpoint: GET /api/v1/reportes/{id}/historial
+   */
+  async getHistorial(id: string, page = 1, limit = 50): Promise<{ data: any[] }> {
+    const params = new HttpParams()
+      .set('page', String(page))
+      .set('limit', String(limit));
+    try {
+      return await firstValueFrom(
+        this.http.get<{ data: any[] }>(`${this.apiUrl}/reportes/${id}/historial`, { params })
+      );
+    } catch (error) {
+      console.warn('Error al obtener historial de cambios:', error);
+      return { data: [] };
     }
   }
 }

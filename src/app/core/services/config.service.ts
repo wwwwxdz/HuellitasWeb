@@ -29,7 +29,7 @@ export class ConfigService {
     if (this.isProduction) return false;
     if (!this.isBrowser) return false;
     const stored = localStorage.getItem(this.STORAGE_KEY);
-    return stored ? stored === 'true' : false;
+    return stored ? stored === 'true' : true;
   }
 
   /**

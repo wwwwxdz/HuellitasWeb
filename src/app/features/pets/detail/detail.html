@@ -12,170 +12,321 @@
       <i class="material-icons">error_outline</i>
       <h3>No se encontró el reporte</h3>
       <button class="btn-back" (click)="goBack()">Volver al listado</button>
-    </div>
-  } @else {
-    
+    </div>  } @else {
     <div class="pet-detail-content-wrapper">
       
-      <!-- Fila Superior de Navegación -->
+      <!-- Volver -->
       <nav class="detail-navigation-bar">
-        <app-button
-          variant="outline"
-          icon="arrow_back"
-          (btnClick)="goBack()"
-        >
+        <app-button variant="outline" icon="arrow_back" (btnClick)="goBack()">
           Volver a Alertas
         </app-button>
       </nav>
 
-      <!-- Grid Principal de Contenido -->
-      <div class="detail-main-grid">
-        
-        <!-- Columna Izquierda: Carrusel Multimedia Grande -->
-        <div class="detail-media-column">
-          <div class="media-card-box">
-            <app-image-carousel 
-              [images]="getImages(report()!)" 
-              [alt]="report()!.nombre || 'Mascota'"
-              (imageClick)="activeViewerImage.set($event)"
-            ></app-image-carousel>
+      <!-- SECCIÓN 6: REPORTADO POR -->
+      <section class="detail-author-section">
+        <h2 class="section-subtitle" style="margin-bottom: 12px;">Reportado por</h2>
+        <div class="author-simple-card">
+          <img 
+            [src]="report()!.usuario.foto_perfil || 'assets/images/default-avatar.png'" 
+            class="author-avatar"
+            onerror="this.src='assets/images/default-avatar.png'"
+          >
+          <div class="author-info">
+            <span class="author-name">{{ report()!.usuario.nombre }}</span>
+            <span class="author-since">Miembro de la comunidad</span>
           </div>
         </div>
+      </section>
 
-        <!-- Columna Derecha: Ficha Técnica e Información -->
-        <div class="detail-info-column">
-          
-          <!-- Cabecera del Detalle -->
-          <div class="pet-detail-card-header">
-            <div class="header-main-row">
-              <h1 class="pet-detail-name">
-                {{ report()!.nombre || 'Mascota sin nombre' }}
-              </h1>
-              <app-badge [status]="report()!.estado"></app-badge>
-            </div>
-            
-            <!-- Info del Reportero -->
-            <div class="detail-author-row">
-              <app-avatar
-                [src]="report()!.usuario.foto_perfil"
-                [name]="report()!.usuario.nombre"
-                [size]="44"
-                class="detail-author-avatar-wrapper"
-              ></app-avatar>
-              <div class="detail-author-meta">
-                <span class="author-name">Reportado por {{ report()!.usuario.nombre }}</span>
-                <span class="post-date">Publicado el {{ report()!.creado_en | date:'dd MMM yyyy, h:mm a' }}</span>
-              </div>
-            </div>
+      <!-- SECCIÓN 2: GALERÍA -->
+      <section class="detail-gallery-section">
+        <div class="media-card-box">
+          <app-image-carousel 
+            [images]="getImages(report()!)" 
+            [alt]="report()!.nombre || 'Mascota'"
+            [zoomable]="true"
+            (imageClick)="activeViewerImage.set($event)"
+          ></app-image-carousel>
+        </div>
+      </section>
+
+      <!-- SECCIÓN 2: DATOS -->
+      <section class="detail-specs-section">
+        <!-- CABECERA DE LA ALERTA -->
+        <div class="hero-header-row">
+          <div class="hero-header-badge-group">
+            <app-badge [status]="report()!.estado"></app-badge>
+            <span class="report-id-badge">Alerta #{{ report()!.id_reporte_mascota.substring(0, 8) }}</span>
           </div>
-
-          <div class="detail-section-divider"></div>
-
-          <!-- Ficha de Detalles (Grid) -->
-          <div class="pet-specs-grid">
-            <div class="spec-card">
-              <span class="spec-label">Especie</span>
-              <span class="spec-value">{{ report()!.tipo | titlecase }}</span>
-            </div>
-            <div class="spec-card">
-              <span class="spec-label">Raza</span>
-              <span class="spec-value">{{ report()!.raza || 'Raza mixta' }}</span>
-            </div>
-            @if (report()!.caracteristicas?.color) {
-              <div class="spec-card">
-                <span class="spec-label">Color</span>
-                <span class="spec-value">{{ report()!.caracteristicas?.color }}</span>
-              </div>
-            }
-            @if (report()!.caracteristicas?.tamano) {
-              <div class="spec-card">
-                <span class="spec-label">Tamaño</span>
-                <span class="spec-value">{{ report()!.caracteristicas?.tamano | titlecase }}</span>
-              </div>
-            }
-            @if (report()!.caracteristicas?.collar) {
-              <div class="spec-card span-2">
-                <span class="spec-label">Collar</span>
-                <span class="spec-value">
-                  Lleva collar ({{ report()!.caracteristicas?.collar_color || 'Color no detallado' }})
-                </span>
-              </div>
-            }
-          </div>
-
-          @if (report()!.descripcion) {
-            <div class="detail-section-divider"></div>
-            <!-- Descripción / Observaciones -->
-            <div class="detail-description-section">
-              <h3>Descripción y Observaciones</h3>
-              <p class="description-text">{{ report()!.descripcion }}</p>
-            </div>
+          @if (!isOwnReport()) {
+            <app-options-dropdown
+              [options]="REPORT_OPTIONS"
+              (optionSelected)="onReportOptionSelected($event)"
+            ></app-options-dropdown>
           }
-
-          <div class="detail-section-divider"></div>
-
-          <!-- Barra de Interacciones Rápidas -->
-          <div class="detail-interaction-bar">
-            <button 
-              class="interaction-btn like-btn" 
-              [class.liked]="report()!.liked_por_usuario"
-              (click)="toggleLike()"
-            >
-              <i class="material-icons">{{ report()!.liked_por_usuario ? 'favorite' : 'favorite_border' }}</i>
-              <span>{{ report()!.total_likes || 0 }} Me gusta</span>
-            </button>
-            <div class="interaction-comments-count">
-              <i class="material-icons">forum</i>
-              <span>{{ report()!.total_comentarios || 0 }} Comentarios</span>
-            </div>
-          </div>
-
+        </div>
+        
+        <h1 class="pet-detail-name" style="margin-top: 4px;">
+          {{ report()!.nombre || 'Mascota sin nombre' }}
+        </h1>
+        
+        <div class="hero-quick-meta" style="border-bottom: none; padding-bottom: 0;">
+          <span class="meta-item"><i class="material-icons">place</i> {{ report()!.distrito || report()!.ubicacion || 'Ubicación no indicada' }}</span>
+          <span class="meta-item"><i class="material-icons">schedule</i> {{ getFechaRelativa(report()!.creado_en) }}</span>
         </div>
 
-      </div>
+        <!-- ACCIONES PRINCIPALES -->
+        <div class="hero-actions-container" style="margin-top: 4px;">
+          @if (!isOwnReport()) {
+            <app-button
+              variant="primary"
+              icon="chat"
+              class="btn-contact-owner"
+              (btnClick)="openContactModal()"
+            >
+              Contactar dueño
+            </app-button>
+          }
+          <div class="hero-secondary-actions">
+            <app-button
+              variant="outline"
+              icon="share"
+              class="btn-share-report"
+              (btnClick)="toggleLike()"
+            >
+              Compartir
+            </app-button>
+            
+            @if (!isOwnReport()) {
+              <app-button
+                id="btn-avisar-sighting"
+                variant="outline"
+                icon="campaign"
+                class="btn-report-sighting"
+                (btnClick)="openSightingModal()"
+              >
+                Reportar avistamiento
+              </app-button>
+            }
+          </div>
+        </div>
 
-      <!-- Fila Inferior: Mapa y Dirección -->
-      <div class="detail-bottom-section">
-        <div class="detail-map-section-card">
-          <div class="map-card-header">
-            <i class="material-icons">place</i>
-            <div class="map-header-meta">
-              <h3>Última ubicación registrada</h3>
-              <p>{{ report()!.ubicacion || 'Dirección no detallada' }}</p>
-              @if (report()!.distrito) {
-                <p class="map-address-sub">
-                  {{ report()!.distrito }}, {{ report()!.provincia }}, {{ report()!.departamento }}
-                </p>
+        <hr style="border: 0; border-top: 1px solid var(--border-color, #27272a); margin: 8px 0;" />
+
+        <!-- DETALLES DE LA MASCOTA -->
+        <h2 class="section-subtitle">Datos de la Mascota</h2>
+        <div class="pet-specs-grid">
+          <div class="spec-card">
+            <span class="spec-label">Raza</span>
+            <span class="spec-value">{{ report()!.raza || 'Criollo' | titlecase }}</span>
+          </div>
+          <div class="spec-card">
+            <span class="spec-label">Sexo</span>
+            <span class="spec-value">{{ report()!.caracteristicas?.sexo || 'No indicado' | titlecase }}</span>
+          </div>
+          <div class="spec-card">
+            <span class="spec-label">Edad</span>
+            <span class="spec-value">{{ report()!.caracteristicas?.edad || 'No indicada' | titlecase }}</span>
+          </div>
+          <div class="spec-card">
+            <span class="spec-label">Tamaño</span>
+            <span class="spec-value">{{ report()!.caracteristicas?.tamano || 'No indicado' | titlecase }}</span>
+          </div>
+          <div class="spec-card">
+            <span class="spec-label">Color</span>
+            <span class="spec-value">{{ report()!.caracteristicas?.color || 'No indicado' | titlecase }}</span>
+          </div>
+          <div class="spec-card">
+            <span class="spec-label">Pelaje</span>
+            <span class="spec-value">{{ report()!.caracteristicas?.pelo || 'No indicado' | titlecase }}</span>
+          </div>
+        </div>
+
+        @if (report()!.descripcion) {
+          <div class="specs-description-box" style="margin-top: 8px;">
+            <span class="spec-label">Descripción</span>
+            <p class="description-text" [innerHTML]="report()!.descripcion | mentionHighlight"></p>
+          </div>
+        }
+      </section>
+
+      <!-- SECCIÓN 3: UBICACIÓN -->
+      @if (report()!.latitud && report()!.longitud) {
+        <section class="detail-map-section">
+          <h2 class="section-subtitle">
+            <i class="material-icons">place</i> Última ubicación conocida
+          </h2>
+          <div class="map-render-container">
+            <app-map-component
+              [center]="[report()!.latitud, report()!.longitud]"
+              [zoom]="15"
+              [editable]="false"
+              [radiusKm]="(report()?.radio || 0) / 1000"
+              [reports]="pawPoint()"
+              [sightingsTrajectory]="sightingsVisibles()"
+            ></app-map-component>
+          </div>
+        </section>
+      }
+
+      <!-- SECCIÓN 4: AVISTAMIENTOS -->
+      @if (hasSightingsSection()) {
+        <section class="detail-sightings-section">
+          <h2 class="section-subtitle">
+            <i class="material-icons">visibility</i> Avistamientos ({{ sightingsVisibles().length }})
+          </h2>
+          
+          @if (isLoadingSightings()) {
+            <div class="sightings-loading-row">
+              <div class="spinner-sm"></div>
+              <span>Cargando avistamientos...</span>
+            </div>
+          } @else if (sightingsVisibles().length === 0) {
+            <div class="sightings-empty">
+              <i class="material-icons">search_off</i>
+              <p>Aún no hay avistamientos para este reporte.</p>
+            </div>
+          } @else {
+            <div class="sightings-cards-grid">
+              @for (s of sightingsLimitados(); track s.id_avistamiento) {
+                <div class="sighting-card-modern" [class.accepted]="s.estado === 1" [class.rejected]="s.estado === 3">
+                  <!-- Indicador de Estado Flotante -->
+                  <div class="sighting-status-badge" [ngClass]="{
+                    'pendiente': s.estado === 2,
+                    'aceptado': s.estado === 1,
+                    'rechazado': s.estado === 3
+                  }">
+                    <i class="material-icons">
+                      {{ s.estado === 1 ? 'check_circle' : s.estado === 3 ? 'cancel' : 'pending' }}
+                    </i>
+                    <span>
+                      {{ s.estado === 1 ? 'Aceptado' : s.estado === 3 ? 'Rechazado' : 'Pendiente' }}
+                    </span>
+                  </div>
+
+                  <!-- Imagen o Carrusel de Cabecera de la Tarjeta -->
+                  @if (s.imagenes && s.imagenes.length > 1) {
+                    <div class="sighting-card-photo-wrapper sighting-carousel-wrapper">
+                      <app-image-carousel 
+                        [images]="getSightingImages(s)" 
+                        [alt]="'Fotos del avistamiento'"
+                        [zoomable]="true"
+                        (imageClick)="activeViewerImage.set($event)"
+                      ></app-image-carousel>
+                    </div>
+                  } @else if (s.imagenes && s.imagenes.length === 1) {
+                    <div class="sighting-card-photo-wrapper">
+                      <img 
+                        [src]="s.imagenes[0].url" 
+                        class="sighting-card-photo"
+                        alt="Foto del avistamiento"
+                        (click)="activeViewerImage.set(s.imagenes[0].url)"
+                      >
+                    </div>
+                  } @else {
+                    <div class="sighting-card-no-photo">
+                      <i class="material-icons">add_a_photo</i>
+                      <span>Sin fotografía</span>
+                    </div>
+                  }
+
+                  <!-- Cuerpo de la Tarjeta -->
+                  <div class="sighting-card-body">
+                    <!-- Informante -->
+                    <div class="sighting-card-header">
+                      <div class="informant-avatar-name">
+                        <img 
+                          [src]="s.usuario_informante?.foto_perfil || 'assets/images/default-avatar.png'" 
+                          class="sighting-card-avatar"
+                          onerror="this.src='assets/images/default-avatar.png'"
+                        >
+                        <div class="informant-meta">
+                          <span class="sighting-user-name">{{ s.usuario_informante?.nombre || 'Usuario Anónimo' }}</span>
+                          <span class="sighting-date">{{ getFechaRelativa(s.creado_en) }}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Datos (Ubicación y Descripción) -->
+                    <div class="sighting-card-details">
+                      <div class="sighting-info-row">
+                        <i class="material-icons text-danger">place</i>
+                        <span class="sighting-info-text">{{ getFormattedLocation(s.ubicacion) }}</span>
+                      </div>
+
+                      @if (s.descripcion) {
+                        <div class="sighting-info-row text-description">
+                          <i class="material-icons">chat_bubble_outline</i>
+                          <span class="sighting-info-text" [innerHTML]="s.descripcion | mentionHighlight"></span>
+                        </div>
+                      }
+                    </div>
+
+                    <!-- Botón de Mapa y Moderación -->
+                    <div class="sighting-card-actions">
+                      <button 
+                        class="btn-view-map-sighting"
+                        (click)="openSightingMapModal(s)"
+                        title="Ver ubicación en mapa"
+                      >
+                        <i class="material-icons">map</i>
+                        <span>Ver en Mapa</span>
+                      </button>
+
+                      @if (isOwnReport() && s.estado === 2 && s.id_avistamiento) {
+                        <div class="sighting-moderation-actions">
+                          <app-button
+                            variant="success"
+                            icon="check"
+                            [loading]="resolvingSightings().has(s.id_avistamiento)"
+                            [disabled]="resolvingSightings().has(s.id_avistamiento)"
+                            (btnClick)="resolverAvistamiento(s.id_avistamiento, 1)"
+                          >
+                            Aceptar
+                          </app-button>
+                          <app-button
+                            variant="danger"
+                            icon="close"
+                            [loading]="resolvingSightings().has(s.id_avistamiento)"
+                            [disabled]="resolvingSightings().has(s.id_avistamiento)"
+                            (btnClick)="resolverAvistamiento(s.id_avistamiento, 3)"
+                          >
+                            Rechazar
+                          </app-button>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                </div>
               }
             </div>
-          </div>
 
-          <!-- Contenedor del Mapa Leaflet -->
-          @if (report()!.latitud && report()!.longitud) {
-            <div class="map-render-container">
-              <app-map-component
-                [center]="[report()!.latitud, report()!.longitud]"
-                [zoom]="15"
-                [editable]="false"
-                [radiusKm]="0"
-                [reports]="pawPoint()"
-              ></app-map-component>
-            </div>
+            @if (tieneMasSightings()) {
+              <div class="view-more-sightings-row" style="margin-top: 16px; display: flex; justify-content: center; width: 100%;">
+                <app-button 
+                  variant="outline"
+                  icon="history"
+                  (btnClick)="isAllSightingsModalOpen.set(true)"
+                  style="width: 100%;"
+                >
+                  Ver todos los avistamientos ({{ sightingsVisibles().length }})
+                </app-button>
+              </div>
+            }
           }
-        </div>
-      </div>
+        </section>
+      }
 
-      <!-- Sección de Conversación Comunitaria (Comentarios) -->
-      <div class="detail-comments-section-wrapper">
-        <div class="comments-card-header">
-          <i class="material-icons">forum</i>
-          <h3>Conversación y Ayuda Comunitaria</h3>
-        </div>
-
-        <!-- Editor de Comentario Principal -->
+      <!-- SECCIÓN 5: COMENTARIOS -->
+      <section class="detail-comments-section">
+        <h2 class="section-subtitle">
+          <i class="material-icons">forum</i> Conversación y Ayuda
+        </h2>
+        
         <div class="main-comment-editor">
           <input 
             type="text"
+            mentionInput
             class="main-comment-input-field"
             placeholder="Aporta pistas, avistamientos o mensajes de apoyo..."
             [ngModel]="commentInput()"
@@ -193,7 +344,6 @@
           </app-button>
         </div>
 
-        <!-- Spinner de Comentarios -->
         @if (isLoadingComments()) {
           <div class="comments-loading-box">
             <div class="spinner-modern-sm"></div>
@@ -201,7 +351,6 @@
           </div>
         }
 
-        <!-- Flujo de Comentarios -->
         <div class="comments-flow-container">
           @for (c of comments(); track c.id_comentario) {
             <app-comment-item
@@ -219,30 +368,404 @@
               (startReply)="startReply($event)"
               (cancelReply)="cancelReply()"
               (sendReply)="onSendReply($event)"
+              (reportComment)="onReportComment($event)"
             ></app-comment-item>
           } @empty {
             @if (!isLoadingComments()) {
               <div class="no-comments-box">
                 <i class="material-icons">chat_bubble_outline</i>
-                <p>Aún no hay comentarios sobre esta alerta. ¡Aporta la primera pista!</p>
+                <p>Aún no hay comentarios. ¡Aporta la primera pista!</p>
               </div>
             }
           }
         </div>
+      </section>
 
-      </div>
+      <!-- SECCIÓN 7: HISTORIAL (Acordeón) -->
+      @if (historial() && historial().length > 0) {
+        <section class="detail-history-section">
+          <details class="history-details-accordion">
+            <summary class="history-summary">
+              <span>Historial de cambios</span>
+              <i class="material-icons accordion-arrow">expand_more</i>
+            </summary>
+            <div class="history-accordion-content">
+              @for (entry of historial(); track entry.id_historial_reporte) {
+                <div class="history-entry-item">
+                  <div class="entry-dot"></div>
+                  <div class="entry-meta">
+                    <span class="entry-date">{{ entry.modificado_en | date:'dd/MM/yyyy' }}</span>
+                    <span class="entry-desc">{{ getCambioDescriptivo(entry) }}</span>
+                  </div>
+                </div>
+              }
+            </div>
+          </details>
+        </section>
+      }
 
     </div>
-
   }
 
-</div>
+  <!-- Modal para ver Mapa de un Avistamiento -->
+  <app-modal
+    [(isOpen)]="isSightingMapModalOpen"
+    [title]="'Ubicación del Avistamiento'"
+    [showFooter]="false"
+    size="md"
+  >
+    @if (selectedSightingForMap()) {
+      <div class="sighting-map-modal-body" style="padding: 8px 4px;">
+        <div class="map-container-sighting-view" style="width: 100%; height: 350px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); position: relative;">
+          <app-map-component
+            [center]="[selectedSightingForMap()!.latitud, selectedSightingForMap()!.longitud]"
+            [radiusKm]="selectedSightingForMap()!.radio / 1000"
+            [zoom]="15"
+            [editable]="false"
+            [reports]="sightingPoint()"
+            [showControls]="true"
+          ></app-map-component>
+        </div>
+        <div class="sighting-map-info-footer" style="margin-top: 12px; display: flex; align-items: flex-start; gap: 8px; font-size: 0.9rem; color: var(--text-main);">
+          <i class="material-icons" style="color: var(--primary-color, #106063); flex-shrink: 0; margin-top: 2px;">place</i>
+          <div>
+            <p style="font-weight: 700; margin: 0 0 2px 0;">Dirección / Referencia:</p>
+            <p style="margin: 0; color: var(--text-secondary, #a1a1aa);">{{ getFormattedLocation(selectedSightingForMap()!.ubicacion) }}</p>
+          </div>
+        </div>
+      </div>
+    }
+  </app-modal>
 
-@if (activeViewerImage()) {
-  <app-image-viewer
-    [src]="activeViewerImage()!"
-    (close)="activeViewerImage.set(null)"
-  ></app-image-viewer>
-}
+  <!-- Modal para Registrar Avistamiento -->
+  <app-modal
+    [(isOpen)]="isSightingModalOpen"
+    [title]="'Reportar Avistamiento'"
+    [showFooter]="false"
+    size="lg"
+  >
+    <div class="sighting-modal-body">
+      <p class="sighting-modal-intro">
+        <i class="material-icons">info_outline</i>
+        Comparte dónde y cuándo viste a esta mascota. Tu reporte llegará al dueño.
+      </p>
+
+      <div class="sighting-modal-grid">
+        <!-- Columna Izquierda: Datos del Avistamiento -->
+        <div class="sighting-modal-col-left">
+          <div class="sm-form-group">
+            <label class="sm-label">Ubicación / Referencia</label>
+            <input 
+              type="text" 
+              class="sm-input" 
+              placeholder="Ej: Parque Central, cerca a la tienda de ropa..."
+              [ngModel]="sightingForm().ubicacion"
+              (ngModelChange)="updateSightingField('ubicacion', $event)"
+            >
+          </div>
+
+          <div class="sm-form-row">
+            <div class="sm-form-group">
+              <label class="sm-label">Fecha</label>
+              <input 
+                type="date" 
+                class="sm-input"
+                [ngModel]="sightingForm().fecha_avistamiento"
+                (ngModelChange)="updateSightingField('fecha_avistamiento', $event)"
+              >
+            </div>
+            <div class="sm-form-group">
+              <label class="sm-label">Hora Aprox.</label>
+              <input 
+                type="time" 
+                class="sm-input"
+                [ngModel]="sightingForm().hora_avistamiento"
+                (ngModelChange)="updateSightingField('hora_avistamiento', $event)"
+              >
+            </div>
+          </div>
+
+          <div class="sm-form-group">
+            <label class="sm-label">Descripción (opcional)</label>
+            <textarea 
+              mentionInput
+              class="sm-input sm-textarea" 
+              rows="3"
+              placeholder="Ej: Se veía asustada, estaba cerca del parque..."
+              [ngModel]="sightingForm().descripcion"
+              (ngModelChange)="updateSightingField('descripcion', $event)"
+            ></textarea>
+          </div>
+
+          <div class="sm-form-group">
+            <label class="sm-label">Fotos de la mascota avistada (opcional, máx. 4)</label>
+            
+            <div class="sighting-images-uploader-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 8px;">
+              @for (preview of sightingImagePreviews(); track preview; let idx = $index) {
+                <div class="uploader-preview-card" style="position: relative; aspect-ratio: 1; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color, #27272a); background-color: rgba(255, 255, 255, 0.02);">
+                  <img [src]="preview" alt="Vista previa" style="width: 100%; height: 100%; object-fit: cover;">
+                  <button 
+                    type="button"
+                    (click)="removeSelectedSightingImage(idx); $event.stopPropagation();"
+                    style="position: absolute; top: 4px; right: 4px; border: none; background-color: rgba(239, 68, 68, 0.9); color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;"
+                    title="Eliminar imagen"
+                  >
+                    <i class="material-icons" style="font-size: 14px;">close</i>
+                  </button>
+                </div>
+              }
+              
+              @if (sightingImagePreviews().length < 4) {
+                <div 
+                  class="uploader-add-card" 
+                  (click)="fileInputRef.click()"
+                  style="aspect-ratio: 1; border: 1px dashed var(--border-color, #27272a); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; background-color: rgba(255,255,255,0.01); color: var(--text-muted, #94a3b8); transition: all 0.2s;"
+                >
+                  <i class="material-icons" style="font-size: 1.5rem; margin-bottom: 2px;">add_a_photo</i>
+                  <span style="font-size: 0.65rem; text-align: center;">Subir</span>
+                </div>
+              }
+            </div>
+            
+            <input 
+              #fileInputRef
+              type="file" 
+              accept="image/*"
+              multiple
+              style="display:none"
+              (change)="onSightingFilesSelected($event)"
+            />
+          </div>
+        </div>
+
+        <!-- Columna Derecha: Datos de Mapa y Cobertura -->
+        <div class="sighting-modal-col-right">
+          <!-- MAPA DE SELECCIÓN DE UBICACIÓN -->
+          <div class="sm-form-group">
+            <label class="sm-label">Marca el lugar exacto en el mapa</label>
+            <div class="map-container-sighting" style="width: 100%; height: 210px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); margin-top: 4px; position: relative;">
+              <app-map-component
+                [center]="[sightingForm().latitud, sightingForm().longitud]"
+                [radiusKm]="sightingForm().radio / 1000"
+                [zoom]="15"
+                [editable]="true"
+                [showControls]="true"
+                (mapClick)="onSightingLocationChange($event)"
+              ></app-map-component>
+            </div>
+          </div>
+
+          <div class="sm-form-group">
+            <label class="sm-label">Radio de Incertidumbre: <strong>{{ sightingForm().radio }}m</strong></label>
+            <input 
+              type="range" 
+              min="50" max="2000" step="50"
+              class="sm-slider"
+              [ngModel]="sightingForm().radio"
+              (ngModelChange)="updateSightingField('radio', +$event)"
+            >
+            <div class="sm-slider-labels">
+              <span>50m</span>
+              <span>2000m</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sm-actions-row">
+        <app-button variant="outline" (btnClick)="isSightingModalOpen.set(false)">Cancelar</app-button>
+        <app-button
+          variant="primary"
+          icon="send"
+          [loading]="isSubmittingSighting()"
+          [disabled]="!sightingForm().ubicacion.trim()"
+          (btnClick)="confirmSighting()"
+        >
+          Enviar Avistamiento
+        </app-button>
+      </div>
+    </div>
+  </app-modal>
+
+  <!-- Modal para Contactar al Dueño -->
+  <app-modal
+    [(isOpen)]="isContactModalOpen"
+    [title]="'Contactar al Dueño'"
+    [showFooter]="false"
+    size="sm"
+  >
+    <div class="contact-modal-body" style="display: flex; flex-direction: column; gap: 16px; padding: 8px 4px;">
+      <p class="modal-info-text" style="font-size: 0.95rem; line-height: 1.5; color: var(--text-main); margin: 0;">
+        Puedes comunicarte directamente con <strong>{{ report()?.usuario?.nombre || 'el dueño' }}</strong> a través de los siguientes canales:
+      </p>
+
+      <div class="contact-options" style="display: flex; flex-direction: column; gap: 12px; margin-top: 8px;">
+        @if (report()?.usuario?.telefono) {
+          <a [href]="'https://wa.me/' + report()!.usuario.telefono" target="_blank" class="contact-option-btn whatsapp" style="display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px; border-radius: 12px; font-weight: 700; text-decoration: none; color: #fff; background-color: #25d366; transition: background-color 0.2s;">
+            <i class="material-icons">chat</i>
+            <span>Enviar WhatsApp</span>
+          </a>
+          <a [href]="'tel:' + report()!.usuario.telefono" class="contact-option-btn phone" style="display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px; border-radius: 12px; font-weight: 700; text-decoration: none; color: #fff; background-color: #3b82f6; transition: background-color 0.2s;">
+            <i class="material-icons">call</i>
+            <span>Llamar por Teléfono ({{ report()!.usuario.telefono }})</span>
+          </a>
+        }
+        @if (report()?.usuario?.email) {
+          <a [href]="'mailto:' + report()!.usuario.email" class="contact-option-btn email" style="display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px; border-radius: 12px; font-weight: 700; text-decoration: none; color: #fff; background-color: #4b5563; transition: background-color 0.2s;">
+            <i class="material-icons">email</i>
+            <span>Enviar Correo</span>
+          </a>
+        }
+      </div>
+
+      <div class="modal-actions-row border-top" style="display: flex; justify-content: flex-end; padding-top: 14px; border-top: 1px solid var(--border-color, #334155); margin-top: 8px;">
+        <app-button variant="outline" (btnClick)="isContactModalOpen.set(false)">Cerrar</app-button>
+      </div>
+    </div>
+  </app-modal>
+
+  @if (activeViewerImage()) {
+    <app-image-viewer
+      [src]="activeViewerImage()!"
+      (close)="activeViewerImage.set(null)"
+    ></app-image-viewer>
+  }
+
+  <!-- Modal para ver el Historial Completo de Avistamientos -->
+  <app-modal
+    [(isOpen)]="isAllSightingsModalOpen"
+    [title]="'Historial de Avistamientos'"
+    [showFooter]="false"
+    size="lg"
+  >
+    <div class="all-sightings-modal-body" style="max-height: 70vh; overflow-y: auto; padding: 4px;">
+      <div class="sightings-cards-grid" style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px;">
+        @for (s of sightingsOrdenados(); track s.id_avistamiento) {
+          <div class="sighting-card-modern" [class.accepted]="s.estado === 1" [class.rejected]="s.estado === 3">
+            <!-- Indicador de Estado Flotante -->
+            <div class="sighting-status-badge" [ngClass]="{
+              'pendiente': s.estado === 2,
+              'aceptado': s.estado === 1,
+              'rechazado': s.estado === 3
+            }">
+              <i class="material-icons">
+                {{ s.estado === 1 ? 'check_circle' : s.estado === 3 ? 'cancel' : 'pending' }}
+              </i>
+              <span>
+                {{ s.estado === 1 ? 'Aceptado' : s.estado === 3 ? 'Rechazado' : 'Pendiente' }}
+              </span>
+            </div>
+
+            <!-- Imagen o Carrusel de Cabecera de la Tarjeta -->
+            @if (s.imagenes && s.imagenes.length > 1) {
+              <div class="sighting-card-photo-wrapper sighting-carousel-wrapper">
+                <app-image-carousel 
+                  [images]="getSightingImages(s)" 
+                  [alt]="'Fotos del avistamiento'"
+                  [zoomable]="true"
+                  (imageClick)="activeViewerImage.set($event)"
+                ></app-image-carousel>
+              </div>
+            } @else if (s.imagenes && s.imagenes.length === 1) {
+              <div class="sighting-card-photo-wrapper">
+                <img 
+                  [src]="s.imagenes[0].url" 
+                  class="sighting-card-photo"
+                  alt="Foto del avistamiento"
+                  (click)="activeViewerImage.set(s.imagenes[0].url)"
+                >
+              </div>
+            } @else {
+              <div class="sighting-card-no-photo">
+                <i class="material-icons">add_a_photo</i>
+                <span>Sin fotografía</span>
+              </div>
+            }
+
+            <!-- Cuerpo de la Tarjeta -->
+            <div class="sighting-card-body">
+              <!-- Informante -->
+              <div class="sighting-card-header">
+                <div class="informant-avatar-name">
+                  <img 
+                    [src]="s.usuario_informante?.foto_perfil || 'assets/images/default-avatar.png'" 
+                    class="sighting-card-avatar"
+                    onerror="this.src='assets/images/default-avatar.png'"
+                  >
+                  <div class="informant-meta">
+                    <span class="sighting-user-name">{{ s.usuario_informante?.nombre || 'Usuario Anónimo' }}</span>
+                    <span class="sighting-date">{{ getFechaRelativa(s.creado_en) }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Datos (Ubicación y Descripción) -->
+              <div class="sighting-card-details">
+                <div class="sighting-info-row">
+                  <i class="material-icons text-danger">place</i>
+                  <span class="sighting-info-text">{{ getFormattedLocation(s.ubicacion) }}</span>
+                </div>
+
+                @if (s.descripcion) {
+                  <div class="sighting-info-row text-description">
+                    <i class="material-icons">chat_bubble_outline</i>
+                    <span class="sighting-info-text" [innerHTML]="s.descripcion | mentionHighlight"></span>
+                  </div>
+                }
+              </div>
+
+              <!-- Botón de Mapa y Moderación -->
+              <div class="sighting-card-actions">
+                <button 
+                  class="btn-view-map-sighting"
+                  (click)="openSightingMapModal(s)"
+                  title="Ver ubicación en mapa"
+                >
+                  <i class="material-icons">map</i>
+                  <span>Ver en Mapa</span>
+                </button>
+
+                @if (isOwnReport() && s.estado === 2 && s.id_avistamiento) {
+                  <div class="sighting-moderation-actions">
+                    <app-button
+                      variant="success"
+                      icon="check"
+                      [loading]="resolvingSightings().has(s.id_avistamiento)"
+                      [disabled]="resolvingSightings().has(s.id_avistamiento)"
+                      (btnClick)="resolverAvistamiento(s.id_avistamiento, 1)"
+                    >
+                      Aceptar
+                    </app-button>
+                    <app-button
+                      variant="danger"
+                      icon="close"
+                      [loading]="resolvingSightings().has(s.id_avistamiento)"
+                      [disabled]="resolvingSightings().has(s.id_avistamiento)"
+                      (btnClick)="resolverAvistamiento(s.id_avistamiento, 3)"
+                    >
+                      Rechazar
+                    </app-button>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </app-modal>
+
+  <!-- Modal de Denuncias / Reportar Contenido Inapropiado -->
+  <app-flag-modal
+    [isOpen]="isFlagModalOpen()"
+    [target]="flagTarget()"
+    [isFlagging]="isSendingFlag()"
+    [(motivo)]="flagMotivo"
+    [(descripcion)]="flagDescripcion"
+    (closed)="closeFlagModal()"
+    (confirmSubmit)="submitFlag()"
+  ></app-flag-modal>
 
 <app-footer></app-footer>
+
+</div>

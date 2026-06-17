@@ -3,8 +3,11 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Comentario } from '../../../core/models/comment.model';
 import { AuthService } from '../../../core/auth/auth.service';
+import { MentionInputDirective } from '../../directives/mention-input.directive';
+import { MentionHighlightPipe } from '../../pipes/mention-highlight.pipe';
 
 import { AvatarComponent } from '../avatar/avatar';
+import { OptionsDropdownComponent, DropdownOption } from '../options-dropdown/options-dropdown';
 
 @Component({
   selector: 'app-comment-item',
@@ -13,6 +16,9 @@ import { AvatarComponent } from '../avatar/avatar';
     CommonModule, 
     FormsModule,
     AvatarComponent,
+    MentionInputDirective,
+    MentionHighlightPipe,
+    OptionsDropdownComponent,
     // Importación recursiva en standalone para las respuestas
     CommentItemComponent
   ],
@@ -48,20 +54,42 @@ export class CommentItemComponent {
     return isAdminOrMod || isOwner;
   });
 
+  isOwnComment = computed(() => {
+    const user = this.authService.usuario();
+    if (!user) return false;
+    return user.id_usuario === this.comment().usuario?.id_usuario;
+  });
+
+  commentOptions = computed<DropdownOption[]>(() => {
+    const options: DropdownOption[] = [];
+    if (this.canDelete()) {
+      options.push({ label: 'Eliminar comentario', icon: 'delete_outline', value: 'delete', danger: true });
+    }
+    if (!this.isOwnComment()) {
+      options.push({ label: 'Denunciar comentario', icon: 'flag', value: 'report', danger: true });
+    }
+    return options;
+  });
+
   // Outputs
   deleteComment = output<{ reporteId: string; commentId: string }>();
   toggleLike = output<string>();
   startReply = output<string>();
   cancelReply = output<void>();
   sendReply = output<{ text: string; parentId: string }>();
+  reportComment = output<Comentario>();
 
   // Handlers
-  onDelete(): void {
-    if (this.comment().id_comentario) {
+  onOptionSelected(option: DropdownOption): void {
+    if (!this.comment().id_comentario) return;
+
+    if (option.value === 'delete') {
       this.deleteComment.emit({
         reporteId: this.reporteId(),
         commentId: this.comment().id_comentario!
       });
+    } else if (option.value === 'report') {
+      this.reportComment.emit(this.comment());
     }
   }
 
@@ -81,6 +109,7 @@ export class CommentItemComponent {
     const mins = Math.floor(diff / 60000);
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
+    if (mins < 1) return 'Hace un momento';
     if (mins < 60) return `Hace ${mins}m`;
     if (hours < 24) return `Hace ${hours}h`;
     return `Hace ${days}d`;

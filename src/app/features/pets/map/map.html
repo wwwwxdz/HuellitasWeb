@@ -101,16 +101,37 @@
       <div class="map-floating-bar">
         <span class="bar-text">
           <span class="red-dot"></span>
-          Alertas en tiempo real:
+          Filtrar:
         </span>
-        <button class="btn-pill" (click)="filtrarPorEspecie(null)">
-          <i class="material-icons">pets</i> Todos
+        <button 
+          class="btn-pill" 
+          [class.active]="selectedEspecie() === null" 
+          (click)="filtrarPorEspecie(null)"
+        >
+          <i class="material-icons">grid_view</i> Todos
         </button>
-        <button class="btn-pill" (click)="filtrarPorEspecie('esp-dog-id')">
-          Dog
+        <button 
+          class="btn-pill" 
+          [class.active]="idGato() !== null && selectedEspecie() === idGato()" 
+          [disabled]="idGato() === null"
+          (click)="filtrarPorEspecie(idGato())"
+        >
+          <i class="material-icons">pets</i> Gato
         </button>
-        <button class="btn-pill" (click)="filtrarPorEspecie('esp-cat-id')">
-          Cat
+        <button 
+          class="btn-pill" 
+          [class.active]="idPerro() !== null && selectedEspecie() === idPerro()" 
+          [disabled]="idPerro() === null"
+          (click)="filtrarPorEspecie(idPerro())"
+        >
+          <i class="material-icons">pets</i> Perro
+        </button>
+        <button 
+          class="btn-pill" 
+          [class.active]="selectedEspecie() === 'otros'" 
+          (click)="filtrarPorEspecie('otros')"
+        >
+          <i class="material-icons">pets</i> Otros
         </button>
       </div>
 
@@ -173,7 +194,17 @@
             }
             
             <div style="margin-top: 12px; font-size: 0.85rem; color: var(--text-main); line-height: 1.4;">
-              <strong>Descripción:</strong> Cerca de avenidas principales. Lleva collar azul pero sin placa de identificación.
+              <strong>Descripción:</strong> {{ selectedReport()?.descripcion || 'Sin descripción adicional.' }}
+            </div>
+
+            <div style="margin-top: 16px;">
+              <a 
+                [routerLink]="['/pets/reports/detail', selectedReport()?.id_reporte_mascota]"
+                class="btn-view-detail"
+              >
+                <i class="material-icons">launch</i>
+                Ver Detalles
+              </a>
             </div>
           </div>
         </div>

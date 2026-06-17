@@ -7,6 +7,7 @@ export interface User {
   bio?: string | null;
   id_role?: string;
   esta_baneado: boolean;
+  is_verificado?: boolean;
   creado_en?: string;
   departamento?: string | null;
   provincia?: string | null;
@@ -29,4 +30,10 @@ export interface RawUserGeoResponse {
     lng?: number;
   } | null;
   radio?: number | null;
+}
+
+export interface UsuarioMencion {
+  id_usuario: string;
+  nombre: string;
+  foto_perfil: string;
 }

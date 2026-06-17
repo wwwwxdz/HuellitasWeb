@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, Observable, of, tap } from 'rxjs';
 import { ConfigService } from './config.service';
-import { UserGeoPreferences, RawUserGeoResponse } from '../models/user.model';
+import { UserGeoPreferences, RawUserGeoResponse, UsuarioMencion } from '../models/user.model';
 
 @Injectable({
   providedIn: 'root',
@@ -62,12 +62,24 @@ export class UserService {
    * Actualiza la contraseña del usuario.
    * Endpoint: PUT /api/v1/usuarios/{id}/password
    */
-  async updatePassword(id: string, passwordActual: string, passwordNuevo: string): Promise<any> {
+  async updatePassword(id: string, telefono: string, passwordNuevo: string): Promise<any> {
     return await firstValueFrom(
       this.http.put<any>(`${this.apiUrl}/usuarios/${id}/password`, {
-        password_actual: passwordActual,
-        password_nuevo: passwordNuevo
+        password: passwordNuevo,
+        telefono: telefono
       })
+    );
+  }
+
+  private _mentionsCache = new Map<string, UsuarioMencion[]>();
+
+  searchMentions(q: string): Observable<UsuarioMencion[]> {
+    const cleanQuery = q.trim().toLowerCase();
+    if (this._mentionsCache.has(cleanQuery)) {
+      return of(this._mentionsCache.get(cleanQuery)!);
+    }
+    return this.http.get<UsuarioMencion[]>(`${this.apiUrl}/usuarios/menciones`, { params: { q } }).pipe(
+      tap(users => this._mentionsCache.set(cleanQuery, users))
     );
   }
 }

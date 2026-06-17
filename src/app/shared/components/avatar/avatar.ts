@@ -1,4 +1,4 @@
-import { Component, input, signal, computed } from '@angular/core';
+import { Component, input, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -14,6 +14,14 @@ export class AvatarComponent {
   size = input<number>(40);
 
   imageError = signal<boolean>(false);
+
+  constructor() {
+    // Cuando cambie la URL de la imagen, reseteamos el estado de error de la imagen
+    effect(() => {
+      this.src(); // leemos el signal reactivo src
+      this.imageError.set(false);
+    });
+  }
 
   // Determinar si debemos mostrar el fallback de iniciales
   showFallback = computed(() => {

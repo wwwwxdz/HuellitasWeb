@@ -24,7 +24,7 @@
     <div class="post-header-actions">
       <app-badge [status]="report().estado"></app-badge>
       <app-options-dropdown
-        [options]="REPORT_OPTIONS"
+        [options]="menuItems()"
         (optionSelected)="onReportOptionSelected($event)"
       ></app-options-dropdown>
     </div>
@@ -40,6 +40,7 @@
     <app-image-carousel 
       [images]="getImages()" 
       [alt]="report().nombre || 'Mascota'"
+      [zoomable]="false"
     ></app-image-carousel>
   </div>
 
@@ -158,6 +159,7 @@
             (startReply)="startReply($event)"
             (cancelReply)="cancelReply()"
             (sendReply)="onSendReply($event)"
+            (reportComment)="flagComment.emit($event)"
           ></app-comment-item>
         } @empty {
           @if (!isLoadingComments()) {

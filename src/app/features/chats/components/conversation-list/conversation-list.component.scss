@@ -1,0 +1,237 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.conv-list {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8px;
+  gap: 4px;
+
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+}
+
+.conv-search {
+  padding: 8px 12px 12px;
+  background: var(--bg-card);
+  flex-shrink: 0;
+
+  .search-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+
+    &:focus-within {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.1);
+      background: rgba(var(--primary-rgb), 0.02);
+    }
+  }
+
+  i {
+    color: var(--text-muted);
+    font-size: 18px;
+  }
+
+  input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text-main);
+    font-size: 0.875rem;
+
+    &::placeholder { color: var(--text-muted); }
+  }
+}
+
+.conv-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  border-radius: 12px;
+  transition: background 0.15s, transform 0.1s;
+
+  &:hover { background: var(--bg-hover, rgba(255,255,255,0.04)); }
+  &.active { background: rgba(var(--primary-rgb), 0.12); }
+  &.unread .conv-name { font-weight: 700; }
+  &.unread .conv-preview { color: var(--text-main); font-weight: 500; }
+}
+
+.conv-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.conv-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.unread-dot {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--primary);
+  border: 2px solid var(--bg-card);
+  z-index: 2;
+}
+
+.status-dot {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #6b7280; // Gris para offline
+  border: 2px solid var(--bg-card);
+  z-index: 1;
+  transition: background 0.3s;
+
+  &.online {
+    background: #10b981; // Verde para online
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+  }
+}
+
+.conv-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.conv-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 2px;
+}
+
+.conv-name {
+  font-size: 0.9rem;
+  color: var(--text-main);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.conv-time {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.conv-preview {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+  flex: 1;
+}
+
+.conv-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-delete-chat {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.4;
+  transition: opacity 0.2s, background 0.2s, color 0.2s;
+
+  i {
+    font-size: 16px;
+  }
+
+  @media (hover: hover) {
+    opacity: 0;
+  }
+
+  &:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ff4444;
+    opacity: 1 !important;
+  }
+}
+
+.conv-item:hover .btn-delete-chat {
+  opacity: 1;
+}
+
+// Empty
+.conv-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 48px 16px;
+  color: var(--text-muted);
+
+  i { font-size: 36px; opacity: 0.4; }
+  p { font-size: 0.85rem; margin: 0; }
+}
+
+// Skeleton
+.conv-item.skeleton {
+  pointer-events: none;
+
+  .sk-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--bg-input);
+    flex-shrink: 0;
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+
+  .sk-body { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+
+  .sk-line {
+    height: 12px;
+    border-radius: 6px;
+    background: var(--bg-input);
+    animation: pulse 1.4s ease-in-out infinite;
+    &.wide { width: 70%; }
+    &.short { width: 45%; }
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}

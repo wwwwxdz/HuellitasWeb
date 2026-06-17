@@ -1,0 +1,81 @@
+// El :host llena exactamente el espacio del content-wrapper.
+// Limitamos rígidamente su altura al viewport para evitar scrolls duplicados en el body.
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;     // Viewport dinámico para navegadores móviles
+  overflow: hidden;
+  width: 100%;
+  background-color: var(--bg-dark, #09090b);
+}
+
+.chat-center {
+  display: grid;
+  grid-template-columns: 1fr;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--bg-card, #18181b);
+  border: none;
+  border-radius: 0;
+  width: 100%;
+  max-width: var(--container-md, 1200px);
+  margin: 0 auto;
+
+  @media (min-width: 768px) {
+    grid-template-columns: 360px 1fr;
+    border-left: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.25);
+  }
+
+  &.mobile-window-open {
+    .chat-sidebar { display: none; }
+    .chat-main    { display: flex; }
+
+    @media (min-width: 768px) {
+      .chat-sidebar { display: flex; }
+    }
+  }
+}
+
+// ── Sidebar ──────────────────────────────────────────────────────────────────
+.chat-sidebar {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border-color);
+  background: var(--bg-card);
+  overflow: hidden;
+  min-height: 0;
+}
+
+.sidebar-header {
+  padding: 20px 20px 8px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  background: var(--bg-card);
+  z-index: 2;
+
+  h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-main);
+    letter-spacing: -0.01em;
+  }
+}
+
+// ── Main panel ───────────────────────────────────────────────────────────────
+.chat-main {
+  display: none;
+  flex-direction: column;
+  overflow: hidden;  // No scroll aquí; el scroll lo tiene .messages-area dentro
+  background: var(--bg-main);
+  min-height: 0;
+
+  @media (min-width: 768px) {
+    display: flex;
+  }
+}

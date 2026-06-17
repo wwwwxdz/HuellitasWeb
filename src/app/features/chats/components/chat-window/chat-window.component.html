@@ -1,0 +1,96 @@
+@if (!chat()) {
+  <div class="chat-empty-state">
+    <i class="material-icons">forum</i>
+    <h3>Selecciona una conversación</h3>
+    <p>Elige un chat de la lista para ver los mensajes</p>
+  </div>
+} @else {
+  <div class="chat-window">
+    <!-- Header -->
+    <div class="chat-header">
+      <div
+        class="header-actions"
+        (click)="closed.emit()"
+        (keydown.enter)="closed.emit()"
+        tabindex="0"
+        role="button"
+        aria-label="Cerrar chat"
+      >
+        <i class="material-icons">arrow_back</i>
+      </div>
+      @if (otherUser()) {
+        <div class="header-avatar-wrap">
+          <img
+            [src]="getAvatar(otherUser()!.nombre, otherUser()!.foto_perfil)"
+            [alt]="otherUser()!.nombre"
+            class="header-avatar"
+          />
+          <span class="status-dot" [class.online]="otherUser()!.activo"></span>
+        </div>
+        <div class="header-info">
+          <span class="header-name">{{ otherUser()!.nombre }}</span>
+          <span class="header-status" [class.online]="otherUser()!.activo">
+            {{ otherUser()!.activo ? 'En línea' : 'Desconectado' }}
+          </span>
+        </div>
+        <app-options-dropdown
+          [options]="menuItems"
+          (optionSelected)="handleMenuAction($event)"
+        ></app-options-dropdown>
+      }
+    </div>
+
+    <!-- Messages List -->
+    <app-chat-messages
+      [mensajes]="store.mensajes()"
+      [isLoading]="store.isLoading()"
+      [isLoadingMore]="store.isLoadingMore()"
+      [hasMore]="store.hasMore()"
+      [myId]="myId()"
+      [otherAvatar]="otherUser() ? getAvatar(otherUser()!.nombre, otherUser()!.foto_perfil) : ''"
+      (loadMore)="loadMore()"
+      (previewReport)="openReportPreview($event)"
+    >
+      <div #messagesEnd></div>
+    </app-chat-messages>
+
+    <!-- Input Bar o Banner de Restricción -->
+    @if (hasChatRestriction()) {
+      <div class="restriction-banner">
+        <div class="restriction-icon">
+          <i class="material-icons">gavel</i>
+        </div>
+        <div class="restriction-info">
+          <span class="restriction-title">Función de Chat Deshabilitada</span>
+          <span class="restriction-reason">
+            Motivo: {{ chatRestriction()?.razon || 'Infracción de las directrices comunitarias' }}
+          </span>
+          <span class="restriction-expiry">
+            Tu acceso se restaurará el {{ chatRestriction()?.hasta | date:'dd/MM/yyyy, hh:mm a' }}
+          </span>
+        </div>
+      </div>
+    } @else {
+      <!-- Input Bar -->
+      <app-chat-input (send)="sendMessage($event)"></app-chat-input>
+    }
+  </div>
+}
+
+<!-- Modal de Vista Previa de Reporte -->
+<app-chat-report-preview
+  [isOpen]="isPreviewModalOpen()"
+  [message]="selectedReportMsg()"
+  (closed)="closePreviewModal()"
+></app-chat-report-preview>
+
+<!-- Modal de Denuncia de Perfil -->
+<app-flag-modal
+  [isOpen]="flagModalOpen()"
+  [target]="flagTarget()"
+  [isFlagging]="isFlagging()"
+  [(motivo)]="flagMotivo"
+  [(descripcion)]="flagDescripcion"
+  (closed)="flagModalOpen.set(false)"
+  (confirmSubmit)="submitFlag()"
+></app-flag-modal>

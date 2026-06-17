@@ -1,0 +1,62 @@
+<div 
+  class="msg-row" 
+  [class.mine]="isMine()" 
+  [class.is-report]="message().tipo === 'reporte'" 
+  (click)="onReportClick()"
+  (keydown.enter)="onReportClick()"
+  [attr.tabindex]="message().tipo === 'reporte' ? 0 : null"
+  [attr.role]="message().tipo === 'reporte' ? 'button' : null"
+>
+  @if (!isMine()) {
+    <img
+      [src]="otherAvatar()"
+      [alt]="message().remitente.nombre"
+      class="msg-avatar"
+    >
+  }
+  <div class="msg-bubble" [class.mine]="isMine()">
+    @if (message().tipo === 'reporte' && message().reporte_mascota) {
+      <!-- Card de reporte embebido -->
+      <a class="reporte-card" [routerLink]="['/pets/reports/detail', message().reporte_mascota?.id_reporte_mascota]" (click)="$event.stopPropagation()">
+        @if (message().reporte_mascota?.imagen_principal?.url) {
+          <img [src]="message().reporte_mascota!.imagen_principal!.url" [alt]="message().reporte_mascota!.nombre" class="reporte-card-img">
+        } @else {
+          <div class="reporte-card-no-img"><i class="material-icons">pets</i></div>
+        }
+        <div class="reporte-card-body">
+          <span class="reporte-card-estado" [class]="getEstadoCss(message().reporte_mascota?.estado)">
+            {{ getEstadoLabel(message().reporte_mascota?.estado) }}
+          </span>
+          <p class="reporte-card-nombre">{{ message().reporte_mascota?.nombre || 'Sin nombre' }}</p>
+          @if (message().reporte_mascota?.ubicacion) {
+            <p class="reporte-card-ubicacion">
+              <i class="material-icons">location_on</i>
+              {{ message().reporte_mascota!.ubicacion }}
+            </p>
+          }
+        </div>
+      </a>
+      @if (message().contenido) {
+        <p class="reporte-card-texto">{{ message().contenido }}</p>
+      }
+    } @else if (message().tipo === 'reporte' && !message().reporte_mascota) {
+      <div class="reporte-card-loading">
+        <i class="material-icons rotating">sync</i>
+        <span>Cargando datos del reporte...</span>
+        @if (message().contenido) {
+          <p class="reporte-card-texto">{{ message().contenido }}</p>
+        }
+      </div>
+    } @else {
+      <p [innerHTML]="message().contenido | mentionHighlight"></p>
+    }
+    <div class="msg-meta">
+      <span class="msg-time">{{ message().creado_en | date:'HH:mm' }}</span>
+      @if (isMine()) {
+        <i class="material-icons read-tick" [class.read]="message().leido">
+          {{ message().leido ? 'done_all' : 'done' }}
+        </i>
+      }
+    </div>
+  </div>
+</div>

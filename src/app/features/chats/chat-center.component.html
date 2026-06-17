@@ -1,0 +1,22 @@
+<app-navbar></app-navbar>
+
+<div class="chat-center" [class.mobile-window-open]="showMobileWindow()">
+  <!-- Sidebar: lista de conversaciones -->
+  <aside class="chat-sidebar">
+    <div class="sidebar-header">
+      <h2>Mensajes</h2>
+    </div>
+    <app-conversation-list
+      [chats]="chats()"
+      [selectedChatId]="selectedChat()?.id_chat ?? null"
+      [isLoading]="isLoadingChats()"
+      (chatSelected)="selectChat($event)"
+      (deleteChat)="onDeleteChat($event)"
+    ></app-conversation-list>
+  </aside>
+
+  <!-- Panel principal: ventana de chat -->
+  <main class="chat-main">
+    <app-chat-window [chat]="selectedChat()" (closed)="closeMobileWindow()"></app-chat-window>
+  </main>
+</div>

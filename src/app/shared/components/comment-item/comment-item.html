@@ -14,16 +14,19 @@
         <span class="comment-author">{{ comment().usuario.nombre }}</span>
         <span class="comment-date">{{ getTimeAgo(comment().creado_en) }}</span>
         
-        <!-- Acciones Rápidas (Borrar) -->
-        @if (canDelete()) {
-          <button class="btn-delete-comment" (click)="onDelete()" title="Eliminar comentario">
-            <i class="material-icons">delete_outline</i>
-          </button>
+        <!-- Menú de Opciones (3 puntitos) -->
+        @if (commentOptions().length > 0) {
+          <div class="comment-options-dropdown-wrapper">
+            <app-options-dropdown
+              [options]="commentOptions()"
+              (optionSelected)="onOptionSelected($event)"
+            ></app-options-dropdown>
+          </div>
         }
       </div>
 
       <!-- Contenido -->
-      <p class="comment-content-text">{{ comment().contenido }}</p>
+      <p class="comment-content-text" [innerHTML]="comment().contenido | mentionHighlight"></p>
     </div>
 
     <!-- Barra de Acciones del Comentario -->
@@ -55,6 +58,7 @@
       <div class="reply-editor-box">
         <input
           type="text"
+          mentionInput
           class="reply-text-input"
           placeholder="Escribe una respuesta..."
           [(ngModel)]="replyInput"
@@ -101,6 +105,7 @@
         (startReply)="startReply.emit($event)"
         (cancelReply)="cancelReply.emit()"
         (sendReply)="sendReply.emit($event)"
+        (reportComment)="reportComment.emit($event)"
       ></app-comment-item>
     }
   </div>

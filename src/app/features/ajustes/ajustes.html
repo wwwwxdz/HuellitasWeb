@@ -59,6 +59,15 @@
           </button>
           <button
             class="nav-item"
+            [class.active]="activeTab() === 'mapa'"
+            (click)="setTab('mapa')"
+          >
+            <i class="material-icons">map</i>
+            <span>Mapa de Cobertura</span>
+            <i class="material-icons nav-arrow">chevron_right</i>
+          </button>
+          <button
+            class="nav-item"
             [class.active]="activeTab() === 'seguridad'"
             (click)="setTab('seguridad')"
           >
@@ -103,230 +112,98 @@
               <i class="material-icons">person</i>
               <div>
                 <h2>Información Personal</h2>
-                <p>Gestiona tus datos de contacto y área geográfica para recibir alertas de mascotas.</p>
+                <p>Gestiona tu información de contacto y descripción personal.</p>
               </div>
             </div>
 
             <form [formGroup]="perfilForm" (ngSubmit)="onSavePerfil()" class="settings-form">
-              <div class="settings-perfil-grid">
-                
-                <!-- Lado Izquierdo: Información Personal -->
-                <div class="profile-basic-column">
-                  <div class="form-grid" style="grid-template-columns: 1fr; gap: 16px;">
-                    <!-- ID Usuario (Lectura) -->
-                    <div class="form-field">
-                      <label>
-                        <i class="material-icons">key</i>
-                        ID Usuario (Lectura)
-                      </label>
-                      <input
-                        type="text"
-                        [value]="usuario()?.id_usuario || ''"
-                        disabled
-                        style="opacity: 0.65; cursor: not-allowed;"
-                      />
-                    </div>
-
-                    <!-- Nombre -->
-                    <div class="form-field" [class.has-error]="perfilForm.get('nombre')?.touched && perfilForm.get('nombre')?.invalid">
-                      <label for="nombre">
-                        <i class="material-icons">badge</i>
-                        Nombre Completo
-                        <span class="required">*</span>
-                      </label>
-                      <input
-                        id="nombre"
-                        type="text"
-                        formControlName="nombre"
-                        placeholder="Ej: Juan Pérez"
-                        autocomplete="name"
-                      />
-                      @if (getError(perfilForm, 'nombre')) {
-                        <span class="field-error">{{ getError(perfilForm, 'nombre') }}</span>
-                      }
-                    </div>
-
-                    <!-- Email -->
-                    <div class="form-field" [class.has-error]="perfilForm.get('email')?.touched && perfilForm.get('email')?.invalid">
-                      <label for="email">
-                        <i class="material-icons">alternate_email</i>
-                        Correo Electrónico
-                        <span class="required">*</span>
-                      </label>
-                      <input
-                        id="email"
-                        type="email"
-                        formControlName="email"
-                        placeholder="usuario@ejemplo.com"
-                        autocomplete="email"
-                      />
-                      @if (getError(perfilForm, 'email')) {
-                        <span class="field-error">{{ getError(perfilForm, 'email') }}</span>
-                      }
-                    </div>
-
-                    <!-- Teléfono -->
-                    <div class="form-field">
-                      <label for="telefono">
-                        <i class="material-icons">phone</i>
-                        Teléfono de Contacto
-                      </label>
-                      <input
-                        id="telefono"
-                        type="tel"
-                        formControlName="telefono"
-                        placeholder="+51 999 999 999"
-                        autocomplete="tel"
-                      />
-                    </div>
+              <div class="profile-basic-column" style="width: 100%;">
+                <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                  <!-- ID Usuario (Lectura) -->
+                  <div class="form-field">
+                    <label>
+                      <i class="material-icons">key</i>
+                      ID Usuario (Lectura)
+                    </label>
+                    <input
+                      type="text"
+                      [value]="usuario()?.id_usuario || ''"
+                      disabled
+                      style="opacity: 0.65; cursor: not-allowed;"
+                    />
                   </div>
 
-                  <!-- Bio -->
-                  <div class="form-field full-width" style="margin-top: 16px;" [class.has-error]="perfilForm.get('bio')?.touched && perfilForm.get('bio')?.invalid">
-                    <label for="bio">
-                      <i class="material-icons">notes</i>
-                      Biografía
-                      <span class="char-badge">{{ charCount }}/250</span>
+                  <!-- Nombre -->
+                  <div class="form-field" [class.has-error]="perfilForm.get('nombre')?.touched && perfilForm.get('nombre')?.invalid">
+                    <label for="nombre">
+                      <i class="material-icons">badge</i>
+                      Nombre Completo
+                      <span class="required">*</span>
                     </label>
-                    <textarea
-                      id="bio"
-                      formControlName="bio"
-                      placeholder="Cuéntanos un poco sobre ti y tu amor por los animales..."
-                      rows="4"
-                    ></textarea>
-                    @if (getError(perfilForm, 'bio')) {
-                      <span class="field-error">{{ getError(perfilForm, 'bio') }}</span>
+                    <input
+                      id="nombre"
+                      type="text"
+                      formControlName="nombre"
+                      placeholder="Ej: Juan Pérez"
+                      autocomplete="name"
+                    />
+                    @if (getError(perfilForm, 'nombre')) {
+                      <span class="field-error">{{ getError(perfilForm, 'nombre') }}</span>
                     }
                   </div>
-                </div>
 
-                <!-- Lado Derecho: Ubicación y Mapa de Cobertura -->
-                <div class="profile-location-column">
-                  <div class="form-section">
-                    <h3 class="location-title">
-                      <i class="material-icons">map</i>
-                      Ubicación de Cobertura
-                    </h3>
-                    
-                    <div class="ubigeo-selectors-grid">
-                      <!-- Departamento -->
-                      <div class="form-field">
-                        <label for="departamento">
-                          <i class="material-icons">explore</i>
-                          Departamento
-                        </label>
-                        <div class="select-wrapper">
-                          <select id="departamento" formControlName="departamento">
-                            <option value="">Selecciona</option>
-                            @for (dept of departamentos(); track dept.value) {
-                              <option [value]="dept.value">{{ dept.label }}</option>
-                            }
-                          </select>
-                        </div>
-                      </div>
-
-                      <!-- Provincia -->
-                      <div class="form-field">
-                        <label for="provincia">
-                          <i class="material-icons">location_city</i>
-                          Provincia
-                        </label>
-                        <div class="select-wrapper">
-                          <select id="provincia" formControlName="provincia">
-                            <option value="">Selecciona</option>
-                            @for (prov of provincias(); track prov.value) {
-                              <option [value]="prov.value">{{ prov.label }}</option>
-                            }
-                          </select>
-                        </div>
-                      </div>
-
-                      <!-- Distrito -->
-                      <div class="form-field">
-                        <label for="distrito">
-                          <i class="material-icons">place</i>
-                          Distrito
-                        </label>
-                        <div class="select-wrapper">
-                          <select id="distrito" formControlName="distrito">
-                            <option value="">Selecciona</option>
-                            @for (dist of distritos(); track dist.value) {
-                              <option [value]="dist.value">{{ dist.label }}</option>
-                            }
-                          </select>
-                        </div>
-                      </div>
-                    </div>
+                  <!-- Email -->
+                  <div class="form-field" [class.has-error]="perfilForm.get('email')?.touched && perfilForm.get('email')?.invalid">
+                    <label for="email">
+                      <i class="material-icons">alternate_email</i>
+                      Correo Electrónico
+                      <span class="required">*</span>
+                    </label>
+                    <input
+                      id="email"
+                      type="email"
+                      formControlName="email"
+                      placeholder="usuario@ejemplo.com"
+                      autocomplete="email"
+                    />
+                    @if (getError(perfilForm, 'email')) {
+                      <span class="field-error">{{ getError(perfilForm, 'email') }}</span>
+                    }
                   </div>
 
-                  <div class="form-divider" style="margin: 24px 0;"></div>
-
-                  <div class="form-section map-config-section">
-                    <h3 class="location-title">
-                      <i class="material-icons">radar</i>
-                      Radio de Notificaciones de Avistamientos
-                    </h3>
-                    <p class="section-desc">Define tu centro de búsqueda y el radio en metros para recibir notificaciones sobre mascotas en tu zona de cobertura.</p>
-
-                    <div class="map-wrapper-ajustes">
-                      <div class="map-container-ajustes">
-                        <app-map-component
-                          [center]="[perfilForm.get('latitud')?.value || -9.1214, perfilForm.get('longitud')?.value || -78.5308]"
-                          [radiusKm]="(perfilForm.get('radio')?.value || 10000) / 1000"
-                          [zoom]="13"
-                          [editable]="true"
-                          [showControls]="true"
-                          (mapClick)="onLocationChange($event)"
-                        ></app-map-component>
-                      </div>
-
-                      <!-- Control de Radio -->
-                      <div class="radius-control-card shadow-sm">
-                        <div class="radius-info">
-                          <div class="radius-label-group">
-                            <i class="material-icons text-cyan">radar</i>
-                            <span class="label">Radio de Búsqueda:</span>
-                          </div>
-                          <div class="radius-values-group">
-                            <span class="value">{{ (perfilForm.get('radio')?.value || 10000) / 1000 | number:'1.1-1' }} km</span>
-                            <span class="value-meters">({{ perfilForm.get('radio')?.value || 10000 | number:'1.0-0' }} metros)</span>
-                          </div>
-                        </div>
-                        <input 
-                          type="range" 
-                          min="500" 
-                          max="50000" 
-                          step="500" 
-                          [value]="perfilForm.get('radio')?.value || 10000"
-                          (input)="onRadiusInput($event)"
-                          class="radius-slider"
-                        >
-                      </div>
-
-                      <!-- Coordenadas -->
-                      <div class="coords-display-ajustes">
-                        <div class="coord-item">
-                          <span class="label">Latitud:</span>
-                          <span class="value">{{ perfilForm.get('latitud')?.value || -9.1214 }}</span>
-                        </div>
-                        <div class="coord-item">
-                          <span class="label">Longitud:</span>
-                          <span class="value">{{ perfilForm.get('longitud')?.value || -78.5308 }}</span>
-                        </div>
-                      </div>
-
-                      <!-- Dirección Descriptiva -->
-                      <div class="address-display-ajustes shadow-sm">
-                        <div class="address-header">
-                          <i class="material-icons text-cyan">place</i>
-                          <span class="label">Dirección Estimada de Cobertura:</span>
-                        </div>
-                        <p class="address-value">{{ currentAddress() }}</p>
-                      </div>
-                    </div>
+                  <!-- Teléfono -->
+                  <div class="form-field">
+                    <label for="telefono">
+                      <i class="material-icons">phone</i>
+                      Teléfono de Contacto
+                    </label>
+                    <input
+                      id="telefono"
+                      type="tel"
+                      formControlName="telefono"
+                      placeholder="+51 999 999 999"
+                      autocomplete="tel"
+                    />
                   </div>
                 </div>
 
+                <!-- Bio -->
+                <div class="form-field full-width" style="margin-top: 20px;" [class.has-error]="perfilForm.get('bio')?.touched && perfilForm.get('bio')?.invalid">
+                  <label for="bio">
+                    <i class="material-icons">notes</i>
+                    Biografía
+                    <span class="char-badge">{{ charCount }}/250</span>
+                  </label>
+                  <textarea
+                    id="bio"
+                    formControlName="bio"
+                    placeholder="Cuéntanos un poco sobre ti y tu amor por los animales..."
+                    rows="4"
+                  ></textarea>
+                  @if (getError(perfilForm, 'bio')) {
+                    <span class="field-error">{{ getError(perfilForm, 'bio') }}</span>
+                  }
+                </div>
               </div>
 
               <!-- Botón guardar -->
@@ -338,6 +215,159 @@
                   } @else {
                     <i class="material-icons">save</i>
                     Guardar Cambios
+                  }
+                </button>
+              </div>
+            </form>
+          </section>
+        }
+
+        <!-- ══ TAB: Mapa de Cobertura ═══════════════════════════ -->
+        @if (activeTab() === 'mapa') {
+          <section class="settings-section">
+            <div class="section-title">
+              <i class="material-icons">map</i>
+              <div>
+                <h2>Mapa de Cobertura</h2>
+                <p>Define tu ubicación y el radio en metros para recibir alertas y avistamientos en tu zona de interés.</p>
+              </div>
+            </div>
+
+            <form [formGroup]="perfilForm" (ngSubmit)="onSavePerfil()" class="settings-form">
+              <div class="profile-location-column" style="width: 100%;">
+                
+                <div class="form-section">
+                  <h3 class="location-title">
+                    <i class="material-icons">explore</i>
+                    Ubicación General
+                  </h3>
+                  
+                  <div class="ubigeo-selectors-grid">
+                    <!-- Departamento -->
+                    <div class="form-field">
+                      <label for="departamento">
+                        Departamento
+                      </label>
+                      <div class="select-wrapper">
+                        <select id="departamento" formControlName="departamento">
+                          <option value="">Selecciona</option>
+                          @for (dept of departamentos(); track dept.value) {
+                            <option [value]="dept.value">{{ dept.label }}</option>
+                          }
+                        </select>
+                      </div>
+                    </div>
+
+                    <!-- Provincia -->
+                    <div class="form-field">
+                      <label for="provincia">
+                        Provincia
+                      </label>
+                      <div class="select-wrapper">
+                        <select id="provincia" formControlName="provincia">
+                          <option value="">Selecciona</option>
+                          @for (prov of provincias(); track prov.value) {
+                            <option [value]="prov.value">{{ prov.label }}</option>
+                          }
+                        </select>
+                      </div>
+                    </div>
+
+                    <!-- Distrito -->
+                    <div class="form-field">
+                      <label for="distrito">
+                        Distrito
+                      </label>
+                      <div class="select-wrapper">
+                        <select id="distrito" formControlName="distrito">
+                          <option value="">Selecciona</option>
+                          @for (dist of distritos(); track dist.value) {
+                            <option [value]="dist.value">{{ dist.label }}</option>
+                          }
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-divider" style="margin: 16px 0;"></div>
+
+                <div class="form-section map-config-section">
+                  <h3 class="location-title">
+                    <i class="material-icons">radar</i>
+                    Radio de Notificaciones
+                  </h3>
+                  <p class="section-desc">Haz clic en el mapa para establecer tu centro de búsqueda y ajusta el radio para recibir alertas oportunas de mascotas perdidas/encontradas.</p>
+
+                  <div class="map-wrapper-ajustes">
+                    <div class="map-container-ajustes" style="height: 350px;">
+                      <app-map-component
+                        [center]="[perfilForm.get('latitud')?.value || -9.1214, perfilForm.get('longitud')?.value || -78.5308]"
+                        [radiusKm]="(perfilForm.get('radio')?.value || 10000) / 1000"
+                        [zoom]="13"
+                        [editable]="true"
+                        [showControls]="true"
+                        (mapClick)="onLocationChange($event)"
+                      ></app-map-component>
+                    </div>
+
+                    <!-- Control de Radio -->
+                    <div class="radius-control-card shadow-sm">
+                      <div class="radius-info">
+                        <div class="radius-label-group">
+                          <i class="material-icons text-cyan">radar</i>
+                          <span class="label">Radio de Cobertura:</span>
+                        </div>
+                        <div class="radius-values-group">
+                          <span class="value">{{ (perfilForm.get('radio')?.value || 10000) / 1000 | number:'1.1-1' }} km</span>
+                          <span class="value-meters">({{ perfilForm.get('radio')?.value || 10000 | number:'1.0-0' }} metros)</span>
+                        </div>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="500" 
+                        max="50000" 
+                        step="500" 
+                        [value]="perfilForm.get('radio')?.value || 10000"
+                        (input)="onRadiusInput($event)"
+                        class="radius-slider"
+                      >
+                    </div>
+
+                    <!-- Coordenadas y Dirección -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                      <div class="coords-display-ajustes" style="margin: 0; display: flex; flex-direction: column; justify-content: center; gap: 8px;">
+                        <div class="coord-item">
+                          <span class="label">Latitud:</span>
+                          <span class="value">{{ perfilForm.get('latitud')?.value || -9.1214 }}</span>
+                        </div>
+                        <div class="coord-item">
+                          <span class="label">Longitud:</span>
+                          <span class="value">{{ perfilForm.get('longitud')?.value || -78.5308 }}</span>
+                        </div>
+                      </div>
+
+                      <div class="address-display-ajustes shadow-sm" style="margin: 0;">
+                        <div class="address-header">
+                          <i class="material-icons text-cyan">place</i>
+                          <span class="label">Dirección Estimada:</span>
+                        </div>
+                        <p class="address-value" style="font-size: 0.82rem; margin: 4px 0 0 0; line-height: 1.4;">{{ currentAddress() }}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Botón guardar -->
+              <div class="form-actions">
+                <button type="submit" class="btn-save" [disabled]="isSaving() || perfilForm.invalid">
+                  @if (isSaving()) {
+                    <i class="material-icons spin-icon">sync</i>
+                    Guardando...
+                  } @else {
+                    <i class="material-icons">save</i>
+                    Guardar Ubicación
                   }
                 </button>
               </div>
@@ -369,13 +399,18 @@
                   Contraseña Actual
                   <span class="required">*</span>
                 </label>
-                <input
-                  id="password_actual"
-                  type="password"
-                  formControlName="password_actual"
-                  placeholder="Tu contraseña actual"
-                  autocomplete="current-password"
-                />
+                <div class="password-input-wrapper">
+                  <input
+                    id="password_actual"
+                    [type]="showPasswordActual() ? 'text' : 'password'"
+                    formControlName="password_actual"
+                    placeholder="Tu contraseña actual"
+                    autocomplete="current-password"
+                  />
+                  <button type="button" class="btn-toggle-password" (click)="togglePasswordActual()" aria-label="Mostrar/ocultar contraseña actual">
+                    <i class="material-icons">{{ showPasswordActual() ? 'visibility_off' : 'visibility' }}</i>
+                  </button>
+                </div>
                 @if (getError(seguridadForm, 'password_actual')) {
                   <span class="field-error">{{ getError(seguridadForm, 'password_actual') }}</span>
                 }
@@ -388,13 +423,18 @@
                   Nueva Contraseña
                   <span class="required">*</span>
                 </label>
-                <input
-                  id="password_nuevo"
-                  type="password"
-                  formControlName="password_nuevo"
-                  placeholder="Mínimo 6 caracteres"
-                  autocomplete="new-password"
-                />
+                <div class="password-input-wrapper">
+                  <input
+                    id="password_nuevo"
+                    [type]="showPasswordNuevo() ? 'text' : 'password'"
+                    formControlName="password_nuevo"
+                    placeholder="Mínimo 6 caracteres"
+                    autocomplete="new-password"
+                  />
+                  <button type="button" class="btn-toggle-password" (click)="togglePasswordNuevo()" aria-label="Mostrar/ocultar nueva contraseña">
+                    <i class="material-icons">{{ showPasswordNuevo() ? 'visibility_off' : 'visibility' }}</i>
+                  </button>
+                </div>
                 @if (getError(seguridadForm, 'password_nuevo')) {
                   <span class="field-error">{{ getError(seguridadForm, 'password_nuevo') }}</span>
                 }
@@ -407,13 +447,18 @@
                   Confirmar Nueva Contraseña
                   <span class="required">*</span>
                 </label>
-                <input
-                  id="password_confirmar"
-                  type="password"
-                  formControlName="password_confirmar"
-                  placeholder="Repite la nueva contraseña"
-                  autocomplete="new-password"
-                />
+                <div class="password-input-wrapper">
+                  <input
+                    id="password_confirmar"
+                    [type]="showPasswordConfirmar() ? 'text' : 'password'"
+                    formControlName="password_confirmar"
+                    placeholder="Repite la nueva contraseña"
+                    autocomplete="new-password"
+                  />
+                  <button type="button" class="btn-toggle-password" (click)="togglePasswordConfirmar()" aria-label="Confirmar mostrar/ocultar contraseña">
+                    <i class="material-icons">{{ showPasswordConfirmar() ? 'visibility_off' : 'visibility' }}</i>
+                  </button>
+                </div>
                 @if (seguridadForm.errors?.['noMatch'] && seguridadForm.get('password_confirmar')?.touched) {
                   <span class="field-error">Las contraseñas no coinciden.</span>
                 }

@@ -8,10 +8,11 @@ import { LocationFilterModal } from '../components/location-filter-modal/locatio
 import { PetService } from '../../../core/services/pet.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { PetReport, Especie } from '../../../core/models/pet.model';
-import { FlagModalComponent } from '../../../shared/components/flag-modal/flag-modal';
-import { FlagService } from '../../../core/services/flag.service';
 import { MotivoDenuncia } from '../../../core/models/flag.model';
 import { PostCardSocialComponent } from '../../../shared/components/post-card-social/post-card-social';
+import { Comentario } from '../../../core/models/comment.model';
+import { FlagModalComponent } from '../../../shared/components/flag-modal/flag-modal';
+import { FlagService } from '../../../core/services/flag.service';
 
 @Component({
   selector: 'app-reports',
@@ -89,7 +90,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
 
       // Recargar reportes en la página 1
       this.loadReports(1);
-    }, { allowSignalWrites: true });
+    });
   }
 
   ngOnInit(): void {
@@ -298,6 +299,23 @@ export class ReportsComponent implements OnInit, OnDestroy {
     this.isFlagModalOpen.set(true);
   }
 
+  onFlagComment(c: Comentario): void {
+    if (!this.usuario()) {
+      this.router.navigate(['/login'], { queryParams: { returnUrl: this.router.url } });
+      return;
+    }
+    if (!c.id_comentario) return;
+
+    this.flagTarget.set({
+      type: 'comentario',
+      id: c.id_comentario,
+      label: `Comentario de ${c.usuario.nombre || 'Usuario'}`
+    });
+    this.flagMotivo.set('spam');
+    this.flagDescripcion.set('');
+    this.isFlagModalOpen.set(true);
+  }
+
   closeFlagModal(): void {
     this.isFlagModalOpen.set(false);
     this.flagTarget.set(null);
@@ -310,7 +328,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
     this.isSendingFlag.set(true);
     try {
       await this.flagService.crearDenuncia({
-        tipo_objetivo: 'reporte',
+        tipo_objetivo: target.type as any,
         id_objetivo: target.id,
         motivo: this.flagMotivo(),
         descripcion: this.flagDescripcion()
@@ -321,10 +339,14 @@ export class ReportsComponent implements OnInit, OnDestroy {
       console.error('Error al enviar la denuncia:', error);
       const errMsg = error?.error?.error || 'No se pudo enviar la denuncia. Inténtalo de nuevo más tarde.';
       alert(errMsg === 'ya has denunciado este contenido anteriormente'
-        ? 'Ya has reportado esta publicación anteriormente.'
+        ? 'Ya has reportado este contenido anteriormente.'
         : errMsg);
     } finally {
       this.isSendingFlag.set(false);
     }
+  }
+
+  onPostDeleted(id: string): void {
+    this.reports.update(list => list.filter(r => r.id_reporte_mascota !== id));
   }
 }

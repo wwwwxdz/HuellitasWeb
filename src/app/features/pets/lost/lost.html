@@ -22,7 +22,9 @@
       [(selectedOrder)]="selectedOrder"
       [(radio)]="radioFilter"
       [(withReward)]="withRewardFilter"
+      [geoActive]="geoFilterActive()"
       (openMap)="openMapFilter()"
+      (clearGeo)="handleClearGeoFilter()"
     ></app-filter-bar>
 
     <!-- Layout principal -->
@@ -46,8 +48,8 @@
           <div style="position: absolute; inset: 0; z-index: 500; cursor: pointer;"></div>
           <button class="expand-map-btn" style="position: absolute; bottom: 12px; left: 12px; z-index: 1001; display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background-color: rgba(255, 255, 255, 0.92); border: none; border-radius: 100px; font-size: 0.85rem; font-weight: 700; color: #1e293b; cursor: pointer; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); pointer-events: none;">
             <i class="material-icons" style="font-size: 1rem;">my_location</i>
-            @if (radioFilter() > 0) {
-              <span>Buscando en {{ radioFilter() }} KM</span>
+            @if (geoFilter().active) {
+              <span>Buscando en {{ geoFilter().radio }} KM</span>
             } @else {
               <span>Buscar cerca de mí</span>
             }
@@ -59,7 +61,7 @@
           <div class="error-banner">
             <i class="material-icons">error_outline</i>
             <span>{{ error() }}</span>
-            <button (click)="fetchReports(advancedFilters(), page(), false)">Reintentar</button>
+            <button (click)="reloadReports()">Reintentar</button>
           </div>
         }
 
@@ -123,8 +125,9 @@
 <app-location-filter-modal
   [isOpen]="isMapModalOpen()"
   [initialCenter]="center()"
-  [initialRadius]="radioFilter() || 15"
-  [reports]="mapPoints()"
+  [initialRadius]="geoFilter().radio"
+  [initialActive]="geoFilter().active"
+  [reports]="[]"
   (closeModal)="closeMapFilter()"
   (applyFilters)="handleMapFilterApply($event)"
 ></app-location-filter-modal>

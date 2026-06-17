@@ -1,0 +1,61 @@
+<div
+  class="notification-item"
+  [class.unread]="!notification().leido"
+  (click)="clicked.emit(notification())"
+  (keydown.enter)="clicked.emit(notification())"
+  tabindex="0"
+  role="button"
+>
+  <!-- Avatar + badge de tipo -->
+  <div class="notif-avatar">
+    <img
+      [src]="
+        notification().actor?.foto_perfil ||
+        'https://ui-avatars.com/api/?name=' +
+          (notification().actor?.nombre || 'U') +
+          '&background=106063&color=fff'
+      "
+      [alt]="notification().actor?.nombre || 'Usuario'"
+    />
+    <div class="type-badge" [class]="notification().tipo.toLowerCase()">
+      <i class="material-icons">
+        {{
+          notification().tipo === 'LIKE'            ? 'favorite'        :
+          notification().tipo === 'MENCION'         ? 'alternate_email' :
+          notification().tipo === 'COMENTARIO' ||
+          notification().tipo === 'RESPUESTA'       ? 'chat_bubble'     :
+          notification().tipo === 'MATCH_IA'        ? 'psychology'      :
+          notification().tipo === 'REPORTE_CERCANO' ? 'location_on'     :
+                                                      'notifications'
+        }}
+      </i>
+    </div>
+  </div>
+
+  <!-- Contenido -->
+  <div class="notif-details">
+    <div class="notif-body">
+      <p class="message">
+        <strong>{{ notification().actor?.nombre || 'Alguien' }}</strong>
+        <span> </span>
+        <span [innerHTML]="notification().mensaje | mentionHighlight"></span>
+      </p>
+      <span class="time">{{ notification().creado_en | timeAgo }}</span>
+    </div>
+
+    <!-- Derecha: punto no leído o botón eliminar -->
+    <div class="notif-right">
+      @if (!notification().leido) {
+        <span class="unread-dot"></span>
+      } @else if (showDelete()) {
+        <button
+          class="action-btn"
+          (click)="onDelete($event)"
+          [title]="deleteIcon() === 'close' ? 'Ocultar' : 'Eliminar'"
+        >
+          <i class="material-icons">{{ deleteIcon() }}</i>
+        </button>
+      }
+    </div>
+  </div>
+</div>

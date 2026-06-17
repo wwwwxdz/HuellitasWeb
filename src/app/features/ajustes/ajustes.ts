@@ -28,7 +28,7 @@ interface SelectOption {
   label: string;
 }
 
-type SettingsTab = 'perfil' | 'cuenta' | 'seguridad';
+type SettingsTab = 'perfil' | 'mapa' | 'seguridad';
 
 @Component({
   selector: 'app-ajustes',
@@ -52,6 +52,11 @@ export class AjustesComponent implements OnInit {
   saveSuccess = signal<string | null>(null);
   saveError = signal<string | null>(null);
   previewUrl = signal<string | null>(null);
+
+  // Visibilidad de contraseñas
+  showPasswordActual = signal(false);
+  showPasswordNuevo = signal(false);
+  showPasswordConfirmar = signal(false);
 
   // Formulario de perfil
   perfilForm!: FormGroup;
@@ -260,6 +265,7 @@ export class AjustesComponent implements OnInit {
       this.perfilForm.patchValue({ foto_perfil: url });
       await this.userService.updateUsuario(user.id_usuario, { foto_perfil: url });
       this.authService.patchUsuario({ foto_perfil: url });
+      await firstValueFrom(this.authService.refreshUser());
       this.previewUrl.set(null);
       this.saveSuccess.set('Foto de perfil actualizada correctamente.');
     } catch {
@@ -297,6 +303,7 @@ export class AjustesComponent implements OnInit {
       }
 
       await this.userService.updateUsuario(user.id_usuario, data);
+      this.authService.patchUsuario(data);
       await firstValueFrom(this.authService.refreshUser());
       this.saveSuccess.set('Datos guardados correctamente.');
     } catch {
@@ -320,20 +327,33 @@ export class AjustesComponent implements OnInit {
     this.clearMessages();
 
     try {
-      const { password_actual, password_nuevo } = this.seguridadForm.value;
+      const { password_nuevo } = this.seguridadForm.value;
+      // El backend requiere el teléfono registrado del usuario para verificar identidad (si no es admin)
       await this.userService.updatePassword(
         user.id_usuario,
-        password_actual,
+        user.telefono || '',
         password_nuevo
       );
       this.saveSuccess.set('Contraseña actualizada correctamente.');
       this.seguridadForm.reset();
     } catch (error: any) {
-      const msg = error?.error?.error || 'Contraseña actual incorrecta o error al actualizar.';
+      const msg = error?.error?.error || 'Error al actualizar la contraseña.';
       this.saveError.set(msg);
     } finally {
       this.isSaving.set(false);
     }
+  }
+
+  togglePasswordActual(): void {
+    this.showPasswordActual.update(v => !v);
+  }
+
+  togglePasswordNuevo(): void {
+    this.showPasswordNuevo.update(v => !v);
+  }
+
+  togglePasswordConfirmar(): void {
+    this.showPasswordConfirmar.update(v => !v);
   }
 
   // ── Helpers ─────────────────────────────────────────────────────

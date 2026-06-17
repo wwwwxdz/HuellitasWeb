@@ -5,43 +5,49 @@
       id="cat-all"
       class="cat-pill"
       [class.active]="selectedEspecieId() === ''"
-      (click)="selectCategory('all')"
+      (click)="selectEspecie('')"
     >
       <i class="material-icons">grid_view</i>
       <span>Todos</span>
     </button>
     
-    @if (perroEspecie()) {
-      <button
-        id="cat-perros"
-        class="cat-pill"
-        [class.active]="selectedEspecieId() !== '' && selectedEspecieId() === perroEspecie()?.id_especie"
-        (click)="selectCategory('perro')"
-      >
-        <i class="material-icons">pets</i>
-        <span>Perros</span>
-      </button>
-    }
-    
-    @if (gatoEspecie()) {
-      <button
-        id="cat-gatos"
-        class="cat-pill"
-        [class.active]="selectedEspecieId() !== '' && selectedEspecieId() === gatoEspecie()?.id_especie"
-        (click)="selectCategory('gato')"
-      >
-        <i class="material-icons">cruelty_free</i>
-        <span>Gatos</span>
-      </button>
-    }
-    
+    <button
+      id="cat-gato"
+      class="cat-pill"
+      [class.active]="idGato() !== null && selectedEspecieId() === idGato()"
+      [disabled]="idGato() === null"
+      (click)="selectEspecie(idGato() || '')"
+    >
+      @if (idGato() !== null && getEspecieSvg('gato'); as svg) {
+        <span class="species-svg-icon" [innerHTML]="svg" style="margin-right: 6px; display: inline-flex; align-items: center; justify-content: center; line-height: 1; flex-shrink: 0;"></span>
+      } @else {
+        <i class="material-icons notranslate" style="font-size: 1.15rem; line-height: 1; display: inline-flex; align-items: center; justify-content: center; margin-right: 4px;">pets</i>
+      }
+      <span>Gato</span>
+    </button>
+
+    <button
+      id="cat-perro"
+      class="cat-pill"
+      [class.active]="idPerro() !== null && selectedEspecieId() === idPerro()"
+      [disabled]="idPerro() === null"
+      (click)="selectEspecie(idPerro() || '')"
+    >
+      @if (idPerro() !== null && getEspecieSvg('perro'); as svg) {
+        <span class="species-svg-icon" [innerHTML]="svg" style="margin-right: 6px; display: inline-flex; align-items: center; justify-content: center; line-height: 1; flex-shrink: 0;"></span>
+      } @else {
+        <i class="material-icons notranslate" style="font-size: 1.15rem; line-height: 1; display: inline-flex; align-items: center; justify-content: center; margin-right: 4px;">pets</i>
+      }
+      <span>Perro</span>
+    </button>
+
     <button
       id="cat-otros"
       class="cat-pill"
       [class.active]="selectedEspecieId() === 'otros'"
-      (click)="selectCategory('otros')"
+      (click)="selectEspecie('otros')"
     >
-      <i class="material-icons">flutter_dash</i>
+      <i class="material-icons notranslate" style="font-size: 1.15rem; line-height: 1; display: inline-flex; align-items: center; justify-content: center; margin-right: 4px;">pets</i>
       <span>Otros</span>
     </button>
   </div>
@@ -51,19 +57,11 @@
     <!-- Ordenación -->
     <div class="sort-group">
       <span class="sort-label">Ordenar:</span>
-      <div class="select-wrapper">
-        <select
-          id="sort-select"
-          [value]="selectedOrder()"
-          (change)="selectedOrder.set($any($event.target).value)"
-          class="sort-select"
-          aria-label="Ordenar reportes"
-        >
-          <option value="recent">Más recientes ▼</option>
-          <option value="oldest">Más antiguos ▲</option>
-        </select>
-        <i class="material-icons dropdown-icon">expand_more</i>
-      </div>
+      <app-select
+        id="sort-select"
+        [(value)]="selectedOrder"
+        [options]="sortOptions"
+      ></app-select>
     </div>
 
     <!-- Filtros Rápidos -->
@@ -71,13 +69,18 @@
       <button
         id="btn-filter-nearby"
         class="toggle-pill"
-        [class.active]="radio() > 0"
-        (click)="toggleNearby()"
+        [class.active]="geoActive()"
+        (click)="openMap.emit()"
       >
         <i class="material-icons">place</i>
-        <span>Cerca de mí</span>
-        @if (radio() > 0) {
-          <span class="badge">{{ radio() }} km</span>
+        <span>Filtrar Zona</span>
+        @if (geoActive()) {
+          <span class="badge animate-scale-in">
+            {{ radio() > 0 ? radio() + ' km' : 'Activo' }}
+            <span class="clear-geo-btn" (click)="$event.stopPropagation(); clearGeo.emit()">
+              <i class="material-icons">close</i>
+            </span>
+          </span>
         }
       </button>
 
@@ -90,6 +93,14 @@
         >
           <i class="material-icons">paid</i>
           <span>Con recompensa</span>
+          @if (withReward()) {
+            <span class="badge animate-scale-in">
+              Activo
+              <span class="clear-geo-btn" (click)="$event.stopPropagation(); withReward.set(false)">
+                <i class="material-icons">close</i>
+              </span>
+            </span>
+          }
         </button>
       }
     </div>

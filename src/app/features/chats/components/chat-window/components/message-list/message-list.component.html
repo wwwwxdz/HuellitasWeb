@@ -1,0 +1,38 @@
+<div class="messages-area" #messagesArea>
+  @if (hasMore()) {
+    <div class="load-more-wrap">
+      <button class="load-more-btn" (click)="loadMore.emit()" [disabled]="isLoadingMore()">
+        @if (isLoadingMore()) {
+          <span class="spinner-xs"></span>
+        } @else {
+          <i class="material-icons">expand_less</i>
+          Ver mensajes anteriores
+        }
+      </button>
+    </div>
+  }
+
+  @if (isLoading()) {
+    @for (i of [1, 2, 3, 4, 5]; track i) {
+      <div class="msg-skeleton" [class.mine]="i % 2 === 0">
+        <div class="sk-bubble"></div>
+      </div>
+    }
+  } @else {
+    @for (msg of mensajes(); track trackByMsg($index, msg); let i = $index) {
+      @if (showDateSeparator(i)) {
+        <div class="date-separator">
+          <span>{{ msg.creado_en | date: 'dd MMM yyyy' }}</span>
+        </div>
+      }
+      <app-chat-message-item
+        [message]="msg"
+        [isMine]="isMine(msg)"
+        [otherAvatar]="otherAvatar()"
+        (previewReport)="previewReport.emit($event)"
+      ></app-chat-message-item>
+    }
+  }
+  <ng-content></ng-content>
+  <!-- Para el anchor de scroll -->
+</div>

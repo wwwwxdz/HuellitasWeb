@@ -2,7 +2,7 @@
   min-height: calc(100vh - 70px);
   padding: 4rem 1.5rem;
   background-color: var(--bg-dark, #09090b);
-  background-image: 
+  background-image:
     radial-gradient(at 0% 0%, rgba(var(--primary-rgb, 60, 129, 138), 0.08) 0px, transparent 50%),
     radial-gradient(at 100% 100%, rgba(var(--success-rgb, 16, 185, 129), 0.04) 0px, transparent 50%);
   display: flex;
@@ -45,10 +45,15 @@
 }
 
 @keyframes formEntrance {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
-
 
 /* --- Form Fields --- */
 .form-title {
@@ -157,9 +162,15 @@ textarea.form-control {
 }
 
 @keyframes floatIcon {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-5px); }
-  100% { transform: translateY(0px); }
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
 }
 
 .preview-grid {
@@ -208,8 +219,14 @@ textarea.form-control {
 }
 
 @keyframes imageEntrance {
-  from { opacity: 0; transform: scale(0.9); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* --- Map Selection Step 2 --- */
@@ -226,9 +243,8 @@ textarea.form-control {
 .wizard-actions {
   display: flex;
   justify-content: space-between;
-  margin-top: 3.5rem;
+  padding: 1rem;
   border-top: 1px solid var(--border-color);
-  padding-top: 2rem;
 }
 
 .btn {
@@ -281,8 +297,14 @@ textarea.form-control {
 }
 
 @keyframes successEntrance {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .success-screen .success-icon {
@@ -299,11 +321,19 @@ textarea.form-control {
 }
 
 @keyframes pulse-success {
-  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
-  70% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(16, 185, 129, 0); }
-  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+  }
+  70% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 15px rgba(16, 185, 129, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
 }
-
 
 /* --- Tags Input Container Premium --- */
 .tags-input-container {
@@ -391,6 +421,121 @@ textarea.form-control {
 }
 
 @keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.8); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* --- Verification Warning Screen --- */
+.verification-warning-screen {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.75rem;
+  padding: 3rem 0;
+  animation: successEntrance 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+
+  .warning-icon {
+    width: 95px;
+    height: 95px;
+    border-radius: 50%;
+    background-color: rgba(var(--primary-rgb, 60, 129, 138), 0.1);
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3.75rem;
+    animation: pulse-warning 2.5s infinite;
+
+    i {
+      font-size: 3.75rem;
+    }
+  }
+
+  .form-title {
+    margin-bottom: 0.25rem;
+  }
+
+  .form-subtitle {
+    max-width: 500px;
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+@keyframes pulse-warning {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(var(--primary-rgb, 60, 129, 138), 0.3);
+  }
+  70% {
+    transform: scale(1.04);
+    box-shadow: 0 0 0 15px rgba(var(--primary-rgb, 60, 129, 138), 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(var(--primary-rgb, 60, 129, 138), 0);
+  }
+}
+
+.btn-gps-locate {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 30px;
+  border: 1px solid rgba(var(--primary-rgb, 60, 129, 138), 0.3);
+  background-color: rgba(var(--primary-rgb, 60, 129, 138), 0.08);
+  color: var(--primary-color, #3c818a);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: inherit;
+
+  i {
+    font-size: 1.05rem;
+    transition: transform 0.3s ease;
+  }
+
+  &:hover {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 12px rgba(var(--primary-rgb, 60, 129, 138), 0.25);
+
+    i {
+      transform: scale(1.1) rotate(45deg);
+      color: white !important;
+    }
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+/* --- Adaptación responsiva del selector de estado --- */
+.desktop-only-tabs {
+  display: block;
+}
+.mobile-only-select {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .desktop-only-tabs {
+    display: none;
+  }
+  .mobile-only-select {
+    display: block;
+  }
 }

@@ -1,0 +1,109 @@
+.toast-container {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 420px;
+  width: calc(100% - 48px);
+  pointer-events: none;
+}
+
+.toast-card {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  border-radius: 16px;
+  background-color: var(--glass-bg, rgba(24, 24, 27, 0.85));
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+  color: var(--text-main, #f8fafc);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  overflow: hidden;
+  animation: toastSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px -5px rgba(0, 0, 0, 0.4);
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+  }
+
+  /* --- Variantes de Tipos --- */
+  &.success {
+    border-left: 1px solid rgba(16, 185, 129, 0.3);
+    &::before { background-color: #10b981; }
+    .toast-icon { color: #10b981; }
+  }
+
+  &.error {
+    border-left: 1px solid rgba(239, 68, 68, 0.3);
+    &::before { background-color: #ef4444; }
+    .toast-icon { color: #ef4444; }
+  }
+
+  &.warning {
+    border-left: 1px solid rgba(245, 158, 11, 0.3);
+    &::before { background-color: #f59e0b; }
+    .toast-icon { color: #f59e0b; }
+  }
+
+  &.info {
+    border-left: 1px solid rgba(6, 182, 212, 0.3);
+    &::before { background-color: #06b6d4; }
+    .toast-icon { color: #06b6d4; }
+  }
+}
+
+.toast-message {
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.4;
+  flex: 1;
+}
+
+.toast-close-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted, #94a3b8);
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease;
+
+  i {
+    font-size: 1.15rem;
+  }
+
+  &:hover {
+    color: var(--text-main, #f8fafc);
+  }
+}
+
+@keyframes toastSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(100px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}

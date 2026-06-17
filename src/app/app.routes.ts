@@ -62,6 +62,21 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'chats',
+    loadComponent: () => import('./features/chats/chat-center.component').then(m => m.ChatCenterComponent),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'mensajes',
+    loadComponent: () => import('./features/chats/preview/messages-preview.component').then(m => m.MessagesPreviewComponent),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'notifications',
+    loadComponent: () => import('./features/notifications/notifications-center.component').then(m => m.NotificationsCenterComponent),
+    canActivate: [authGuard],
+  },
+  {
     path: 'dashboard',
     redirectTo: 'perfil',
     pathMatch: 'full',

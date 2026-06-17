@@ -13,34 +13,40 @@ export class LocationFilterModal {
   isOpen = input<boolean>(false);
   initialCenter = input<[number, number]>([-9.1214, -78.5308]);
   initialRadius = input<number>(15);
+  /** Indica si el filtro geográfico ya estaba activo antes de abrir el modal */
+  initialActive = input<boolean>(false);
   reports = input<ReporteMascotaPuntoMapa[]>([]);
 
   closeModal = output<void>();
-  applyFilters = output<{ center: [number, number]; radius: number }>();
+  /** Emite { center, radius, active }
+   * active=true  → aplicar filtro geográfico
+   * active=false → cancelar filtro geográfico */
+  applyFilters = output<{ center: [number, number]; radius: number; active: boolean }>();
 
   tempCenter = signal<[number, number]>([-9.1214, -78.5308]);
   tempRadius = signal<number>(15);
-  private originalCenter: [number, number] = [-9.1214, -78.5308];
-  private originalRadius = 15;
-  /** Radio que tenía el filtro ANTES de abrir el modal (puede ser 0 si no había filtro activo) */
-  private originalRadiusBeforeOpen = 0;
+
+  /** Centro y radio que había ANTES de abrir el modal (para restaurar al cancelar) */
+  private snapshotCenter: [number, number] = [-9.1214, -78.5308];
+  private snapshotRadius = 0;
+  private snapshotActive = false;
 
   constructor() {
-    // Sincronizar estados temporales cuando el modal se abre y disparar búsqueda inicial
+    // Al abrir el modal: tomar snapshot del estado previo e inicializar valores temporales
     effect(() => {
       if (this.isOpen()) {
         const centerVal = this.initialCenter();
-        const radiusVal = this.initialRadius() || 15;
+        const radiusVal = this.initialRadius() > 0 ? this.initialRadius() : 15;
+
+        // Guardar estado previo para restaurarlo si el usuario cancela
+        this.snapshotCenter = [...centerVal] as [number, number];
+        this.snapshotRadius = this.initialRadius();
+        this.snapshotActive = this.initialActive(); // ← usa el input dedicado
+
+        // Inicializar los valores temporales del mapa
         this.tempCenter.set(centerVal);
         this.tempRadius.set(radiusVal);
-        this.originalCenter = [...centerVal] as [number, number];
-        this.originalRadius = radiusVal;
-        // Guardar el radio REAL antes de abrir (sin el fallback de 15)
-        this.originalRadiusBeforeOpen = this.initialRadius() ?? 0;
-        // Disparar búsqueda automática al abrir el modal con los valores iniciales
-        setTimeout(() => {
-          this.applyFilters.emit({ center: centerVal, radius: radiusVal });
-        }, 0);
+        // NO emitir aqui: el filtro solo se activa cuando el usuario interactúa con el mapa
       }
     });
   }
@@ -49,33 +55,38 @@ export class LocationFilterModal {
     this.closeModal.emit();
   }
 
+  /** Cancelar: restaurar el estado anterior a la apertura del modal */
   handleCancel(): void {
-    // Restaurar al estado previo a la apertura del modal
     this.applyFilters.emit({
-      center: this.originalCenter,
-      radius: this.originalRadiusBeforeOpen
+      center: this.snapshotCenter,
+      radius: this.snapshotRadius,
+      active: this.snapshotActive
     });
     this.handleClose();
   }
 
+  /** Aplicar: los cambios ya se emitieron en tiempo real, solo cerramos */
   handleApply(): void {
-    // Los filtros ya se aplicaron en tiempo real, solo cerramos el modal
     this.handleClose();
   }
 
+  /** El usuario hizo clic o arrastró el pin en el mapa → actualizar en tiempo real */
   updateTempCenter(coords: [number, number]): void {
     this.tempCenter.set(coords);
     this.applyFilters.emit({
       center: coords,
-      radius: this.tempRadius()
+      radius: this.tempRadius(),
+      active: true
     });
   }
 
+  /** El usuario movió el slider de radio → actualizar en tiempo real */
   updateTempRadius(radius: number): void {
     this.tempRadius.set(radius);
     this.applyFilters.emit({
       center: this.tempCenter(),
-      radius: radius
+      radius: radius,
+      active: true
     });
   }
 }

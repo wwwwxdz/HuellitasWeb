@@ -329,3 +329,24 @@ img {
   opacity: 1;
   transform: translateY(0);
 }
+
+/* 🔒 Evitar scroll del body con modal activo */
+body.modal-open {
+  overflow: hidden !important;
+  height: 100vh !important;
+}
+
+/* 🏷️ Estilos para Menciones (@Usuario) */
+.mention-text {
+  color: #06b6d4;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+  display: inline-block;
+
+  &:hover {
+    text-decoration: underline;
+    opacity: 0.85;
+  }
+}
+

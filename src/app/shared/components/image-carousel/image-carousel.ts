@@ -11,6 +11,7 @@ import { CommonModule } from '@angular/common';
 export class ImageCarouselComponent {
   images = input.required<string[]>();
   alt = input('');
+  zoomable = input<boolean>(true);
   
   imageClick = output<string>();
   
@@ -70,6 +71,7 @@ export class ImageCarouselComponent {
   }
 
   onImageClick(e: MouseEvent, image: string) {
+    if (!this.zoomable()) return;
     if (this.images().length > 1) {
       const diffX = Math.abs(e.clientX - this.dragStartX);
       const diffY = Math.abs(e.clientY - this.dragStartY);

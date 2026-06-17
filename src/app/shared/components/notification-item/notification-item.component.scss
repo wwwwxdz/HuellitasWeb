@@ -1,0 +1,178 @@
+.notification-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.18s ease;
+  position: relative;
+  overflow: hidden;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 8px;
+    bottom: 8px;
+    width: 3px;
+    border-radius: 2px;
+    background: transparent;
+    transition: background 0.18s;
+  }
+
+  &.unread {
+    background: rgba(var(--primary-rgb, 16, 96, 99), 0.06);
+    &::before {
+      background: var(--primary-color, #106063);
+    }
+    .message strong {
+      color: var(--primary-color, #106063);
+    }
+  }
+
+  &:hover, &:focus-visible {
+    background: var(--bg-input, rgba(0, 0, 0, 0.03));
+    outline: none;
+  }
+
+  &:active {
+    transform: scale(0.99);
+  }
+}
+
+/* ── Avatar ────────────────────────────────── */
+.notif-avatar {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+
+  img {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--border-color, #eee);
+    display: block;
+  }
+
+  .type-badge {
+    position: absolute;
+    bottom: -3px;
+    right: -3px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--bg-card, #fff);
+
+    i { font-size: 10px; color: #fff; line-height: 1; }
+
+    &.like         { background: #ef4444; }
+    &.comentario,
+    &.respuesta    { background: var(--primary-color, #106063); }
+    &.mencion      { background: #6366f1; }
+    &.match_ia     { background: #a855f7; }
+    &.moderacion   { background: #f59e0b; }
+    &.reporte_cercano { background: #10b981; }
+    &.compartido   { background: #0ea5e9; }
+  }
+}
+
+/* ── Body ──────────────────────────────────── */
+.notif-details {
+  flex: 1;
+  min-width: 0; // evita overflow de texto
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.notif-body {
+  flex: 1;
+  min-width: 0;
+
+  .message {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--text-secondary, #666);
+    line-height: 1.45;
+    // Texto en hasta 2 líneas
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+
+    strong {
+      font-weight: 700;
+      color: var(--text-main, #333);
+    }
+
+    ::ng-deep .mention-text {
+      color: var(--primary-color, #106063);
+      font-weight: 600;
+    }
+  }
+
+  .time {
+    font-size: 0.72rem;
+    color: var(--text-muted, #999);
+    display: block;
+    margin-top: 3px;
+    letter-spacing: 0.01em;
+  }
+}
+
+/* ── Indicador no leído / acciones ────────── */
+.notif-right {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.unread-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--primary-color, #106063);
+  flex-shrink: 0;
+  box-shadow: 0 0 6px rgba(var(--primary-rgb, 16, 96, 99), 0.5);
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted, #999);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.18s;
+  opacity: 0;
+  line-height: 1;
+
+  .notification-item:hover & {
+    opacity: 1;
+  }
+
+  &:hover {
+    background: rgba(var(--danger-rgb, 239, 68, 68), 0.12);
+    color: #ef4444;
+  }
+
+  i { font-size: 16px; }
+}
+
+/* Eliminar chevron innecesario en mobile */
+.notif-action-icon {
+  display: none;
+}

@@ -8,6 +8,7 @@ import { CloudinaryService } from '../../core/services/cloudinary.service';
 import { Navbar } from '../../shared/components/navbar/navbar';
 import { Footer } from '../../shared/components/footer/footer';
 import { PetReport } from '../../core/models/pet.model';
+import { firstValueFrom } from 'rxjs';
 
 type ProfileTab = 'creados' | 'likes' | 'compartidos';
 
@@ -44,7 +45,7 @@ export class PerfilComponent implements OnInit {
     effect(() => {
       const tab = this.activeTab();
       this.cargarDatos(tab);
-    }, { allowSignalWrites: true });
+    });
   }
 
   ngOnInit(): void {
@@ -148,9 +149,10 @@ export class PerfilComponent implements OnInit {
     this.isUploadingAvatar.set(true);
 
     try {
-      const secureUrl = await this.cloudinaryService.uploadImage(file, 'perfiles');
+      const secureUrl = await this.cloudinaryService.uploadImage(file, `usuarios/${user.id_usuario}/perfil`);
       await this.userService.updateUsuario(user.id_usuario, { foto_perfil: secureUrl });
       this.authService.patchUsuario({ foto_perfil: secureUrl });
+      await firstValueFrom(this.authService.refreshUser());
     } catch (err: any) {
       console.error('Error al actualizar avatar:', err);
       alert(err.message || 'Hubo un error al actualizar la foto de perfil.');

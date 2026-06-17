@@ -38,6 +38,8 @@ export class PostCardSocialComponent {
   report = input.required<PetReport>();
   reportChange = output<PetReport>();
   flagPost = output<PetReport>();
+  flagComment = output<Comentario>();
+  postDeleted = output<string>();
 
   // Estado Sesión
   usuario = this.authService.usuario;
@@ -68,10 +70,24 @@ export class PostCardSocialComponent {
   commentLikedSet = signal<Set<string>>(new Set());
   commentLikeCounts = signal<Record<string, number>>({});
 
-  // Opciones de menú
-  readonly REPORT_OPTIONS = [
-    { label: 'Denunciar publicación', icon: 'flag', value: 'report', danger: true }
-  ];
+  isOwnReport = computed(() => {
+    const r = this.report();
+    const u = this.usuario();
+    if (!r || !u) return false;
+    return r.usuario?.id_usuario === u.id_usuario;
+  });
+
+  // Opciones de menú reactivas
+  menuItems = computed(() => {
+    if (this.isOwnReport()) {
+      return [
+        { label: 'Eliminar publicación', icon: 'delete_outline', value: 'delete', danger: true }
+      ];
+    }
+    return [
+      { label: 'Denunciar publicación', icon: 'flag', value: 'report', danger: true }
+    ];
+  });
 
   // Métodos de visualización
   get formattedLocation(): string {
@@ -98,6 +114,7 @@ export class PostCardSocialComponent {
     const mins = Math.floor(diff / 60000);
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
+    if (mins < 1) return 'Hace un momento';
     if (mins < 60) return `Hace ${mins}m`;
     if (hours < 24) return `Hace ${hours}h`;
     return `Hace ${days}d`;
@@ -214,6 +231,23 @@ export class PostCardSocialComponent {
   onReportOptionSelected(option: any): void {
     if (option.value === 'report') {
       this.flagPost.emit(this.report());
+    } else if (option.value === 'delete') {
+      this.onDeletePost();
+    }
+  }
+
+  async onDeletePost(): Promise<void> {
+    const reportId = this.report().id_reporte_mascota;
+    if (!reportId) return;
+
+    if (!confirm('¿Estás seguro de que deseas eliminar este reporte?')) return;
+
+    try {
+      await this.petService.deleteReporte(reportId);
+      this.postDeleted.emit(reportId);
+    } catch (err) {
+      console.error('Error al eliminar el reporte:', err);
+      alert('Ocurrió un error al eliminar el reporte');
     }
   }
 

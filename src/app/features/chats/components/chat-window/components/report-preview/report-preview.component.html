@@ -1,0 +1,49 @@
+<app-modal
+  [(isOpen)]="isOpen"
+  [title]="'Detalle del Reporte'"
+  [showFooter]="false"
+  size="md"
+  (closed)="closed.emit()"
+>
+  @if (message()) {
+    <div class="report-preview-modal">
+      <div class="report-header">
+        <div class="report-img-wrapper">
+          @if (message()!.reporte_mascota?.imagen_principal?.url) {
+            <img [src]="message()!.reporte_mascota!.imagen_principal!.url" alt="Mascota">
+          } @else {
+            <div class="no-img"><i class="material-icons">pets</i></div>
+          }
+        </div>
+        <div class="report-basic-info">
+          <h3>{{ message()!.reporte_mascota?.nombre || 'Sin nombre' }}</h3>
+          <app-badge [status]="message()!.reporte_mascota!.estado"></app-badge>
+          <p class="location">
+            <i class="material-icons">location_on</i> 
+            {{ message()!.reporte_mascota?.ubicacion || 'Ubicación no especificada' }}
+          </p>
+        </div>
+      </div>
+
+      <div class="report-description">
+        <h4>Descripción del reporte</h4>
+        <p>{{ message()!.reporte_mascota?.descripcion || 'No hay descripción adicional.' }}</p>
+      </div>
+
+      <div class="message-sent-section">
+        <h4>Mensaje enviado</h4>
+        <textarea 
+          class="msg-preview-area" 
+          readonly 
+          [value]="message()!.contenido || 'Sin mensaje adicional.'"
+          placeholder="Mensaje enviado con este reporte..."
+        ></textarea>
+        <p class="msg-date">Enviado el {{ message()!.creado_en | date:'dd/MM/yyyy HH:mm' }}</p>
+      </div>
+
+      <div class="modal-actions">
+        <app-button variant="primary" (btnClick)="closed.emit()">Cerrar</app-button>
+      </div>
+    </div>
+  }
+</app-modal>

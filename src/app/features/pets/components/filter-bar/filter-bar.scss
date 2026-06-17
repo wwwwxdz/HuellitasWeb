@@ -1,4 +1,6 @@
 .filter-container {
+  position: relative;
+  z-index: 1010; /* Crea contexto de apilamiento por encima de Leaflet */
   display: flex;
   flex-flow: row wrap;
   align-items: center;
@@ -109,8 +111,13 @@
   align-items: center;
   gap: 8px;
 
+  app-select {
+    min-width: 170px;
+  }
+
   @media (max-width: 576px) {
     justify-content: space-between;
+    app-select { flex-grow: 1; min-width: unset; }
   }
 }
 
@@ -120,56 +127,6 @@
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-}
-
-.select-wrapper {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-
-  @media (max-width: 576px) {
-    flex-grow: 1;
-    .sort-select {
-      width: 100%;
-    }
-  }
-}
-
-.sort-select {
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  padding: 10px 36px 10px 16px;
-  border-radius: 12px;
-  border: 1px solid var(--border-color);
-  background-color: var(--bg-card);
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  font-weight: 600;
-  font-family: var(--font-main);
-  cursor: pointer;
-  outline: none;
-  transition: all 0.25s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
-
-  &:hover, &:focus {
-    border-color: var(--primary-color);
-    color: var(--primary-color);
-    background-color: rgba(60, 129, 138, 0.02);
-  }
-}
-
-.dropdown-icon {
-  position: absolute;
-  right: 12px;
-  pointer-events: none;
-  font-size: 1.2rem;
-  color: var(--text-muted);
-  transition: color 0.25s ease;
-
-  .select-wrapper:hover & {
-    color: var(--primary-color);
-  }
 }
 
 // Filtros Rápidos (Toggles)
@@ -234,7 +191,6 @@
     }
   }
 
-  // Estilo específico con recompensa cuando está activo
   &#btn-filter-reward.active {
     background-color: rgba(234, 88, 12, 0.1);
     border-color: #ea580c;
@@ -242,6 +198,11 @@
 
     &:hover {
       background-color: rgba(234, 88, 12, 0.15);
+    }
+
+    .badge {
+      background-color: #ea580c;
+      box-shadow: 0 2px 4px rgba(234, 88, 12, 0.2);
     }
   }
 
@@ -254,5 +215,31 @@
     font-weight: 700;
     margin-left: 4px;
     box-shadow: 0 2px 4px rgba(60, 129, 138, 0.2);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+
+    .clear-geo-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background-color: rgba(255, 255, 255, 0.2);
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+
+      i {
+        font-size: 10px !important;
+        font-weight: bold;
+      }
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.45);
+      }
+    }
   }
 }
+

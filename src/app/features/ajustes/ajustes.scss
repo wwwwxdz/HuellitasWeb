@@ -899,3 +899,41 @@
 .text-cyan {
   color: var(--primary-color) !important;
 }
+
+/* --- Ojito para revelar contraseñas --- */
+.password-input-wrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+
+  input {
+    width: 100%;
+    padding-right: 46px !important; // Espacio para el botón del ojito
+  }
+
+  .btn-toggle-password {
+    position: absolute;
+    right: 12px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    z-index: 10;
+
+    &:hover {
+      color: var(--text-main);
+      background-color: var(--bg-input);
+    }
+
+    i {
+      font-size: 20px;
+    }
+  }
+}

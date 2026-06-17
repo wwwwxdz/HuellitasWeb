@@ -29,6 +29,128 @@
       </a>
 
       @if (auth.isAuthenticated()) {
+        <!-- Cápsula Unificada y Contenedor de Dropdowns -->
+        <div class="nav-badge-container">
+          <div class="nav-capsule-badge" [class.has-unread]="chatService.unreadChatsCount() > 0 || notificationService.unreadCount() > 0">
+            <button class="capsule-item" (click)="toggleChats($event)" title="Mensajes privados">
+              <i class="material-icons">chat_bubble</i>
+              <span>{{ chatService.unreadChatsCount() }}</span>
+            </button>
+            <div class="capsule-divider"></div>
+            <button class="capsule-item" (click)="toggleNotifications($event)" title="Notificaciones">
+              <i class="material-icons">notifications</i>
+              <span>{{ notificationService.unreadCount() }}</span>
+            </button>
+          </div>
+
+          <!-- Dropdown de Chats/Mensajes -->
+          @if (showChats()) {
+            <div class="chats-dropdown glass-card shadow-lg" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" tabindex="-1" role="menu">
+              <div class="chats-header">
+                <h3>Mensajes Recientes</h3>
+              </div>
+              
+              <div class="chats-list custom-scroll">
+                @if (chatService.isLoading() && chatService.totalChats() === 0) {
+                  <div class="chats-loading">
+                    <div class="spinner-mini"></div>
+                    <p>Cargando...</p>
+                  </div>
+                }
+
+                @for (chat of chatService.chats(); track trackByChat($index, chat)) {
+                  @let other = getOtherUser(chat);
+                  <div 
+                    class="dropdown-chat-item" 
+                    [class.unread]="chat.mensajes_sin_leer > 0"
+                    (click)="handleChatClick(chat)"
+                    (keydown.enter)="handleChatClick(chat)"
+                    tabindex="0"
+                    role="button"
+                  >
+                    <div class="dropdown-chat-avatar">
+                      <img [src]="getAvatar(other.nombre, other.foto_perfil)" [alt]="other.nombre" />
+                      <div class="type-badge chat-icon">
+                        <i class="material-icons">chat_bubble</i>
+                      </div>
+                    </div>
+                    <div class="dropdown-chat-details">
+                      <div class="dropdown-chat-body">
+                        <span class="chat-user-name">{{ other.nombre }}</span>
+                        <p class="message">{{ getMessagePreview(chat) }}</p>
+                        @if (chat.ultimo_mensaje) {
+                          <span class="time">{{ chat.ultimo_mensaje.creado_en | timeAgo }}</span>
+                        }
+                      </div>
+                      <div class="dropdown-chat-right">
+                        @if (chat.mensajes_sin_leer > 0) {
+                          <span class="unread-dot"></span>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                }
+                @empty {
+                  @if (!chatService.isLoading()) {
+                    <div class="chats-empty">
+                      <i class="material-icons">chat_bubble_outline</i>
+                      <p>No tienes chats activos</p>
+                    </div>
+                  }
+                }
+              </div>
+              
+              <div class="chats-footer">
+                <a routerLink="/mensajes" (click)="showChats.set(false)">Ver todos los mensajes</a>
+              </div>
+            </div>
+          }
+
+          <!-- Dropdown de Notificaciones -->
+          @if (showNotifications()) {
+            <div class="notification-dropdown glass-card shadow-lg" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" tabindex="-1" role="menu">
+              <div class="notif-header">
+                <h3>Notificaciones</h3>
+                <div style="display: flex; gap: 12px; align-items: center;">
+                  <button class="mark-all-btn" (click)="markAllRead()">Marcar leído</button>
+                  <button class="clear-all-btn" (click)="clearAll()">Borrar todas</button>
+                </div>
+              </div>
+              
+              <div class="notif-list custom-scroll">
+                @if (notificationService.isLoading() && !notificationService.hasNotifications()) {
+                  <div class="notif-loading">
+                    <div class="spinner-mini"></div>
+                    <p>Cargando...</p>
+                  </div>
+                }
+
+                @for (n of notificationService.notifications(); track n.id_notificacion) {
+                  <app-notification-item
+                    [notification]="n"
+                    [showDelete]="true"
+                    [deleteIcon]="'close'"
+                    (clicked)="handleNotificationClick($event)"
+                    (delete)="hideNotification($event)"
+                  />
+                }
+                @empty {
+                  @if (!notificationService.isLoading()) {
+                    <div class="notif-empty">
+                      <i class="material-icons">notifications_off</i>
+                      <p>No tienes notificaciones</p>
+                    </div>
+                  }
+                }
+              </div>
+              
+              <div class="notif-footer">
+                <a routerLink="/notifications" (click)="showNotifications.set(false)">Ver todas las notificaciones</a>
+              </div>
+            </div>
+          }
+        </div>
+
         <app-profile-dropdown></app-profile-dropdown>
       } @else {
         <!-- Conmutador de Tema Día/Noche (sólo si no está autenticado) -->
@@ -96,6 +218,17 @@
       <hr class="divider" />
       
       @if (auth.isAuthenticated()) {
+        <a routerLink="/mensajes" routerLinkActive="active" (click)="closeMobileMenu()" style="display: flex; align-items: center; gap: 8px;">
+          <i class="material-icons">chat_bubble</i>
+          <span>Mensajes Privados ({{ chatService.unreadChatsCount() }})</span>
+        </a>
+        <a routerLink="/notifications" routerLinkActive="active" (click)="closeMobileMenu()" style="display: flex; align-items: center; gap: 8px;">
+          <i class="material-icons">notifications</i>
+          <span>Notificaciones ({{ notificationService.unreadCount() }})</span>
+        </a>
+        
+        <hr class="divider" />
+
         <div class="mobile-auth-actions">
           <div class="mobile-user-name">Sesión: {{ auth.usuario()?.nombre }}</div>
           <button 

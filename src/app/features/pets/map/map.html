@@ -18,6 +18,30 @@
         </div>
       </div>
 
+      <div class="filter-section location-filter-section">
+        <h3>Ubicación de Búsqueda</h3>
+        
+        <button class="btn-gps-sidebar" (click)="obtenerUbicacionActual()">
+          <i class="material-icons">my_location</i>
+          Usar mi ubicación GPS
+        </button>
+
+        <div class="address-search-box">
+          <input 
+            type="text" 
+            placeholder="Ciudad, distrito o calle..."
+            [ngModel]="addressQuery()"
+            (ngModelChange)="addressQuery.set($event)"
+            (keyup.enter)="buscarDireccion()"
+          />
+          <button class="btn-address-search" (click)="buscarDireccion()" [disabled]="isSearchingAddress()" title="Buscar ubicación">
+            <i class="material-icons" [class.spinning]="isSearchingAddress()">
+              {{ isSearchingAddress() ? 'autorenew' : 'travel_explore' }}
+            </i>
+          </button>
+        </div>
+      </div>
+
       <div class="filter-section">
         <h3>Estados de Alerta</h3>
         <div class="status-list">
@@ -157,70 +181,132 @@
           </button>
         </div>
 
-        <div class="mini-pet-card" style="flex-direction: column; gap: 1rem; background-color: transparent; border: none; padding: 0;">
-          <div class="img-wrapper" style="width: 100%; height: 180px; border-radius: 16px;">
-            <img 
-              [src]="selectedReport()?.imagen_principal?.url || '/images/pet-max.png'" 
-              [alt]="selectedReport()?.nombre" 
-              style="border-radius: 16px;"
-            />
-            <div style="position: absolute; top: 12px; left: 12px;">
-              <span class="badge-status" [ngClass]="
-                selectedReport()?.estado === 1 ? 'encontrado' : 
-                selectedReport()?.estado === 2 ? 'perdido' : 
-                selectedReport()?.estado === 3 ? 'avistado' : 'reunido'
-              ">
-                {{ 
-                  selectedReport()?.estado === 1 ? 'Encontrado' : 
-                  selectedReport()?.estado === 2 ? 'Perdido' : 
-                  selectedReport()?.estado === 3 ? 'Avistado' : 'Reunido'
-                }}
-              </span>
+        <div class="alert-detail-container">
+          
+          <!-- Contenedor del avatar simple y limpio -->
+          <div class="pet-avatar-simple-wrapper">
+            <div class="simple-avatar-container">
+              <img 
+                [src]="selectedReport()?.imagen_principal?.url || '/images/pet-max.png'" 
+                [alt]="selectedReport()?.nombre" 
+              />
             </div>
+            <h3 class="pet-name-simple">{{ selectedReport()?.nombre || 'Sin nombre' }}</h3>
+            <span class="badge-status-simple" [class]="
+              selectedReport()?.estado === 1 ? 'encontrado' : 
+              selectedReport()?.estado === 2 ? 'perdido' : 
+              selectedReport()?.estado === 3 ? 'avistado' : 'reunido'
+            ">
+              {{ 
+                selectedReport()?.estado === 1 ? 'Encontrado' : 
+                selectedReport()?.estado === 2 ? 'Perdido' : 
+                selectedReport()?.estado === 3 ? 'Avistado' : 'Reunido'
+              }}
+            </span>
           </div>
 
-          <div class="card-info">
-            <div class="info-row">
-              <h4>{{ selectedReport()?.nombre || 'Sin nombre' }}</h4>
-            </div>
-            <p class="meta-text"><i class="material-icons">location_on</i> {{ getFormattedLocation(selectedReport()?.ubicacion) }}</p>
-            <p class="meta-text"><i class="material-icons">schedule</i> {{ selectedReport()?.creado_en | date:'short' }}</p>
-            <p class="meta-text"><i class="material-icons">pets</i> {{ selectedReport()?.tipo | titlecase }} - {{ selectedReport()?.raza }}</p>
-            @if (selectedReport()?.recompensa || $any(selectedReport()?.caracteristicas)?.recompensa) {
-              <div class="recompensa-label" style="display: flex; align-items: center; gap: 4px; color: #ea580c; font-weight: 700; font-size: 0.8rem; margin-top: 6px;">
-                <i class="material-icons" style="font-size: 1rem;">paid</i>
-                <span>Recompensa: S/. {{ selectedReport()?.monto_recompensa || $any(selectedReport()?.caracteristicas)?.monto_recompensa || 0 }}</span>
-              </div>
-            }
+          <!-- Info Grid de dos columnas -->
+          <div class="pet-info-grid-simple">
             
-            <div style="margin-top: 12px; font-size: 0.85rem; color: var(--text-main); line-height: 1.4;">
-              <strong>Descripción:</strong> {{ selectedReport()?.descripcion || 'Sin descripción adicional.' }}
+            <!-- Columna Izquierda: Ubicación -->
+            <div class="info-card-box-simple location-box">
+              <div class="box-title-simple">
+                <i class="material-icons">location_on</i>
+                <span>Ubicación</span>
+              </div>
+              <p class="box-text-simple">{{ getFormattedLocation(selectedReport()?.ubicacion) }}</p>
+              
+              <!-- Botón Ver Mapa minimalista -->
+              <button class="btn-view-map-simple" (click)="centerMapOnReport()">
+                <i class="material-icons">map</i>
+                <span>Ver mapa</span>
+              </button>
             </div>
 
-            <div style="margin-top: 16px;">
-              <a 
-                [routerLink]="['/pets/reports/detail', selectedReport()?.id_reporte_mascota]"
-                class="btn-view-detail"
-              >
-                <i class="material-icons">launch</i>
-                Ver Detalles
-              </a>
+            <!-- Columna Derecha: Detalles -->
+            <div class="right-details-column-simple">
+              
+              <!-- Fila 1: Tiempo -->
+              <div class="info-card-box-simple">
+                <div class="box-title-simple">
+                  <i class="material-icons">schedule</i>
+                  <span>Tiempo</span>
+                </div>
+                <p class="box-text-simple">{{ selectedReport()?.creado_en | date:'shortDate' }}, {{ selectedReport()?.creado_en | date:'shortTime' }}</p>
+              </div>
+
+              <!-- Fila 2: Especie/Raza -->
+              <div class="info-card-box-simple">
+                <div class="box-title-simple">
+                  <i class="material-icons">pets</i>
+                  <span>Mascota</span>
+                </div>
+                <p class="box-text-simple truncate-text" [title]="(selectedReport()?.tipo | titlecase) + ' - ' + selectedReport()?.raza">
+                  {{ selectedReport()?.tipo | titlecase }} - {{ selectedReport()?.raza }}
+                </p>
+              </div>
+
+              <!-- Fila 3: Recompensa (Caja neutra idéntica) -->
+              @if (selectedReport()?.recompensa || $any(selectedReport()?.caracteristicas)?.recompensa) {
+                <div class="info-card-box-simple reward-box-simple">
+                  <div class="box-title-simple">
+                    <i class="material-icons">paid</i>
+                    <span>Recompensa</span>
+                  </div>
+                  <p class="box-text-simple reward-amount-simple">
+                    S/. {{ selectedReport()?.monto_recompensa || $any(selectedReport()?.caracteristicas)?.monto_recompensa || 0 }}
+                  </p>
+                </div>
+              }
             </div>
+
           </div>
+
+          <!-- Descripción -->
+          <div class="description-section-simple">
+            <h4 class="description-title-simple">Descripción:</h4>
+            <p class="description-text-simple">{{ selectedReport()?.descripcion || 'Sin descripción adicional.' }}</p>
+          </div>
+
+          <!-- Botón de Ver Detalles -->
+          <div class="actions-section">
+            <a 
+              [routerLink]="['/pets/reports/detail', selectedReport()?.id_reporte_mascota]"
+              class="btn-view-detail-simple"
+            >
+              <span>Ver Detalles</span>
+              <i class="material-icons">launch</i>
+            </a>
+          </div>
+
         </div>
 
         <!-- Avistamientos recientes -->
         <div class="sightings-section">
           <h3>Avistamientos Recientes</h3>
           <div class="sightings-list">
-            @for (sighting of sightings(); track sighting.id) {
+            @for (sighting of sightings(); track sighting.id_avistamiento) {
               <div class="sighting-item">
-                <h5>{{ sighting.fecha }}</h5>
-                <p>{{ sighting.descripcion }}</p>
-                <p style="color: var(--primary-color); font-weight: 500;">
-                  <i class="material-icons" style="font-size: 0.75rem; vertical-align: middle;">location_on</i>
-                  {{ sighting.ubicacion }}
-                </p>
+                <div class="sighting-content-wrapper">
+                  @if (sighting.imagenes && sighting.imagenes.length > 0) {
+                    <div class="sighting-img-prev">
+                      <img [src]="sighting.imagenes[0].url" alt="Avistamiento" />
+                    </div>
+                  }
+                  <div class="sighting-info-block">
+                    <h5>{{ (sighting.creado_en || sighting.fecha_avistamiento) | date:'mediumDate' }}</h5>
+                    <p class="sighting-desc">{{ sighting.descripcion }}</p>
+                    <p class="sighting-loc">
+                      <i class="material-icons">location_on</i>
+                      {{ getFormattedLocation(sighting.ubicacion) }}
+                    </p>
+                  </div>
+
+                  <!-- Botón para ver y centrar el avistamiento en el mapa -->
+                  <button class="btn-sighting-map-link" (click)="centerMapOnSighting(sighting)" title="Ver en mapa">
+                    <i class="material-icons">map</i>
+                  </button>
+                </div>
               </div>
             } @empty {
               <p style="font-size: 0.8rem; color: var(--text-muted);">No se han reportado avistamientos de esta alerta aún.</p>
@@ -236,38 +322,10 @@
 
         <div class="results-list">
           @for (pet of resultsList(); track pet.id_reporte_mascota) {
-            <div class="mini-pet-card" (click)="onMarkerClick(pet.id_reporte_mascota)" style="cursor: pointer;">
-              <div class="img-wrapper">
-                <img 
-                  [src]="pet.imagen_principal?.url || '/images/pet-max.png'" 
-                  [alt]="pet.nombre" 
-                />
-              </div>
-              <div class="card-info">
-                <div class="info-row">
-                  <h4>{{ pet.nombre || 'Mascota' }}</h4>
-                  <span class="badge-status" [ngClass]="
-                    pet.estado === 1 ? 'encontrado' : 
-                    pet.estado === 2 ? 'perdido' : 
-                    pet.estado === 3 ? 'avistado' : 'reunido'
-                  ">
-                    {{ 
-                      pet.estado === 1 ? 'Encontrado' : 
-                      pet.estado === 2 ? 'Perdido' : 
-                      pet.estado === 3 ? 'Avistado' : 'Reunido'
-                    }}
-                  </span>
-                </div>
-                <p class="meta-text"><i class="material-icons">location_on</i> {{ getFormattedLocation(pet.ubicacion) }}</p>
-                <p class="meta-text"><i class="material-icons">pets</i> {{ pet.raza }}</p>
-                @if (pet.recompensa || $any(pet.caracteristicas)?.recompensa) {
-                  <div class="recompensa-label" style="display: flex; align-items: center; gap: 4px; color: #ea580c; font-weight: 700; font-size: 0.75rem; margin-top: 4px;">
-                    <i class="material-icons" style="font-size: 0.9rem;">paid</i>
-                    <span>Recompensa: S/. {{ pet.monto_recompensa || $any(pet.caracteristicas)?.monto_recompensa || 0 }}</span>
-                  </div>
-                }
-              </div>
-            </div>
+            <app-mini-pet-card
+              [pet]="pet"
+              (clicked)="onMarkerClick($event)"
+            />
           } @empty {
             <p style="text-align: center; color: var(--text-muted); font-size: 0.9rem; margin-top: 2rem;">
               No hay mascotas reportadas en este radio. Intenta aumentar el rango.

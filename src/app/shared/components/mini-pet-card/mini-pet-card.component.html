@@ -1,0 +1,42 @@
+<div 
+  class="mini-pet-card" 
+  [class]="statusClass()" 
+  (click)="onClick()"
+  (keydown.enter)="onClick()"
+  tabindex="0"
+  role="button"
+>
+  <div class="img-wrapper">
+    <img 
+      [src]="pet().imagen_principal?.url || '/images/pet-max.png'" 
+      [alt]="pet().nombre || 'Mascota'" 
+    />
+    <div class="status-indicator-dot" [class]="statusClass()"></div>
+  </div>
+
+  <div class="card-info">
+    <div class="info-row">
+      <h4 class="pet-name">{{ pet().nombre || 'Sin nombre' }}</h4>
+      <span class="badge-status" [class]="statusClass()">
+        {{ statusLabel() }}
+      </span>
+    </div>
+    
+    <p class="meta-text location">
+      <i class="material-icons">location_on</i>
+      <span>{{ formattedLocation() || 'Ubicación no especificada' }}</span>
+    </p>
+    
+    <p class="meta-text breed">
+      <i class="material-icons">pets</i>
+      <span>{{ pet().raza || 'Raza desconocida' }}</span>
+    </p>
+
+    @if (pet().recompensa || $any(pet().caracteristicas)?.recompensa) {
+      <div class="recompensa-label">
+        <i class="material-icons">paid</i>
+        <span>Recompensa: S/. {{ pet().monto_recompensa || $any(pet().caracteristicas)?.monto_recompensa || 0 }}</span>
+      </div>
+    }
+  </div>
+</div>

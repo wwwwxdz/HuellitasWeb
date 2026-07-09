@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -6,6 +6,7 @@ import { PetService } from '../../../core/services/pet.service';
 import { CommentService } from '../../../core/services/comment.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { CloudinaryService } from '../../../core/services/cloudinary.service';
+import { UserService } from '../../../core/services/user.service';
 import { PetReport, Avistamiento, CreateAvistamientoRequest } from '../../../core/models/pet.model';
 import { Comentario } from '../../../core/models/comment.model';
 import { LocationService } from '../../../core/services/location.service';
@@ -61,6 +62,8 @@ export class PetDetailComponent implements OnInit {
   private cloudinaryService = inject(CloudinaryService);
   private locationService = inject(LocationService);
   private flagService = inject(FlagService);
+  private userService = inject(UserService);
+  private cdr = inject(ChangeDetectorRef);
 
   // Estado
   report = signal<PetReport | null>(null);
@@ -883,6 +886,89 @@ export class PetDetailComponent implements OnInit {
         : errMsg);
     } finally {
       this.isSendingFlag.set(false);
+    }
+  }
+
+  // --- LÓGICA DE POPOVER DE USUARIO ---
+  isPopoverVisible = signal<boolean>(false);
+  popoverUser = signal<any>(null);
+  isLoadingPopover = signal<boolean>(false);
+  private openTimeout: any = null;
+  private closeTimeout: any = null;
+
+  onUserEnter(): void {
+    if (this.closeTimeout) {
+      clearTimeout(this.closeTimeout);
+      this.closeTimeout = null;
+    }
+    
+    if (this.isPopoverVisible()) return;
+
+    this.openTimeout = setTimeout(async () => {
+      this.isPopoverVisible.set(true);
+      this.cdr.detectChanges();
+      
+      if (this.popoverUser()) return; // ya cargado
+      
+      const idUsuario = this.report()?.usuario?.id_usuario;
+      if (!idUsuario) return;
+
+      this.isLoadingPopover.set(true);
+      this.cdr.detectChanges();
+
+      try {
+        const otherUser: any = await this.userService.getUsuarioById(idUsuario);
+        const userDetails = otherUser?.data || otherUser || this.report()?.usuario;
+        
+        // Obtener estadísticas
+        const reports = await this.petService.getReportesCreados(idUsuario);
+        const reunidos = reports.filter((r: any) => r.estado === 4).length;
+
+        this.popoverUser.set({
+          ...userDetails,
+          totalReports: reports.length,
+          totalReunidos: reunidos
+        });
+      } catch (err) {
+        console.error('Error al cargar datos de popover:', err);
+      } finally {
+        this.isLoadingPopover.set(false);
+        this.cdr.detectChanges();
+      }
+    }, 300);
+  }
+
+  onUserLeave(): void {
+    if (this.openTimeout) {
+      clearTimeout(this.openTimeout);
+      this.openTimeout = null;
+    }
+    
+    this.closeTimeout = setTimeout(() => {
+      this.isPopoverVisible.set(false);
+      this.cdr.detectChanges();
+    }, 200);
+  }
+
+  onPopoverEnter(): void {
+    if (this.closeTimeout) {
+      clearTimeout(this.closeTimeout);
+      this.closeTimeout = null;
+    }
+  }
+
+  onPopoverLeave(): void {
+    this.closeTimeout = setTimeout(() => {
+      this.isPopoverVisible.set(false);
+      this.cdr.detectChanges();
+    }, 200);
+  }
+
+  navigateToProfile(event: Event): void {
+    event.stopPropagation();
+    const idUsuario = this.report()?.usuario?.id_usuario;
+    if (idUsuario) {
+      this.router.navigate(['/perfil', idUsuario]);
     }
   }
 }

@@ -1,13 +1,26 @@
-import { Component, input, output, model, HostListener, ElementRef, inject, PLATFORM_ID, OnDestroy, OnInit, ChangeDetectionStrategy, effect } from '@angular/core';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
+import {
+  Component,
+  input,
+  output,
+  model,
+  HostListener,
+  ElementRef,
+  inject,
+  PLATFORM_ID,
+  OnDestroy,
+  OnInit,
+  ChangeDetectionStrategy,
+  effect,
+} from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 
 @Component({
   selector: 'app-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './modal.html',
   styleUrl: './modal.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ModalComponent implements OnInit, OnDestroy {
   private readonly el = inject(ElementRef);

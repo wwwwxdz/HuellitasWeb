@@ -31,7 +31,7 @@ export class AuthComponent {
   @ViewChildren('codeField') codeFields!: QueryList<ElementRef>;
   isCodeValid = signal(false);
 
-  loginData = { email: '', password: '' };
+  loginData = { email: 'furinalove@huellitas.com', password: 'jesusdl11' };
   registerData = { nombre: '', email: '', password: '', confirmPassword: '' };
 
   error = signal('');

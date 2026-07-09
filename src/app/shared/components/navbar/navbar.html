@@ -32,12 +32,12 @@
         <!-- Cápsula Unificada y Contenedor de Dropdowns -->
         <div class="nav-badge-container">
           <div class="nav-capsule-badge" [class.has-unread]="chatService.unreadChatsCount() > 0 || notificationService.unreadCount() > 0">
-            <button class="capsule-item" (click)="toggleChats($event)" title="Mensajes privados">
+            <button class="capsule-item" (click)="toggleChats()" title="Mensajes privados">
               <i class="material-icons">chat_bubble</i>
               <span>{{ chatService.unreadChatsCount() }}</span>
             </button>
             <div class="capsule-divider"></div>
-            <button class="capsule-item" (click)="toggleNotifications($event)" title="Notificaciones">
+            <button class="capsule-item" (click)="toggleNotifications()" title="Notificaciones">
               <i class="material-icons">notifications</i>
               <span>{{ notificationService.unreadCount() }}</span>
             </button>
@@ -101,7 +101,7 @@
               </div>
               
               <div class="chats-footer">
-                <a routerLink="/mensajes" (click)="showChats.set(false)">Ver todos los mensajes</a>
+                <a routerLink="/chats" (click)="showChats.set(false)">Ver todos los mensajes</a>
               </div>
             </div>
           }
@@ -218,7 +218,7 @@
       <hr class="divider" />
       
       @if (auth.isAuthenticated()) {
-        <a routerLink="/mensajes" routerLinkActive="active" (click)="closeMobileMenu()" style="display: flex; align-items: center; gap: 8px;">
+        <a routerLink="/chats" routerLinkActive="active" (click)="closeMobileMenu()" style="display: flex; align-items: center; gap: 8px;">
           <i class="material-icons">chat_bubble</i>
           <span>Mensajes Privados ({{ chatService.unreadChatsCount() }})</span>
         </a>

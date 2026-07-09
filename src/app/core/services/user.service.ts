@@ -49,6 +49,21 @@ export class UserService {
   }
 
   /**
+   * Obtiene los detalles de un usuario por su ID.
+   * Endpoint: GET /api/v1/usuarios/{id}
+   */
+  async getUsuarioById(id: string): Promise<any> {
+    try {
+      return await firstValueFrom(
+        this.http.get<any>(`${this.apiUrl}/usuarios/${id}`)
+      );
+    } catch (error) {
+      console.error(`Error al obtener detalles del usuario ${id}:`, error);
+      return null;
+    }
+  }
+
+  /**
    * Actualiza los datos del perfil de un usuario.
    * Endpoint: PUT /api/v1/usuarios/{id}
    */

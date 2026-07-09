@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { RouterModule, Router } from '@angular/router';
 import { NotificationService } from '../../core/services/notification.service';
 import { Notification } from '../../core/models/notification.model';
@@ -9,7 +9,7 @@ import { take } from 'rxjs';
 @Component({
   selector: 'app-notifications-center',
   standalone: true,
-  imports: [CommonModule, RouterModule, NotificationItemComponent],
+  imports: [RouterModule, NotificationItemComponent],
   templateUrl: './notifications-center.component.html',
   styleUrl: './notifications-center.component.scss',
 })
@@ -29,13 +29,19 @@ export class NotificationsCenterComponent implements OnInit {
 
   ngOnInit(): void {
     this.currentPage = 1;
-    this.notificationService.getNotifications(this.currentPage, this.limit).pipe(take(1)).subscribe();
+    this.notificationService
+      .getNotifications(this.currentPage, this.limit)
+      .pipe(take(1))
+      .subscribe();
   }
 
   loadMore(): void {
     if (this.canLoadMore()) {
       this.currentPage++;
-      this.notificationService.getNotifications(this.currentPage, this.limit).pipe(take(1)).subscribe();
+      this.notificationService
+        .getNotifications(this.currentPage, this.limit)
+        .pipe(take(1))
+        .subscribe();
     }
   }
 

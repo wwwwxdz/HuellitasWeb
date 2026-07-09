@@ -1,15 +1,15 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { UserService } from '../../core/services/user.service';
 import { CloudinaryService } from '../../core/services/cloudinary.service';
 import { LocationService } from '../../core/services/location.service';
+import { PetService } from '../../core/services/pet.service';
 import { MapComponent } from '../../features/pets/components/map-component/map-component';
 import { Navbar } from '../../shared/components/navbar/navbar';
 import { Footer } from '../../shared/components/footer/footer';
-import * as ubigeo from 'ubigeo-peru';
 import { firstValueFrom } from 'rxjs';
 
 interface UbigeoItem {
@@ -43,6 +43,8 @@ export class AjustesComponent implements OnInit {
   private readonly cloudinaryService = inject(CloudinaryService);
   private readonly locationService = inject(LocationService);
   private readonly fb = inject(FormBuilder);
+  private readonly petService = inject(PetService);
+  private readonly router = inject(Router);
 
   // Estado reactivo
   usuario = this.authService.usuario;
@@ -52,6 +54,12 @@ export class AjustesComponent implements OnInit {
   saveSuccess = signal<string | null>(null);
   saveError = signal<string | null>(null);
   previewUrl = signal<string | null>(null);
+
+  // Estadísticas para el sidebar unificado
+  userReports = signal<any[]>([]);
+
+  // Datos cargados dinámicamente de ubigeo-peru
+  private ubigeoData: any = null;
 
   // Visibilidad de contraseñas
   showPasswordActual = signal(false);
@@ -69,11 +77,42 @@ export class AjustesComponent implements OnInit {
   distritos = signal<SelectOption[]>([]);
   currentAddress = signal<string>('Haz clic en el mapa para obtener la dirección descriptiva');
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     this.buildForms();
-    this.initUbigeo();
-    this.patchPerfilForm();
     this.setupListeners();
+    this.cargarStats();
+    await this.loadUbigeoData();
+  }
+
+  private async loadUbigeoData(): Promise<void> {
+    try {
+      const module = await import('ubigeo-peru');
+      this.ubigeoData = module.default || module;
+      this.initUbigeo();
+      this.patchPerfilForm();
+    } catch (err) {
+      console.error('Error al cargar dinámicamente ubigeo-peru:', err);
+    }
+  }
+
+  private async cargarStats(): Promise<void> {
+    const user = this.usuario();
+    if (user && user.id_usuario) {
+      try {
+        const reports = await this.petService.getReportesCreados(user.id_usuario);
+        this.userReports.set(reports);
+      } catch (err) {
+        console.error('Error al cargar estadísticas en ajustes:', err);
+      }
+    }
+  }
+
+  logout(): void {
+    this.authService.logout();
+  }
+
+  crearReporte(): void {
+    this.router.navigate(['/pets/report']);
   }
 
   private buildForms(): void {
@@ -108,8 +147,9 @@ export class AjustesComponent implements OnInit {
   }
 
   private initUbigeo(): void {
+    if (!this.ubigeoData) return;
     try {
-      const list = (ubigeo as unknown as UbigeoData).reniec
+      const list = (this.ubigeoData as unknown as UbigeoData).reniec
         .filter((i: UbigeoItem) => i.provincia === '00' && i.distrito === '00')
         .map((i: UbigeoItem) => ({ value: i.nombre, label: i.nombre }));
       this.departamentos.set(list);
@@ -120,16 +160,17 @@ export class AjustesComponent implements OnInit {
 
   private setupListeners(): void {
     this.perfilForm.get('departamento')?.valueChanges.subscribe(deptName => {
+      if (!this.ubigeoData) return;
       if (!deptName) {
         this.provincias.set([]);
         this.distritos.set([]);
         this.perfilForm.patchValue({ provincia: '', distrito: '' }, { emitEvent: false });
         return;
       }
-      const dept = (ubigeo as unknown as UbigeoData).reniec.find((i: UbigeoItem) => i.nombre === deptName && i.provincia === '00');
+      const dept = (this.ubigeoData as unknown as UbigeoData).reniec.find((i: UbigeoItem) => i.nombre === deptName && i.provincia === '00');
       const deptCode = dept?.departamento || '';
       
-      const provs = (ubigeo as unknown as UbigeoData).reniec
+      const provs = (this.ubigeoData as unknown as UbigeoData).reniec
         .filter((i: UbigeoItem) => i.departamento === deptCode && i.provincia !== '00' && i.distrito === '00')
         .map((i: UbigeoItem) => ({ value: i.nombre, label: i.nombre }));
       this.provincias.set(provs);
@@ -139,21 +180,22 @@ export class AjustesComponent implements OnInit {
     });
 
     this.perfilForm.get('provincia')?.valueChanges.subscribe(provName => {
+      if (!this.ubigeoData) return;
       if (!provName) {
         this.distritos.set([]);
         this.perfilForm.patchValue({ distrito: '' }, { emitEvent: false });
         return;
       }
       const deptName = this.perfilForm.get('departamento')?.value;
-      const dept = (ubigeo as unknown as UbigeoData).reniec.find((i: UbigeoItem) => i.nombre === deptName && i.provincia === '00');
+      const dept = (this.ubigeoData as unknown as UbigeoData).reniec.find((i: UbigeoItem) => i.nombre === deptName && i.provincia === '00');
       const deptCode = dept?.departamento || '';
 
-      const prov = (ubigeo as unknown as UbigeoData).reniec.find((i: UbigeoItem) => 
+      const prov = (this.ubigeoData as unknown as UbigeoData).reniec.find((i: UbigeoItem) => 
         i.departamento === deptCode && i.nombre === provName && i.distrito === '00'
       );
       const provCode = prov?.provincia || '';
 
-      const dists = (ubigeo as unknown as UbigeoData).reniec
+      const dists = (this.ubigeoData as unknown as UbigeoData).reniec
         .filter((i: UbigeoItem) => i.departamento === deptCode && i.provincia === provCode && i.distrito !== '00')
         .map((i: UbigeoItem) => ({ value: i.nombre, label: i.nombre }));
       this.distritos.set(dists);
@@ -193,20 +235,20 @@ export class AjustesComponent implements OnInit {
     const u = this.usuario();
     if (!u) return;
 
-    if (u.departamento) {
-      const dept = (ubigeo as unknown as UbigeoData).reniec.find((i: UbigeoItem) => i.nombre === u.departamento && i.provincia === '00');
+    if (u.departamento && this.ubigeoData) {
+      const dept = (this.ubigeoData as unknown as UbigeoData).reniec.find((i: UbigeoItem) => i.nombre === u.departamento && i.provincia === '00');
       if (dept) {
-        const provs = (ubigeo as unknown as UbigeoData).reniec
+        const provs = (this.ubigeoData as unknown as UbigeoData).reniec
           .filter((i: UbigeoItem) => i.departamento === dept.departamento && i.provincia !== '00' && i.distrito === '00')
           .map((i: UbigeoItem) => ({ value: i.nombre, label: i.nombre }));
         this.provincias.set(provs);
 
         if (u.provincia) {
-          const prov = (ubigeo as unknown as UbigeoData).reniec.find((i: UbigeoItem) => 
+          const prov = (this.ubigeoData as unknown as UbigeoData).reniec.find((i: UbigeoItem) => 
             i.departamento === dept.departamento && i.nombre === u.provincia && i.distrito === '00'
           );
           if (prov) {
-            const dists = (ubigeo as unknown as UbigeoData).reniec
+            const dists = (this.ubigeoData as unknown as UbigeoData).reniec
               .filter((i: UbigeoItem) => i.departamento === dept.departamento && i.provincia === prov.provincia && i.distrito !== '00')
               .map((i: UbigeoItem) => ({ value: i.nombre, label: i.nombre }));
             this.distritos.set(dists);

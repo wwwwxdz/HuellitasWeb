@@ -539,3 +539,249 @@ textarea.form-control {
     display: block;
   }
 }
+
+/* --- Wizard Step Container --- */
+.wizard-form {
+  max-width: 880px; /* Reducimos el ancho máximo para pasos individuales para que sea más elegante */
+  margin: 0 auto;
+}
+
+.wizard-step-container {
+  margin-top: 1.5rem;
+}
+
+/* --- Steps Indicator Premium --- */
+.steps-indicator {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 3.5rem;
+  padding: 0 1.5rem;
+  position: relative;
+  user-select: none;
+}
+
+.step-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+  z-index: 2;
+  cursor: pointer;
+  
+  &:not(.completed):not(.active) {
+    cursor: default;
+  }
+}
+
+.step-num {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background-color: var(--bg-dark, #09090b);
+  border: 2px solid var(--border-color, rgba(255, 255, 255, 0.08));
+  color: var(--text-muted, #71717a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.95rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow-sm);
+
+  i {
+    font-size: 1.15rem;
+    font-weight: 800;
+  }
+}
+
+.step-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  transition: all 0.3s ease;
+  letter-spacing: 0.02em;
+}
+
+.step-line {
+  flex: 1;
+  height: 2px;
+  background-color: var(--border-color, rgba(255, 255, 255, 0.08));
+  margin: 0 12px;
+  transform: translateY(-16px);
+  transition: all 0.4s ease;
+  z-index: 1;
+
+  &.active {
+    background: linear-gradient(90deg, var(--primary-color) 0%, var(--primary-color) 100%);
+  }
+}
+
+/* Modificadores de Estado del Step */
+.step-badge.active {
+  .step-num {
+    border-color: var(--primary-color);
+    color: white;
+    background-color: var(--primary-color);
+    box-shadow: 0 0 15px rgba(var(--primary-rgb, 60, 129, 138), 0.4);
+    transform: scale(1.1);
+  }
+  .step-label {
+    color: var(--primary-color);
+    font-weight: 700;
+  }
+}
+
+.step-badge.completed {
+  .step-num {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    background-color: rgba(var(--primary-rgb, 60, 129, 138), 0.1);
+    
+    &:hover {
+      background-color: var(--primary-color);
+      color: white;
+      box-shadow: 0 0 12px rgba(var(--primary-rgb, 60, 129, 138), 0.3);
+    }
+  }
+  .step-label {
+    color: var(--text-main);
+  }
+}
+
+/* --- Slide in Animation para transiciones de pasos --- */
+.animate-slide-in {
+  animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* --- Resumen Premium del Reporte (Paso 3) --- */
+.report-summary-card {
+  background-color: rgba(255, 255, 255, 0.015);
+  border: 1px dashed var(--border-color);
+  border-radius: 20px;
+  padding: 1.75rem;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.1);
+
+  .summary-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+    &::before {
+      content: 'receipt_long';
+      font-family: 'Material Icons';
+      color: var(--primary-color);
+      font-size: 1.25rem;
+    }
+  }
+}
+
+.summary-details {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  padding-bottom: 8px;
+
+  &.location-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    
+    .value {
+      color: var(--text-muted);
+      line-height: 1.4;
+      text-align: left;
+      font-size: 0.85rem;
+    }
+  }
+
+  .label {
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .value {
+    color: var(--text-main);
+    font-weight: 600;
+    text-align: right;
+  }
+}
+
+/* Badges de Estados en el Resumen */
+.state-badge {
+  padding: 3px 10px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  
+  &.lost {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+  }
+  
+  &.found {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+  }
+  
+  &.sighted {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+  }
+}
+
+.text-highlight {
+  color: var(--primary-color) !important;
+}
+
+.text-success {
+  color: #10b981 !important;
+}
+
+@media (max-width: 576px) {
+  .steps-indicator {
+    padding: 0;
+    margin-bottom: 2.5rem;
+  }
+  .step-label {
+    font-size: 0.72rem;
+  }
+  .step-num {
+    width: 34px;
+    height: 34px;
+    font-size: 0.85rem;
+  }
+  .step-line {
+    margin: 0 4px;
+    transform: translateY(-22px);
+  }
+}

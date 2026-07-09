@@ -1,5 +1,14 @@
-import { Component, OnInit, OnDestroy, inject, signal, computed, effect, HostListener } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  inject,
+  signal,
+  computed,
+  effect,
+  HostListener,
+} from '@angular/core';
+
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { Navbar } from '../../../shared/components/navbar/navbar';
@@ -18,17 +27,16 @@ import { FlagService } from '../../../core/services/flag.service';
   selector: 'app-reports',
   standalone: true,
   imports: [
-    CommonModule,
     FormsModule,
     RouterModule,
     Navbar,
     Footer,
     LocationFilterModal,
     FlagModalComponent,
-    PostCardSocialComponent
+    PostCardSocialComponent,
   ],
   templateUrl: './reports.html',
-  styleUrl: './reports.scss'
+  styleUrl: './reports.scss',
 })
 export class ReportsComponent implements OnInit, OnDestroy {
   private readonly petService = inject(PetService);
@@ -42,7 +50,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
   // Estado de Denuncias
   isFlagModalOpen = signal<boolean>(false);
   isSendingFlag = signal<boolean>(false);
-  flagTarget = signal<{ type: string, id: string, label: string } | null>(null);
+  flagTarget = signal<{ type: string; id: string; label: string } | null>(null);
   flagMotivo = signal<MotivoDenuncia>('spam');
   flagDescripcion = signal<string>('');
 
@@ -51,7 +59,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
   totalResults = signal<number>(0);
   hasMore = signal<boolean>(false);
   especies = signal<Especie[]>([]);
-  
+
   // Estado UI
   isLoading = signal<boolean>(false);
   isLoadingMore = signal<boolean>(false);
@@ -95,7 +103,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadEspecies();
-    
+
     // Escuchar creación de nuevos reportes
     if (typeof window !== 'undefined') {
       window.addEventListener('pet-report-created', this.handleReportCreated);
@@ -139,7 +147,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
         lng: this.isGeoActive() ? this.center()[1] : undefined,
         radio: this.isGeoActive() ? this.geoRadio() : undefined,
         page: page,
-        limit: this.pageSize()
+        limit: this.pageSize(),
       });
 
       this.reports.set(response.data || []);
@@ -170,15 +178,16 @@ export class ReportsComponent implements OnInit, OnDestroy {
         lng: this.isGeoActive() ? this.center()[1] : undefined,
         radio: this.isGeoActive() ? this.geoRadio() : undefined,
         page: nextPage,
-        limit: this.pageSize()
+        limit: this.pageSize(),
       });
 
       const newData = response.data || [];
-      this.reports.update(prev => {
+      this.reports.update((prev) => {
         const combined = [...prev, ...newData];
         // Filtrar duplicados por ID
-        return combined.filter((item, index, self) =>
-          self.findIndex(t => t.id_reporte_mascota === item.id_reporte_mascota) === index
+        return combined.filter(
+          (item, index, self) =>
+            self.findIndex((t) => t.id_reporte_mascota === item.id_reporte_mascota) === index,
         );
       });
       this.hasMore.set(response.hasMore);
@@ -255,19 +264,25 @@ export class ReportsComponent implements OnInit, OnDestroy {
   // Sincronizar cambios en los reportes (Likes, Shares, Comentarios)
   onReportChange(updated: PetReport): void {
     const miUsuarioId = this.usuario()?.id_usuario;
-    this.reports.update(list => {
+    this.reports.update((list) => {
       // 1. Sincronizar todos los reportes existentes con la nueva data
-      let newList = list.map(r => r.id_reporte_mascota === updated.id_reporte_mascota ? { ...r, ...updated } : r);
+      let newList = list.map((r) =>
+        r.id_reporte_mascota === updated.id_reporte_mascota ? { ...r, ...updated } : r,
+      );
 
       // 2. Si se compartió, evaluar si agregamos un repost propio al inicio
       if (updated.esta_compartido) {
         if (miUsuarioId) {
-          const yaExisteRepost = list.some(r => r.id_reporte_mascota === updated.id_reporte_mascota && r.compartido_por_id === miUsuarioId);
+          const yaExisteRepost = list.some(
+            (r) =>
+              r.id_reporte_mascota === updated.id_reporte_mascota &&
+              r.compartido_por_id === miUsuarioId,
+          );
           if (!yaExisteRepost) {
             const repost: PetReport = {
               ...updated,
               compartido_por_id: miUsuarioId,
-              compartido_por_nombre: this.usuario()?.nombre || 'Tú'
+              compartido_por_nombre: this.usuario()?.nombre || 'Tú',
             };
             newList = [repost, ...newList];
           }
@@ -275,7 +290,13 @@ export class ReportsComponent implements OnInit, OnDestroy {
       } else {
         // Si se quitó la compartición, remover el repost propio de la lista
         if (miUsuarioId) {
-          newList = newList.filter(r => !(r.id_reporte_mascota === updated.id_reporte_mascota && r.compartido_por_id === miUsuarioId));
+          newList = newList.filter(
+            (r) =>
+              !(
+                r.id_reporte_mascota === updated.id_reporte_mascota &&
+                r.compartido_por_id === miUsuarioId
+              ),
+          );
         }
       }
       return newList;
@@ -292,7 +313,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
     this.flagTarget.set({
       type: 'reporte',
       id: report.id_reporte_mascota!,
-      label: report.nombre ? `Alerta de ${report.nombre}` : 'Alerta de Mascota'
+      label: report.nombre ? `Alerta de ${report.nombre}` : 'Alerta de Mascota',
     });
     this.flagMotivo.set('spam');
     this.flagDescripcion.set('');
@@ -309,7 +330,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
     this.flagTarget.set({
       type: 'comentario',
       id: c.id_comentario,
-      label: `Comentario de ${c.usuario.nombre || 'Usuario'}`
+      label: `Comentario de ${c.usuario.nombre || 'Usuario'}`,
     });
     this.flagMotivo.set('spam');
     this.flagDescripcion.set('');
@@ -331,22 +352,25 @@ export class ReportsComponent implements OnInit, OnDestroy {
         tipo_objetivo: target.type as any,
         id_objetivo: target.id,
         motivo: this.flagMotivo(),
-        descripcion: this.flagDescripcion()
+        descripcion: this.flagDescripcion(),
       });
       alert('Denuncia enviada correctamente. Gracias por colaborar con la comunidad.');
       this.closeFlagModal();
     } catch (error: any) {
       console.error('Error al enviar la denuncia:', error);
-      const errMsg = error?.error?.error || 'No se pudo enviar la denuncia. Inténtalo de nuevo más tarde.';
-      alert(errMsg === 'ya has denunciado este contenido anteriormente'
-        ? 'Ya has reportado este contenido anteriormente.'
-        : errMsg);
+      const errMsg =
+        error?.error?.error || 'No se pudo enviar la denuncia. Inténtalo de nuevo más tarde.';
+      alert(
+        errMsg === 'ya has denunciado este contenido anteriormente'
+          ? 'Ya has reportado este contenido anteriormente.'
+          : errMsg,
+      );
     } finally {
       this.isSendingFlag.set(false);
     }
   }
 
   onPostDeleted(id: string): void {
-    this.reports.update(list => list.filter(r => r.id_reporte_mascota !== id));
+    this.reports.update((list) => list.filter((r) => r.id_reporte_mascota !== id));
   }
 }

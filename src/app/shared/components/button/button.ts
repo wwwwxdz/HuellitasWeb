@@ -1,12 +1,11 @@
 import { Component, input, output } from '@angular/core';
-import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-button',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './button.html',
-  styleUrl: './button.scss'
+  styleUrl: './button.scss',
 })
 export class ButtonComponent {
   variant = input<'primary' | 'secondary' | 'danger' | 'outline' | 'text' | 'success'>('primary');

@@ -5,22 +5,103 @@
       <span>{{ report().compartido_por_nombre }} compartió este reporte</span>
     </div>
   }
-  
+
   <!-- Cabecera del Post -->
   <div class="post-header">
     <div class="reporter-info">
-      <app-avatar
-        [src]="report().usuario.foto_perfil"
-        [name]="report().usuario.nombre || 'Guardián Anónimo'"
-        [size]="40"
-        class="reporter-avatar-wrapper"
-      ></app-avatar>
+      <!-- Avatar interactivo -->
+      <div
+        class="user-hover-trigger"
+        (click)="navigateToProfile($event)"
+        (mouseenter)="onUserEnter()"
+        (mouseleave)="onUserLeave()"
+      >
+        <app-avatar
+          [src]="report().usuario.foto_perfil"
+          [name]="report().usuario.nombre || 'Guardián Anónimo'"
+          [size]="40"
+          class="reporter-avatar-wrapper clickable-user"
+        ></app-avatar>
+      </div>
       <div class="reporter-meta">
-        <span class="reporter-name">{{ report().usuario.nombre || 'Guardián Anónimo' }}</span>
+        <!-- Nombre interactivo -->
+        <div
+          class="user-hover-trigger inline-trigger"
+          (click)="navigateToProfile($event)"
+          (mouseenter)="onUserEnter()"
+          (mouseleave)="onUserLeave()"
+        >
+          <span class="reporter-name clickable-user">{{
+            report().usuario.nombre || 'Guardián Anónimo'
+          }}</span>
+        </div>
         <span class="post-date">{{ getTimeAgo(report().creado_en) }}</span>
       </div>
+
+      <!-- Popover de Resumen de Perfil -->
+      <div
+        class="user-popover-card"
+        [class.visible]="isPopoverVisible()"
+        (mouseenter)="onPopoverEnter()"
+        (mouseleave)="onPopoverLeave()"
+      >
+        @if (isLoadingPopover()) {
+          <div class="popover-loading">
+            <i class="material-icons loading-spin">sync</i>
+            <span>Cargando perfil...</span>
+          </div>
+        } @else {
+          @if (popoverUser()) {
+            <div class="popover-header">
+              <img
+                [src]="
+                  popoverUser().foto_perfil ||
+                  'https://ui-avatars.com/api/?name=User&background=3c818a&color=fff'
+                "
+                alt="Avatar"
+                class="popover-avatar"
+              />
+              <div class="popover-user-meta">
+                <span class="popover-name">{{ popoverUser().nombre }}</span>
+                <span class="popover-email">{{
+                  popoverUser().email || 'Guardián de Huellitas'
+                }}</span>
+              </div>
+            </div>
+
+            <p class="popover-bio">
+              {{
+                popoverUser().bio ||
+                  'Colaborando activamente para ayudar a las mascotas de la comunidad.'
+              }}
+            </p>
+
+            <div class="popover-stats">
+              <div class="popover-stat-item">
+                <span class="stat-count">{{ popoverUser().totalReports }}</span>
+                <span class="stat-label">Alertas</span>
+              </div>
+              <div class="popover-stat-item">
+                <span class="stat-count reunido-count">{{ popoverUser().totalReunidos }}</span>
+                <span class="stat-label">Reunidos</span>
+              </div>
+            </div>
+
+            <div class="popover-actions">
+              <button class="btn-popover-action" (click)="navigateToProfile($event)">
+                <i class="material-icons">visibility</i> Ver perfil completo
+              </button>
+            </div>
+          } @else {
+            <div class="popover-error">
+              <i class="material-icons">error_outline</i>
+              <span>No se pudo cargar la información</span>
+            </div>
+          }
+        }
+      </div>
     </div>
-    
+
     <div class="post-header-actions">
       <app-badge [status]="report().estado"></app-badge>
       <app-options-dropdown
@@ -37,8 +118,8 @@
 
   <!-- Contenedor Multimedia Grande con Carrusel (Aspect-Ratio 1:1) -->
   <div class="post-media-box">
-    <app-image-carousel 
-      [images]="getImages()" 
+    <app-image-carousel
+      [images]="getImages()"
       [alt]="report().nombre || 'Mascota'"
       [zoomable]="false"
     ></app-image-carousel>
@@ -49,16 +130,18 @@
     <h3 class="pet-title-name">
       {{ report().nombre || 'Mascota sin nombre (Avistado)' }}
     </h3>
-    
+
     <div class="post-meta-details">
       <span class="meta-detail-item">
         <i class="material-icons">pets</i>
         <span>{{ report().raza || 'Raza mixta' }}</span>
       </span>
-      <span class="meta-detail-item" *ngIf="report().ubicacion">
-        <i class="material-icons">place</i>
-        <span>{{ formattedLocation }}</span>
-      </span>
+      @if (report().ubicacion) {
+        <span class="meta-detail-item">
+          <i class="material-icons">place</i>
+          <span>{{ formattedLocation }}</span>
+        </span>
+      }
     </div>
   </div>
 
@@ -66,18 +149,20 @@
   <div class="post-action-bar">
     <div class="action-buttons-group">
       <!-- Botón Me Gusta (Corazón) -->
-      <button 
-        class="feed-action-btn like-btn" 
+      <button
+        class="feed-action-btn like-btn"
         [class.liked]="report().liked_por_usuario"
         (click)="onLikeClick()"
         title="Me gusta"
       >
-        <i class="material-icons">{{ report().liked_por_usuario ? 'favorite' : 'favorite_border' }}</i>
+        <i class="material-icons">{{
+          report().liked_por_usuario ? 'favorite' : 'favorite_border'
+        }}</i>
         <span>{{ report().total_likes || 0 }}</span>
       </button>
 
       <!-- Botón Comentarios (Muestra Detalle) -->
-      <button 
+      <button
         class="feed-action-btn comment-btn"
         [class.active]="openComments()"
         (click)="toggleComments()"
@@ -90,8 +175,8 @@
 
     <div class="action-buttons-group">
       <!-- Botón Compartir -->
-      <button 
-        class="feed-action-btn share-btn" 
+      <button
+        class="feed-action-btn share-btn"
         [class.shared]="report().esta_compartido"
         (click)="onShareClick($event)"
         title="Compartir publicación"
@@ -101,7 +186,10 @@
       </button>
 
       <!-- Detalle -->
-      <a class="feed-action-btn detail-btn" [routerLink]="['/pets/reports/detail', report().id_reporte_mascota]">
+      <a
+        class="feed-action-btn detail-btn"
+        [routerLink]="['/pets/reports/detail', report().id_reporte_mascota]"
+      >
         <i class="material-icons">launch</i>
         <span>Detalles</span>
       </a>
@@ -111,19 +199,18 @@
   <!-- Área de Comentarios Desplegable -->
   @if (openComments()) {
     <div class="post-comments-section" (click)="$event.stopPropagation()">
-      
       <!-- Editor de comentario principal -->
       <div class="comment-input-container">
-        <input 
-          type="text" 
-          class="main-comment-input" 
-          placeholder="Escribe un comentario..." 
+        <input
+          type="text"
+          class="main-comment-input"
+          placeholder="Escribe un comentario..."
           [value]="commentInput()"
           (input)="updateCommentInput($any($event.target).value)"
           (keydown.enter)="onSendComment()"
         />
-        <button 
-          class="btn-send-main-comment" 
+        <button
+          class="btn-send-main-comment"
           (click)="onSendComment()"
           [disabled]="!commentInput().trim() || isSendingComment()"
         >
@@ -169,5 +256,4 @@
       </div>
     </div>
   }
-
 </article>

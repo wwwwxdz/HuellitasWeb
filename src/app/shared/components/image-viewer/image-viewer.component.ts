@@ -1,20 +1,19 @@
-import { 
-  Component, 
-  input, 
-  output, 
-  signal, 
-  HostListener, 
-  ChangeDetectionStrategy
+import {
+  Component,
+  input,
+  output,
+  signal,
+  HostListener,
+  ChangeDetectionStrategy,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-image-viewer',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './image-viewer.component.html',
   styleUrl: './image-viewer.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ImageViewerComponent {
   src = input.required<string>();
@@ -31,11 +30,11 @@ export class ImageViewerComponent {
   private startY = 0;
 
   zoomIn() {
-    this.scale.update(s => Math.min(s + 0.25, 6));
+    this.scale.update((s) => Math.min(s + 0.25, 6));
   }
 
   zoomOut() {
-    this.scale.update(s => Math.max(s - 0.25, 0.5));
+    this.scale.update((s) => Math.max(s - 0.25, 0.5));
   }
 
   resetZoom() {

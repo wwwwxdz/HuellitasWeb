@@ -1,4 +1,4 @@
-import { Component, inject, signal, HostListener } from '@angular/core';
+import { Component, inject, signal, HostListener, ElementRef } from '@angular/core';
 import { RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { take } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
@@ -8,22 +8,15 @@ import { ChatService } from '../../../core/services/chat.service';
 import { Notification } from '../../../core/models/notification.model';
 import { ProfileDropdown } from '../profile-dropdown/profile-dropdown';
 import { NotificationItemComponent } from '../notification-item/notification-item.component';
-import { CommonModule } from '@angular/common';
+
 import { TimeAgoPipe } from '../../pipes/time-ago.pipe';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [
-    CommonModule,
-    RouterLink,
-    RouterLinkActive,
-    ProfileDropdown,
-    NotificationItemComponent,
-    TimeAgoPipe
-  ],
+  imports: [RouterLink, RouterLinkActive, ProfileDropdown, NotificationItemComponent, TimeAgoPipe],
   templateUrl: './navbar.html',
-  styleUrl: './navbar.scss'
+  styleUrl: './navbar.scss',
 })
 export class Navbar {
   protected readonly auth = inject(AuthService);
@@ -31,6 +24,7 @@ export class Navbar {
   protected readonly notificationService = inject(NotificationService);
   protected readonly chatService = inject(ChatService);
   private readonly router = inject(Router);
+  private readonly elementRef = inject(ElementRef);
 
   isMobileMenuOpen = signal<boolean>(false);
   showNotifications = signal<boolean>(false);
@@ -40,7 +34,7 @@ export class Navbar {
   onDocumentClick(event: MouseEvent) {
     const target = event.target as HTMLElement;
     const isInsideBadgeArea = target.closest('.nav-badge-container');
-    
+
     if (!isInsideBadgeArea) {
       this.showNotifications.set(false);
       this.showChats.set(false);
@@ -55,8 +49,7 @@ export class Navbar {
     this.isMobileMenuOpen.set(false);
   }
 
-  toggleNotifications(event: Event) {
-    event.stopPropagation();
+  toggleNotifications() {
     this.showChats.set(false); // Cerrar chats
     this.showNotifications.update((val) => !val);
     if (this.showNotifications()) {
@@ -65,8 +58,7 @@ export class Navbar {
     }
   }
 
-  toggleChats(event: Event) {
-    event.stopPropagation();
+  toggleChats() {
     this.showNotifications.set(false); // Cerrar notificaciones
     this.showChats.update((val) => !val);
     if (this.showChats()) {
@@ -94,7 +86,7 @@ export class Navbar {
     if (!other || !other.nombre) {
       return { ...other, nombre: other?.nombre || 'Usuario desconocido' };
     }
-    
+
     const userCopy = { ...other };
     const uuidRegex = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
     userCopy.nombre = userCopy.nombre.replace(uuidRegex, '').replace(/-+$/, '').trim() || 'Usuario';
@@ -102,7 +94,10 @@ export class Navbar {
   }
 
   getAvatar(nombre: string, foto?: string): string {
-    return foto || `https://ui-avatars.com/api/?name=${encodeURIComponent(nombre)}&background=106063&color=fff&size=64`;
+    return (
+      foto ||
+      `https://ui-avatars.com/api/?name=${encodeURIComponent(nombre)}&background=106063&color=fff&size=64`
+    );
   }
 
   getMessagePreview(chat: any): string {

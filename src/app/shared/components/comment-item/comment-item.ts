@@ -1,5 +1,5 @@
 import { Component, input, output, model, inject, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { Comentario } from '../../../core/models/comment.model';
 import { AuthService } from '../../../core/auth/auth.service';
@@ -13,17 +13,15 @@ import { OptionsDropdownComponent, DropdownOption } from '../options-dropdown/op
   selector: 'app-comment-item',
   standalone: true,
   imports: [
-    CommonModule, 
     FormsModule,
     AvatarComponent,
     MentionInputDirective,
     MentionHighlightPipe,
     OptionsDropdownComponent,
-    // Importación recursiva en standalone para las respuestas
-    CommentItemComponent
+    CommentItemComponent,
   ],
   templateUrl: './comment-item.html',
-  styleUrl: './comment-item.scss'
+  styleUrl: './comment-item.scss',
 })
 export class CommentItemComponent {
   // Inputs
@@ -43,7 +41,7 @@ export class CommentItemComponent {
 
   // Computed
   isSending = computed(() => this.sendingSet().has(this.comment().id_comentario || ''));
-  
+
   canDelete = computed(() => {
     const user = this.authService.usuario();
     if (!user) return false;
@@ -63,7 +61,12 @@ export class CommentItemComponent {
   commentOptions = computed<DropdownOption[]>(() => {
     const options: DropdownOption[] = [];
     if (this.canDelete()) {
-      options.push({ label: 'Eliminar comentario', icon: 'delete_outline', value: 'delete', danger: true });
+      options.push({
+        label: 'Eliminar comentario',
+        icon: 'delete_outline',
+        value: 'delete',
+        danger: true,
+      });
     }
     if (!this.isOwnComment()) {
       options.push({ label: 'Denunciar comentario', icon: 'flag', value: 'report', danger: true });
@@ -86,7 +89,7 @@ export class CommentItemComponent {
     if (option.value === 'delete') {
       this.deleteComment.emit({
         reporteId: this.reporteId(),
-        commentId: this.comment().id_comentario!
+        commentId: this.comment().id_comentario!,
       });
     } else if (option.value === 'report') {
       this.reportComment.emit(this.comment());
@@ -98,7 +101,7 @@ export class CommentItemComponent {
     if (text && this.comment().id_comentario) {
       this.sendReply.emit({
         text,
-        parentId: this.comment().id_comentario!
+        parentId: this.comment().id_comentario!,
       });
     }
   }

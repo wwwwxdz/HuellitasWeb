@@ -3,86 +3,69 @@
 <div class="ajustes-page">
   <div class="ajustes-container">
 
-    <!-- Header de la página -->
-    <div class="page-header">
-      <div class="page-header__left">
-        <div class="page-header__icon">
-          <i class="material-icons">manage_accounts</i>
-        </div>
-        <div>
-          <h1>Ajustes de Cuenta</h1>
-          <p>Gestiona tu información personal y preferencias.</p>
-        </div>
-      </div>
-      <a routerLink="/perfil" class="btn-back">
-        <i class="material-icons">arrow_back</i>
-        Volver al perfil
-      </a>
-    </div>
-
     <!-- Layout principal -->
     <div class="ajustes-layout">
 
-      <!-- Sidebar izquierdo: avatar + navegación -->
-      <aside class="ajustes-sidebar">
-        <!-- Avatar -->
-        <div class="avatar-section">
-          <div class="avatar-wrapper" [class.uploading]="isUploadingPhoto()" (click)="!isUploadingPhoto() && fileInput.click()">
-            <img [src]="currentPhotoSrc" [alt]="usuario()?.nombre" />
-            <div class="avatar-overlay">
-              <i class="material-icons">photo_camera</i>
-              <span>Cambiar foto</span>
-            </div>
-            @if (isUploadingPhoto()) {
-              <div class="avatar-spinner">
-                <i class="material-icons spin-icon">sync</i>
-              </div>
-            }
-          </div>
-          <input #fileInput type="file" accept="image/*" (change)="onFileSelected($event)" hidden />
-          <div class="avatar-info">
-            <strong>{{ usuario()?.nombre || 'Usuario' }}</strong>
-            <span>{{ usuario()?.email }}</span>
-          </div>
+      <!-- Sidebar izquierdo: estilo Instagram -->
+      <aside class="insta-sidebar">
+        <h1 class="sidebar-title">Configuración</h1>
+        
+        <!-- Buscador -->
+        <div class="search-box">
+          <i class="material-icons">search</i>
+          <input type="text" placeholder="Buscar" disabled />
         </div>
 
-        <!-- Tabs de navegación -->
-        <nav class="sidebar-nav">
-          <button
-            class="nav-item"
-            [class.active]="activeTab() === 'perfil'"
-            (click)="setTab('perfil')"
-          >
-            <i class="material-icons">person</i>
-            <span>Información Personal</span>
-            <i class="material-icons nav-arrow">chevron_right</i>
-          </button>
-          <button
-            class="nav-item"
-            [class.active]="activeTab() === 'mapa'"
-            (click)="setTab('mapa')"
-          >
-            <i class="material-icons">map</i>
-            <span>Mapa de Cobertura</span>
-            <i class="material-icons nav-arrow">chevron_right</i>
-          </button>
-          <button
-            class="nav-item"
-            [class.active]="activeTab() === 'seguridad'"
-            (click)="setTab('seguridad')"
-          >
-            <i class="material-icons">lock</i>
-            <span>Seguridad</span>
-            <i class="material-icons nav-arrow">chevron_right</i>
-          </button>
-        </nav>
 
-        <!-- Peligro: cerrar sesión -->
-        <div class="sidebar-footer">
-          <a routerLink="/perfil" class="sidebar-link">
-            <i class="material-icons">grid_view</i>
-            Mis publicaciones
-          </a>
+        <!-- Opciones de Navegación -->
+        <div class="nav-groups-container">
+          <div class="nav-group-section">
+            <span class="group-title">Cómo usas Huellitas</span>
+            <button
+              class="insta-nav-item"
+              [class.active]="activeTab() === 'perfil'"
+              (click)="setTab('perfil')"
+            >
+              <i class="material-icons">person_outline</i>
+              <span>Editar perfil</span>
+            </button>
+          </div>
+
+          <div class="nav-group-section">
+            <span class="group-title">Zona e interés</span>
+            <button
+              class="insta-nav-item"
+              [class.active]="activeTab() === 'mapa'"
+              (click)="setTab('mapa')"
+            >
+              <i class="material-icons">map</i>
+              <span>Mapa de Cobertura</span>
+            </button>
+          </div>
+
+          <div class="nav-group-section">
+            <span class="group-title">Seguridad</span>
+            <button
+              class="insta-nav-item"
+              [class.active]="activeTab() === 'seguridad'"
+              (click)="setTab('seguridad')"
+            >
+              <i class="material-icons">lock</i>
+              <span>Seguridad y Contraseña</span>
+            </button>
+          </div>
+
+          <div class="nav-group-section">
+            <span class="group-title">Acciones</span>
+            <a routerLink="/perfil" class="insta-nav-item link-item">
+              <i class="material-icons">grid_view</i>
+              <span>Mis publicaciones</span>
+            </a>
+            <button class="insta-nav-item logout-btn" (click)="logout()">
+              <i class="material-icons">logout</i>
+              <span>Cerrar Sesión</span>
+            </button>
+          </div>
         </div>
       </aside>
 
@@ -105,116 +88,108 @@
           </div>
         }
 
-        <!-- ══ TAB: Información Personal ══════════════════════════ -->
+        <!-- ══ TAB: Editar Perfil ══════════════════════════ -->
         @if (activeTab() === 'perfil') {
           <section class="settings-section">
-            <div class="section-title">
-              <i class="material-icons">person</i>
-              <div>
-                <h2>Información Personal</h2>
-                <p>Gestiona tu información de contacto y descripción personal.</p>
+            <h2 class="section-main-title">Editar perfil</h2>
+
+            <!-- Tarjeta de Foto Horizontal -->
+            <div class="avatar-card-horizontal">
+              <div class="avatar-card-left">
+                <img [src]="currentPhotoSrc" [alt]="usuario()?.nombre" />
+                <div class="avatar-card-text">
+                  <strong>{{ usuario()?.nombre || 'Usuario' }}</strong>
+                  <span>{{ usuario()?.email }}</span>
+                </div>
               </div>
+              <button class="btn-change-photo" (click)="fileInput.click()" [disabled]="isUploadingPhoto()">
+                @if (isUploadingPhoto()) {
+                  <span>Cargando...</span>
+                } @else {
+                  <span>Cambiar foto</span>
+                }
+              </button>
+              <input #fileInput type="file" accept="image/*" (change)="onFileSelected($event)" hidden />
             </div>
 
-            <form [formGroup]="perfilForm" (ngSubmit)="onSavePerfil()" class="settings-form">
-              <div class="profile-basic-column" style="width: 100%;">
-                <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
-                  <!-- ID Usuario (Lectura) -->
-                  <div class="form-field">
-                    <label>
-                      <i class="material-icons">key</i>
-                      ID Usuario (Lectura)
-                    </label>
-                    <input
-                      type="text"
-                      [value]="usuario()?.id_usuario || ''"
-                      disabled
-                      style="opacity: 0.65; cursor: not-allowed;"
-                    />
-                  </div>
+            <form [formGroup]="perfilForm" (ngSubmit)="onSavePerfil()" class="settings-form-insta">
+              
+              <!-- ID Usuario -->
+              <div class="form-field-insta">
+                <label>ID Usuario</label>
+                <input
+                  type="text"
+                  [value]="usuario()?.id_usuario || ''"
+                  disabled
+                  class="input-disabled"
+                />
+                <span class="field-help-text">Tu identificador único en la plataforma. No se puede modificar.</span>
+              </div>
 
-                  <!-- Nombre -->
-                  <div class="form-field" [class.has-error]="perfilForm.get('nombre')?.touched && perfilForm.get('nombre')?.invalid">
-                    <label for="nombre">
-                      <i class="material-icons">badge</i>
-                      Nombre Completo
-                      <span class="required">*</span>
-                    </label>
-                    <input
-                      id="nombre"
-                      type="text"
-                      formControlName="nombre"
-                      placeholder="Ej: Juan Pérez"
-                      autocomplete="name"
-                    />
-                    @if (getError(perfilForm, 'nombre')) {
-                      <span class="field-error">{{ getError(perfilForm, 'nombre') }}</span>
-                    }
-                  </div>
+              <!-- Nombre -->
+              <div class="form-field-insta" [class.has-error]="perfilForm.get('nombre')?.touched && perfilForm.get('nombre')?.invalid">
+                <label for="nombre">Nombre Completo</label>
+                <input
+                  id="nombre"
+                  type="text"
+                  formControlName="nombre"
+                  placeholder="Tu nombre completo"
+                />
+                <span class="field-help-text">Usa el nombre por el que se te conoce para que las personas te identifiquen fácilmente al coordinar reencuentros.</span>
+                @if (getError(perfilForm, 'nombre')) {
+                  <span class="field-error-insta">{{ getError(perfilForm, 'nombre') }}</span>
+                }
+              </div>
 
-                  <!-- Email -->
-                  <div class="form-field" [class.has-error]="perfilForm.get('email')?.touched && perfilForm.get('email')?.invalid">
-                    <label for="email">
-                      <i class="material-icons">alternate_email</i>
-                      Correo Electrónico
-                      <span class="required">*</span>
-                    </label>
-                    <input
-                      id="email"
-                      type="email"
-                      formControlName="email"
-                      placeholder="usuario@ejemplo.com"
-                      autocomplete="email"
-                    />
-                    @if (getError(perfilForm, 'email')) {
-                      <span class="field-error">{{ getError(perfilForm, 'email') }}</span>
-                    }
-                  </div>
+              <!-- Email -->
+              <div class="form-field-insta" [class.has-error]="perfilForm.get('email')?.touched && perfilForm.get('email')?.invalid">
+                <label for="email">Correo Electrónico</label>
+                <input
+                  id="email"
+                  type="email"
+                  formControlName="email"
+                  placeholder="Tu correo electrónico"
+                />
+                <span class="field-help-text">Utilizado para enviarte alertas críticas de mascotas desaparecidas cerca de ti.</span>
+                @if (getError(perfilForm, 'email')) {
+                  <span class="field-error-insta">{{ getError(perfilForm, 'email') }}</span>
+                }
+              </div>
 
-                  <!-- Teléfono -->
-                  <div class="form-field">
-                    <label for="telefono">
-                      <i class="material-icons">phone</i>
-                      Teléfono de Contacto
-                    </label>
-                    <input
-                      id="telefono"
-                      type="tel"
-                      formControlName="telefono"
-                      placeholder="+51 999 999 999"
-                      autocomplete="tel"
-                    />
-                  </div>
-                </div>
+              <!-- Teléfono -->
+              <div class="form-field-insta">
+                <label for="telefono">Teléfono de Contacto</label>
+                <input
+                  id="telefono"
+                  type="tel"
+                  formControlName="telefono"
+                  placeholder="Tu número telefónico"
+                />
+                <span class="field-help-text">Recomendado para que las personas que encuentren a tu mascota puedan llamarte de inmediato.</span>
+              </div>
 
-                <!-- Bio -->
-                <div class="form-field full-width" style="margin-top: 20px;" [class.has-error]="perfilForm.get('bio')?.touched && perfilForm.get('bio')?.invalid">
-                  <label for="bio">
-                    <i class="material-icons">notes</i>
-                    Biografía
-                    <span class="char-badge">{{ charCount }}/250</span>
-                  </label>
-                  <textarea
-                    id="bio"
-                    formControlName="bio"
-                    placeholder="Cuéntanos un poco sobre ti y tu amor por los animales..."
-                    rows="4"
-                  ></textarea>
-                  @if (getError(perfilForm, 'bio')) {
-                    <span class="field-error">{{ getError(perfilForm, 'bio') }}</span>
-                  }
-                </div>
+              <!-- Bio -->
+              <div class="form-field-insta" [class.has-error]="perfilForm.get('bio')?.touched && perfilForm.get('bio')?.invalid">
+                <label for="bio">Biografía <span class="char-count">{{ charCount }}/250</span></label>
+                <textarea
+                  id="bio"
+                  formControlName="bio"
+                  placeholder="Escribe una pequeña descripción personal..."
+                  rows="3"
+                ></textarea>
+                <span class="field-help-text">Cuéntale a la comunidad un poco sobre ti o tu experiencia cuidando animalitos.</span>
+                @if (getError(perfilForm, 'bio')) {
+                  <span class="field-error-insta">{{ getError(perfilForm, 'bio') }}</span>
+                }
               </div>
 
               <!-- Botón guardar -->
-              <div class="form-actions">
-                <button type="submit" class="btn-save" [disabled]="isSaving() || perfilForm.invalid">
+              <div class="form-actions-insta">
+                <button type="submit" class="btn-save-insta" [disabled]="isSaving() || perfilForm.invalid">
                   @if (isSaving()) {
-                    <i class="material-icons spin-icon">sync</i>
-                    Guardando...
+                    <i class="material-icons spin-icon">sync</i> Guardando...
                   } @else {
-                    <i class="material-icons">save</i>
-                    Guardar Cambios
+                    <span>Guardar Cambios</span>
                   }
                 </button>
               </div>
@@ -225,149 +200,95 @@
         <!-- ══ TAB: Mapa de Cobertura ═══════════════════════════ -->
         @if (activeTab() === 'mapa') {
           <section class="settings-section">
-            <div class="section-title">
-              <i class="material-icons">map</i>
-              <div>
-                <h2>Mapa de Cobertura</h2>
-                <p>Define tu ubicación y el radio en metros para recibir alertas y avistamientos en tu zona de interés.</p>
+            <h2 class="section-main-title">Mapa de Cobertura</h2>
+            <p class="section-main-subtitle">Configura tu ubicación general y el rango de notificaciones en el mapa.</p>
+
+            <form [formGroup]="perfilForm" (ngSubmit)="onSavePerfil()" class="settings-form-insta">
+              
+              <div class="form-field-insta">
+                <label>Ubicación General</label>
+                <div class="selectors-row-insta">
+                  <!-- Departamento -->
+                  <div class="select-wrapper-insta">
+                    <select id="departamento" formControlName="departamento">
+                      <option value="">Departamento</option>
+                      @for (dept of departamentos(); track dept.value) {
+                        <option [value]="dept.value">{{ dept.label }}</option>
+                      }
+                    </select>
+                  </div>
+
+                  <!-- Provincia -->
+                  <div class="select-wrapper-insta">
+                    <select id="provincia" formControlName="provincia">
+                      <option value="">Provincia</option>
+                      @for (prov of provincias(); track prov.value) {
+                        <option [value]="prov.value">{{ prov.label }}</option>
+                      }
+                    </select>
+                  </div>
+
+                  <!-- Distrito -->
+                  <div class="select-wrapper-insta">
+                    <select id="distrito" formControlName="distrito">
+                      <option value="">Distrito</option>
+                      @for (dist of distritos(); track dist.value) {
+                        <option [value]="dist.value">{{ dist.label }}</option>
+                      }
+                    </select>
+                  </div>
+                </div>
+                <span class="field-help-text">Elige tu ubicación para ayudarnos a catalogar tu zona.</span>
               </div>
-            </div>
 
-            <form [formGroup]="perfilForm" (ngSubmit)="onSavePerfil()" class="settings-form">
-              <div class="profile-location-column" style="width: 100%;">
-                
-                <div class="form-section">
-                  <h3 class="location-title">
-                    <i class="material-icons">explore</i>
-                    Ubicación General
-                  </h3>
-                  
-                  <div class="ubigeo-selectors-grid">
-                    <!-- Departamento -->
-                    <div class="form-field">
-                      <label for="departamento">
-                        Departamento
-                      </label>
-                      <div class="select-wrapper">
-                        <select id="departamento" formControlName="departamento">
-                          <option value="">Selecciona</option>
-                          @for (dept of departamentos(); track dept.value) {
-                            <option [value]="dept.value">{{ dept.label }}</option>
-                          }
-                        </select>
-                      </div>
-                    </div>
-
-                    <!-- Provincia -->
-                    <div class="form-field">
-                      <label for="provincia">
-                        Provincia
-                      </label>
-                      <div class="select-wrapper">
-                        <select id="provincia" formControlName="provincia">
-                          <option value="">Selecciona</option>
-                          @for (prov of provincias(); track prov.value) {
-                            <option [value]="prov.value">{{ prov.label }}</option>
-                          }
-                        </select>
-                      </div>
-                    </div>
-
-                    <!-- Distrito -->
-                    <div class="form-field">
-                      <label for="distrito">
-                        Distrito
-                      </label>
-                      <div class="select-wrapper">
-                        <select id="distrito" formControlName="distrito">
-                          <option value="">Selecciona</option>
-                          @for (dist of distritos(); track dist.value) {
-                            <option [value]="dist.value">{{ dist.label }}</option>
-                          }
-                        </select>
-                      </div>
-                    </div>
-                  </div>
+              <!-- Mapa -->
+              <div class="form-field-insta">
+                <label>Ubicación exacta y Radio de Búsqueda</label>
+                <div class="map-container-insta">
+                  <app-map-component
+                    [center]="[perfilForm.get('latitud')?.value || -9.1214, perfilForm.get('longitud')?.value || -78.5308]"
+                    [radiusKm]="(perfilForm.get('radio')?.value || 10000) / 1000"
+                    [zoom]="13"
+                    [editable]="true"
+                    [showControls]="true"
+                    (mapClick)="onLocationChange($event)"
+                  ></app-map-component>
                 </div>
+                <span class="field-help-text">Haz clic en el mapa para marcar tu dirección. El círculo indica la zona donde recibirás notificaciones.</span>
+              </div>
 
-                <div class="form-divider" style="margin: 16px 0;"></div>
+              <!-- Radio Control -->
+              <div class="form-field-insta">
+                <label>Ajustar Radio: {{ (perfilForm.get('radio')?.value || 10000) / 1000 | number:'1.1-1' }} km ({{ perfilForm.get('radio')?.value || 10000 | number:'1.0-0' }} metros)</label>
+                <input 
+                  type="range" 
+                  min="500" 
+                  max="50000" 
+                  step="500" 
+                  [value]="perfilForm.get('radio')?.value || 10000"
+                  (input)="onRadiusInput($event)"
+                  class="radius-slider-insta"
+                >
+              </div>
 
-                <div class="form-section map-config-section">
-                  <h3 class="location-title">
-                    <i class="material-icons">radar</i>
-                    Radio de Notificaciones
-                  </h3>
-                  <p class="section-desc">Haz clic en el mapa para establecer tu centro de búsqueda y ajusta el radio para recibir alertas oportunas de mascotas perdidas/encontradas.</p>
-
-                  <div class="map-wrapper-ajustes">
-                    <div class="map-container-ajustes" style="height: 350px;">
-                      <app-map-component
-                        [center]="[perfilForm.get('latitud')?.value || -9.1214, perfilForm.get('longitud')?.value || -78.5308]"
-                        [radiusKm]="(perfilForm.get('radio')?.value || 10000) / 1000"
-                        [zoom]="13"
-                        [editable]="true"
-                        [showControls]="true"
-                        (mapClick)="onLocationChange($event)"
-                      ></app-map-component>
-                    </div>
-
-                    <!-- Control de Radio -->
-                    <div class="radius-control-card shadow-sm">
-                      <div class="radius-info">
-                        <div class="radius-label-group">
-                          <i class="material-icons text-cyan">radar</i>
-                          <span class="label">Radio de Cobertura:</span>
-                        </div>
-                        <div class="radius-values-group">
-                          <span class="value">{{ (perfilForm.get('radio')?.value || 10000) / 1000 | number:'1.1-1' }} km</span>
-                          <span class="value-meters">({{ perfilForm.get('radio')?.value || 10000 | number:'1.0-0' }} metros)</span>
-                        </div>
-                      </div>
-                      <input 
-                        type="range" 
-                        min="500" 
-                        max="50000" 
-                        step="500" 
-                        [value]="perfilForm.get('radio')?.value || 10000"
-                        (input)="onRadiusInput($event)"
-                        class="radius-slider"
-                      >
-                    </div>
-
-                    <!-- Coordenadas y Dirección -->
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
-                      <div class="coords-display-ajustes" style="margin: 0; display: flex; flex-direction: column; justify-content: center; gap: 8px;">
-                        <div class="coord-item">
-                          <span class="label">Latitud:</span>
-                          <span class="value">{{ perfilForm.get('latitud')?.value || -9.1214 }}</span>
-                        </div>
-                        <div class="coord-item">
-                          <span class="label">Longitud:</span>
-                          <span class="value">{{ perfilForm.get('longitud')?.value || -78.5308 }}</span>
-                        </div>
-                      </div>
-
-                      <div class="address-display-ajustes shadow-sm" style="margin: 0;">
-                        <div class="address-header">
-                          <i class="material-icons text-cyan">place</i>
-                          <span class="label">Dirección Estimada:</span>
-                        </div>
-                        <p class="address-value" style="font-size: 0.82rem; margin: 4px 0 0 0; line-height: 1.4;">{{ currentAddress() }}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              <!-- Dirección física autocompletada -->
+              <div class="form-field-insta">
+                <label>Dirección Estimada</label>
+                <input
+                  type="text"
+                  [value]="currentAddress()"
+                  disabled
+                  class="input-disabled"
+                />
               </div>
 
               <!-- Botón guardar -->
-              <div class="form-actions">
-                <button type="submit" class="btn-save" [disabled]="isSaving() || perfilForm.invalid">
+              <div class="form-actions-insta">
+                <button type="submit" class="btn-save-insta" [disabled]="isSaving() || perfilForm.invalid">
                   @if (isSaving()) {
-                    <i class="material-icons spin-icon">sync</i>
-                    Guardando...
+                    <i class="material-icons spin-icon">sync</i> Guardando...
                   } @else {
-                    <i class="material-icons">save</i>
-                    Guardar Ubicación
+                    <span>Guardar Ubicación</span>
                   }
                 </button>
               </div>
@@ -378,108 +299,81 @@
         <!-- ══ TAB: Seguridad ══════════════════════════════════════ -->
         @if (activeTab() === 'seguridad') {
           <section class="settings-section">
-            <div class="section-title">
-              <i class="material-icons">lock</i>
-              <div>
-                <h2>Seguridad</h2>
-                <p>Cambia tu contraseña para mantener tu cuenta segura.</p>
-              </div>
-            </div>
+            <h2 class="section-main-title">Seguridad y Contraseña</h2>
+            <p class="section-main-subtitle">Cambia tu contraseña periódicamente para asegurar tu cuenta.</p>
 
-            <form [formGroup]="seguridadForm" (ngSubmit)="onSavePassword()" class="settings-form">
-              <div class="security-info-banner">
-                <i class="material-icons">info</i>
-                <p>Usa una contraseña de al menos 6 caracteres con letras y números para mayor seguridad.</p>
-              </div>
-
+            <form [formGroup]="seguridadForm" (ngSubmit)="onSavePassword()" class="settings-form-insta">
+              
               <!-- Contraseña actual -->
-              <div class="form-field" [class.has-error]="seguridadForm.get('password_actual')?.touched && seguridadForm.get('password_actual')?.invalid">
-                <label for="password_actual">
-                  <i class="material-icons">key</i>
-                  Contraseña Actual
-                  <span class="required">*</span>
-                </label>
-                <div class="password-input-wrapper">
+              <div class="form-field-insta" [class.has-error]="seguridadForm.get('password_actual')?.touched && seguridadForm.get('password_actual')?.invalid">
+                <label for="password_actual">Contraseña Actual</label>
+                <div class="password-wrapper-insta">
                   <input
                     id="password_actual"
                     [type]="showPasswordActual() ? 'text' : 'password'"
                     formControlName="password_actual"
                     placeholder="Tu contraseña actual"
-                    autocomplete="current-password"
                   />
-                  <button type="button" class="btn-toggle-password" (click)="togglePasswordActual()" aria-label="Mostrar/ocultar contraseña actual">
+                  <button type="button" class="btn-toggle-insta" (click)="togglePasswordActual()">
                     <i class="material-icons">{{ showPasswordActual() ? 'visibility_off' : 'visibility' }}</i>
                   </button>
                 </div>
                 @if (getError(seguridadForm, 'password_actual')) {
-                  <span class="field-error">{{ getError(seguridadForm, 'password_actual') }}</span>
+                  <span class="field-error-insta">{{ getError(seguridadForm, 'password_actual') }}</span>
                 }
               </div>
 
               <!-- Nueva contraseña -->
-              <div class="form-field" [class.has-error]="seguridadForm.get('password_nuevo')?.touched && seguridadForm.get('password_nuevo')?.invalid">
-                <label for="password_nuevo">
-                  <i class="material-icons">lock_reset</i>
-                  Nueva Contraseña
-                  <span class="required">*</span>
-                </label>
-                <div class="password-input-wrapper">
+              <div class="form-field-insta" [class.has-error]="seguridadForm.get('password_nuevo')?.touched && seguridadForm.get('password_nuevo')?.invalid">
+                <label for="password_nuevo">Nueva Contraseña</label>
+                <div class="password-wrapper-insta">
                   <input
                     id="password_nuevo"
                     [type]="showPasswordNuevo() ? 'text' : 'password'"
                     formControlName="password_nuevo"
                     placeholder="Mínimo 6 caracteres"
-                    autocomplete="new-password"
                   />
-                  <button type="button" class="btn-toggle-password" (click)="togglePasswordNuevo()" aria-label="Mostrar/ocultar nueva contraseña">
+                  <button type="button" class="btn-toggle-insta" (click)="togglePasswordNuevo()">
                     <i class="material-icons">{{ showPasswordNuevo() ? 'visibility_off' : 'visibility' }}</i>
                   </button>
                 </div>
                 @if (getError(seguridadForm, 'password_nuevo')) {
-                  <span class="field-error">{{ getError(seguridadForm, 'password_nuevo') }}</span>
+                  <span class="field-error-insta">{{ getError(seguridadForm, 'password_nuevo') }}</span>
                 }
               </div>
 
               <!-- Confirmar nueva contraseña -->
-              <div class="form-field" [class.has-error]="seguridadForm.get('password_confirmar')?.touched && (seguridadForm.get('password_confirmar')?.invalid || seguridadForm.errors?.['noMatch'])">
-                <label for="password_confirmar">
-                  <i class="material-icons">verified</i>
-                  Confirmar Nueva Contraseña
-                  <span class="required">*</span>
-                </label>
-                <div class="password-input-wrapper">
+              <div class="form-field-insta" [class.has-error]="seguridadForm.get('password_confirmar')?.touched && (seguridadForm.get('password_confirmar')?.invalid || seguridadForm.errors?.['noMatch'])">
+                <label for="password_confirmar">Confirmar Nueva Contraseña</label>
+                <div class="password-wrapper-insta">
                   <input
                     id="password_confirmar"
                     [type]="showPasswordConfirmar() ? 'text' : 'password'"
                     formControlName="password_confirmar"
                     placeholder="Repite la nueva contraseña"
-                    autocomplete="new-password"
                   />
-                  <button type="button" class="btn-toggle-password" (click)="togglePasswordConfirmar()" aria-label="Confirmar mostrar/ocultar contraseña">
+                  <button type="button" class="btn-toggle-insta" (click)="togglePasswordConfirmar()">
                     <i class="material-icons">{{ showPasswordConfirmar() ? 'visibility_off' : 'visibility' }}</i>
                   </button>
                 </div>
                 @if (seguridadForm.errors?.['noMatch'] && seguridadForm.get('password_confirmar')?.touched) {
-                  <span class="field-error">Las contraseñas no coinciden.</span>
+                  <span class="field-error-insta">Las contraseñas no coinciden.</span>
                 }
               </div>
 
               <!-- Botón guardar -->
-              <div class="form-actions">
-                <button type="submit" class="btn-save" [disabled]="isSaving() || seguridadForm.invalid">
+              <div class="form-actions-insta">
+                <button type="submit" class="btn-save-insta" [disabled]="isSaving() || seguridadForm.invalid">
                   @if (isSaving()) {
-                    <i class="material-icons spin-icon">sync</i>
-                    Actualizando...
+                    <i class="material-icons spin-icon">sync</i> Guardando...
                   } @else {
-                    <i class="material-icons">lock</i>
-                    Actualizar Contraseña
+                    <span>Actualizar Contraseña</span>
                   }
                 </button>
               </div>
             </form>
           </section>
         }
-
       </main>
     </div>
   </div>

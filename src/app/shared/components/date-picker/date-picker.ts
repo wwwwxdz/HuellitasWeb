@@ -1,7 +1,15 @@
 import {
-  Component, inject, ElementRef, HostListener, signal, computed, input, output, model, effect
+  Component,
+  inject,
+  ElementRef,
+  HostListener,
+  signal,
+  computed,
+  input,
+  output,
+  model,
+  effect,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
 
 export interface DateRange {
   start: Date | null;
@@ -12,21 +20,28 @@ export interface DateRange {
 @Component({
   selector: 'app-date-picker',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   template: `
-    <div class="datepicker-wrapper" style="font-family: var(--font-main), sans-serif; user-select: none;">
+    <div
+      class="datepicker-wrapper"
+      style="font-family: var(--font-main), sans-serif; user-select: none;"
+    >
       @if (label()) {
         <label class="datepicker-label" [for]="id()">{{ label() }}</label>
       }
 
-      <div class="datepicker-container" [class.is-open]="isOpen()" style="position: relative; width: 100%;">
+      <div
+        class="datepicker-container"
+        [class.is-open]="isOpen()"
+        style="position: relative; width: 100%;"
+      >
         <!-- Trigger -->
-        <div 
-          class="datepicker-trigger" 
-          [id]="id()" 
-          (click)="toggle()" 
-          (keydown.enter)="toggle()" 
-          tabindex="0" 
+        <div
+          class="datepicker-trigger"
+          [id]="id()"
+          (click)="toggle()"
+          (keydown.enter)="toggle()"
+          tabindex="0"
           role="button"
         >
           <div class="trigger-content">
@@ -64,13 +79,14 @@ export interface DateRange {
               </div>
 
               <div class="calendar-weekdays">
-                <span>Lu</span><span>Ma</span><span>Mi</span><span>Ju</span><span>Vi</span><span>Sa</span><span>Do</span>
+                <span>Lu</span><span>Ma</span><span>Mi</span><span>Ju</span><span>Vi</span
+                ><span>Sa</span><span>Do</span>
               </div>
 
               <div class="calendar-grid">
                 @for (day of days(); track $index) {
-                  <div 
-                    class="calendar-day" 
+                  <div
+                    class="calendar-day"
                     [class.empty]="day === 0"
                     [class.today]="isToday(day)"
                     [class.selected]="isSelected(day)"
@@ -93,343 +109,345 @@ export interface DateRange {
       </div>
     </div>
   `,
-  styles: [`
-    .datepicker-wrapper {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      width: 100%;
-    }
-
-    .datepicker-label {
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--text-main);
-    }
-
-    .datepicker-trigger {
-      width: 100%;
-      padding: 13px 18px;
-      background: var(--bg-input, rgba(255, 255, 255, 0.03));
-      border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
-      border-radius: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      cursor: pointer;
-      color: var(--text-main);
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-
-      &:hover {
-        background: rgba(var(--primary-rgb, 60, 129, 138), 0.05);
-        border-color: var(--primary-color);
-      }
-
-      .trigger-content {
+  styles: [
+    `
+      .datepicker-wrapper {
         display: flex;
-        align-items: center;
-        gap: 12px;
-
-        .trigger-icon {
-          font-size: 1.25rem;
-          color: var(--primary-color);
-        }
-
-        .selected-text {
-          font-size: 0.9rem;
-          font-weight: 500;
-          color: var(--text-main);
-
-          &.placeholder {
-            color: var(--text-muted);
-            opacity: 0.6;
-          }
-        }
-      }
-
-      .arrow-icon {
-        font-size: 1.35rem;
-        color: var(--text-muted);
-        transition: transform 0.3s ease;
-      }
-    }
-
-    .datepicker-container.is-open {
-      .datepicker-trigger {
-        border-color: var(--primary-color);
-        background: var(--bg-card, #18181b);
-        box-shadow: 0 0 0 3px rgba(var(--primary-rgb, 60, 129, 138), 0.15);
-        
-        .arrow-icon {
-          transform: rotate(180deg);
-          color: var(--primary-color);
-        }
-      }
-    }
-
-    .datepicker-panel {
-      position: absolute;
-      top: calc(100% + 8px);
-      left: 0;
-      display: flex;
-      flex-direction: column;
-      background: var(--bg-card, #18181b);
-      border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
-      border-radius: 20px;
-      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
-      backdrop-filter: blur(var(--glass-blur, 12px));
-      z-index: 2000;
-      padding: 12px;
-      gap: 12px;
-      min-width: 280px;
-      width: 100%;
-      animation: panelIn 0.25s cubic-bezier(0, 0, 0.2, 1) forwards;
-
-      @media (min-width: 768px) {
-        flex-direction: row;
-        width: auto;
-      }
-    }
-
-    .presets-column {
-      width: 100%;
-      display: flex;
-      flex-direction: row;
-      flex-wrap: wrap;
-      gap: 6px;
-      border-bottom: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
-      padding-bottom: 12px;
-
-      @media (min-width: 768px) {
-        width: 150px;
         flex-direction: column;
-        flex-wrap: nowrap;
-        gap: 4px;
-        border-right: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
-        border-bottom: none;
-        padding-right: 12px;
-        padding-bottom: 0;
-      }
-
-      .panel-subtitle {
-        font-size: 0.7rem;
-        font-weight: 800;
-        color: var(--text-muted);
-        text-transform: uppercase;
-        padding: 4px 8px;
-        margin: 0;
+        gap: 6px;
         width: 100%;
       }
 
-      .preset-btn {
-        padding: 6px 12px;
-        background: rgba(255, 255, 255, 0.02);
-        border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
-        color: var(--text-main);
-        font-size: 0.8rem;
+      .datepicker-label {
+        font-size: 0.85rem;
         font-weight: 600;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.2s;
-        text-align: center;
-
-        @media (min-width: 768px) {
-          width: 100%;
-          padding: 8px 12px;
-          text-align: left;
-          background: transparent;
-          border: none;
-          border-radius: 10px;
-        }
-
-        &:hover {
-          background: rgba(var(--primary-rgb, 60, 129, 138), 0.1);
-          color: var(--primary-color);
-        }
+        color: var(--text-main);
       }
-    }
 
-    .calendar-column {
-      flex: 1;
-      padding: 8px 6px;
-
-      .calendar-header {
+      .datepicker-trigger {
+        width: 100%;
+        padding: 13px 18px;
+        background: var(--bg-input, rgba(255, 255, 255, 0.03));
+        border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+        border-radius: 16px;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 16px;
+        cursor: pointer;
+        color: var(--text-main);
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 
-        .month-year {
-          font-size: 0.95rem;
-          font-weight: 700;
-          color: var(--text-main);
-          text-transform: capitalize;
+        &:hover {
+          background: rgba(var(--primary-rgb, 60, 129, 138), 0.05);
+          border-color: var(--primary-color);
         }
 
-        .nav-btn {
-          width: 32px;
-          height: 32px;
-          border-radius: 8px;
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
-          color: var(--text-muted);
-          cursor: pointer;
+        .trigger-content {
           display: flex;
           align-items: center;
-          justify-content: center;
-          transition: all 0.2s;
+          gap: 12px;
 
-          &:hover {
-            background: var(--primary-color);
-            color: white;
+          .trigger-icon {
+            font-size: 1.25rem;
+            color: var(--primary-color);
+          }
+
+          .selected-text {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-main);
+
+            &.placeholder {
+              color: var(--text-muted);
+              opacity: 0.6;
+            }
+          }
+        }
+
+        .arrow-icon {
+          font-size: 1.35rem;
+          color: var(--text-muted);
+          transition: transform 0.3s ease;
+        }
+      }
+
+      .datepicker-container.is-open {
+        .datepicker-trigger {
+          border-color: var(--primary-color);
+          background: var(--bg-card, #18181b);
+          box-shadow: 0 0 0 3px rgba(var(--primary-rgb, 60, 129, 138), 0.15);
+
+          .arrow-icon {
+            transform: rotate(180deg);
+            color: var(--primary-color);
           }
         }
       }
 
-      .calendar-weekdays {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        margin-bottom: 8px;
+      .datepicker-panel {
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 0;
+        display: flex;
+        flex-direction: column;
+        background: var(--bg-card, #18181b);
+        border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+        border-radius: 20px;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(var(--glass-blur, 12px));
+        z-index: 2000;
+        padding: 12px;
+        gap: 12px;
+        min-width: 280px;
+        width: 100%;
+        animation: panelIn 0.25s cubic-bezier(0, 0, 0.2, 1) forwards;
 
-        span {
-          text-align: center;
-          font-size: 0.72rem;
+        @media (min-width: 768px) {
+          flex-direction: row;
+          width: auto;
+        }
+      }
+
+      .presets-column {
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 6px;
+        border-bottom: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+        padding-bottom: 12px;
+
+        @media (min-width: 768px) {
+          width: 150px;
+          flex-direction: column;
+          flex-wrap: nowrap;
+          gap: 4px;
+          border-right: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+          border-bottom: none;
+          padding-right: 12px;
+          padding-bottom: 0;
+        }
+
+        .panel-subtitle {
+          font-size: 0.7rem;
           font-weight: 800;
           color: var(--text-muted);
           text-transform: uppercase;
+          padding: 4px 8px;
+          margin: 0;
+          width: 100%;
         }
-      }
 
-      .calendar-grid {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        row-gap: 4px;
-
-        .calendar-day {
-          aspect-ratio: 1;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 0.85rem;
-          font-weight: 600;
+        .preset-btn {
+          padding: 6px 12px;
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
           color: var(--text-main);
-          border-radius: 50%;
+          font-size: 0.8rem;
+          font-weight: 600;
+          border-radius: 8px;
           cursor: pointer;
           transition: all 0.2s;
-          position: relative;
-          z-index: 1;
+          text-align: center;
 
-          &:hover:not(.empty):not(.selected):not(.range-between) {
+          @media (min-width: 768px) {
+            width: 100%;
+            padding: 8px 12px;
+            text-align: left;
+            background: transparent;
+            border: none;
+            border-radius: 10px;
+          }
+
+          &:hover {
             background: rgba(var(--primary-rgb, 60, 129, 138), 0.1);
             color: var(--primary-color);
           }
+        }
+      }
 
-          &.today {
-            color: var(--primary-color);
-            text-decoration: underline;
+      .calendar-column {
+        flex: 1;
+        padding: 8px 6px;
+
+        .calendar-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 16px;
+
+          .month-year {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-main);
+            text-transform: capitalize;
+          }
+
+          .nav-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+
+            &:hover {
+              background: var(--primary-color);
+              color: white;
+            }
+          }
+        }
+
+        .calendar-weekdays {
+          display: grid;
+          grid-template-columns: repeat(7, 1fr);
+          margin-bottom: 8px;
+
+          span {
+            text-align: center;
+            font-size: 0.72rem;
             font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
           }
+        }
 
-          &.selected {
-            background: var(--primary-color) !important;
-            color: white !important;
+        .calendar-grid {
+          display: grid;
+          grid-template-columns: repeat(7, 1fr);
+          row-gap: 4px;
+
+          .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-main);
             border-radius: 50%;
-          }
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            z-index: 1;
 
-          &.range-between {
-            background: rgba(var(--primary-rgb, 60, 129, 138), 0.15) !important;
-            color: var(--primary-color) !important;
-            border-radius: 0 !important;
-          }
-
-          &.range-start {
-            background: var(--primary-color) !important;
-            color: white !important;
-            border-top-left-radius: 50% !important;
-            border-bottom-left-radius: 50% !important;
-            border-top-right-radius: 0 !important;
-            border-bottom-right-radius: 0 !important;
-            
-            &::after {
-              content: '';
-              position: absolute;
-              right: 0;
-              top: 0;
-              bottom: 0;
-              width: 50%;
-              background: rgba(var(--primary-rgb, 60, 129, 138), 0.15);
-              z-index: -1;
+            &:hover:not(.empty):not(.selected):not(.range-between) {
+              background: rgba(var(--primary-rgb, 60, 129, 138), 0.1);
+              color: var(--primary-color);
             }
-          }
 
-          &.range-end {
-            background: var(--primary-color) !important;
-            color: white !important;
-            border-top-right-radius: 50% !important;
-            border-bottom-right-radius: 50% !important;
-            border-top-left-radius: 0 !important;
-            border-bottom-left-radius: 0 !important;
-
-            &::after {
-              content: '';
-              position: absolute;
-              left: 0;
-              top: 0;
-              bottom: 0;
-              width: 50%;
-              background: rgba(var(--primary-rgb, 60, 129, 138), 0.15);
-              z-index: -1;
+            &.today {
+              color: var(--primary-color);
+              text-decoration: underline;
+              font-weight: 800;
             }
-          }
 
-          &.range-start.range-end {
-            border-radius: 50% !important;
-            &::after {
-              display: none !important;
+            &.selected {
+              background: var(--primary-color) !important;
+              color: white !important;
+              border-radius: 50%;
             }
-          }
 
-          &.empty {
-            cursor: default;
-            background: transparent !important;
-            &::after {
-              display: none !important;
+            &.range-between {
+              background: rgba(var(--primary-rgb, 60, 129, 138), 0.15) !important;
+              color: var(--primary-color) !important;
+              border-radius: 0 !important;
+            }
+
+            &.range-start {
+              background: var(--primary-color) !important;
+              color: white !important;
+              border-top-left-radius: 50% !important;
+              border-bottom-left-radius: 50% !important;
+              border-top-right-radius: 0 !important;
+              border-bottom-right-radius: 0 !important;
+
+              &::after {
+                content: '';
+                position: absolute;
+                right: 0;
+                top: 0;
+                bottom: 0;
+                width: 50%;
+                background: rgba(var(--primary-rgb, 60, 129, 138), 0.15);
+                z-index: -1;
+              }
+            }
+
+            &.range-end {
+              background: var(--primary-color) !important;
+              color: white !important;
+              border-top-right-radius: 50% !important;
+              border-bottom-right-radius: 50% !important;
+              border-top-left-radius: 0 !important;
+              border-bottom-left-radius: 0 !important;
+
+              &::after {
+                content: '';
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: 50%;
+                background: rgba(var(--primary-rgb, 60, 129, 138), 0.15);
+                z-index: -1;
+              }
+            }
+
+            &.range-start.range-end {
+              border-radius: 50% !important;
+              &::after {
+                display: none !important;
+              }
+            }
+
+            &.empty {
+              cursor: default;
+              background: transparent !important;
+              &::after {
+                display: none !important;
+              }
             }
           }
         }
       }
-    }
 
-    @keyframes panelIn {
-      from {
-        opacity: 0;
-        transform: translateY(-8px) scale(0.97);
+      @keyframes panelIn {
+        from {
+          opacity: 0;
+          transform: translateY(-8px) scale(0.97);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
       }
-      to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
-    }
 
-    .datepicker-panel.single-mode {
-      min-width: 280px;
-      width: auto;
+      .datepicker-panel.single-mode {
+        min-width: 280px;
+        width: auto;
 
-      .calendar-column {
-        border-left: none;
+        .calendar-column {
+          border-left: none;
+        }
       }
-    }
-  `]
+    `,
+  ],
 })
 export class DatePicker {
   id = input('');
   label = input('');
   placeholder = input('Seleccionar fecha...');
   mode = input<'range' | 'single'>('range');
-  
+
   range = input<DateRange | null>(null);
   value = model<Date | null>(null);
-  
+
   rangeChange = output<DateRange>();
   dateChange = output<Date>();
 
@@ -438,7 +456,7 @@ export class DatePicker {
 
   viewDate = signal(new Date());
   days = signal<number[]>([]);
-  
+
   monthName = computed(() => this.viewDate().toLocaleString('es-ES', { month: 'long' }));
   year = computed(() => this.viewDate().getFullYear());
 
@@ -460,7 +478,7 @@ export class DatePicker {
         this.selectedRange.set({
           start: rng.start,
           end: rng.end,
-          label: rng.label || `${this.formatDate(rng.start)} - ${this.formatDate(rng.end)}`
+          label: rng.label || `${this.formatDate(rng.start)} - ${this.formatDate(rng.end)}`,
         });
         this.viewDate.set(new Date(rng.start));
       }
@@ -473,7 +491,7 @@ export class DatePicker {
         this.selectedRange.set({
           start: date,
           end: date,
-          label: this.formatDate(date)
+          label: this.formatDate(date),
         });
         this.viewDate.set(new Date(date));
       }
@@ -485,7 +503,7 @@ export class DatePicker {
   }
 
   toggle() {
-    this.isOpen.update(v => !v);
+    this.isOpen.update((v) => !v);
   }
 
   @HostListener('document:click', ['$event'])
@@ -586,7 +604,7 @@ export class DatePicker {
     if (day === 0) return false;
     const current = this.selectedRange();
     if (!current.start) return false;
-    
+
     const date = new Date(this.year(), this.viewDate().getMonth(), day);
 
     if (current.start && !current.end) {
@@ -601,7 +619,7 @@ export class DatePicker {
     const current = this.selectedRange();
     if (!current.start) return false;
     const date = new Date(this.year(), this.viewDate().getMonth(), day);
-    
+
     return (
       date.getDate() === current.start.getDate() &&
       date.getMonth() === current.start.getMonth() &&
@@ -614,7 +632,7 @@ export class DatePicker {
     const current = this.selectedRange();
     if (!current.end) return false;
     const date = new Date(this.year(), this.viewDate().getMonth(), day);
-    
+
     return (
       date.getDate() === current.end.getDate() &&
       date.getMonth() === current.end.getMonth() &&
@@ -626,9 +644,17 @@ export class DatePicker {
     if (day === 0) return false;
     const current = this.selectedRange();
     if (!current.start || !current.end) return false;
-    
-    const startNorm = new Date(current.start.getFullYear(), current.start.getMonth(), current.start.getDate());
-    const endNorm = new Date(current.end.getFullYear(), current.end.getMonth(), current.end.getDate());
+
+    const startNorm = new Date(
+      current.start.getFullYear(),
+      current.start.getMonth(),
+      current.start.getDate(),
+    );
+    const endNorm = new Date(
+      current.end.getFullYear(),
+      current.end.getMonth(),
+      current.end.getDate(),
+    );
     if (startNorm.getTime() === endNorm.getTime()) return false;
 
     const date = new Date(this.year(), this.viewDate().getMonth(), day);

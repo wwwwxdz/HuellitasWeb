@@ -1,5 +1,14 @@
-import { Component, input, output, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {
+  Component,
+  input,
+  output,
+  inject,
+  signal,
+  computed,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+} from '@angular/core';
+
 import { RouterModule, Router } from '@angular/router';
 import { AvatarComponent } from '../avatar/avatar';
 import { BadgeComponent } from '../badge/badge';
@@ -11,28 +20,30 @@ import { Comentario } from '../../../core/models/comment.model';
 import { CommentService } from '../../../core/services/comment.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { PetService } from '../../../core/services/pet.service';
+import { UserService } from '../../../core/services/user.service';
 
 @Component({
   selector: 'app-post-card-social',
   standalone: true,
   imports: [
-    CommonModule,
     RouterModule,
     AvatarComponent,
     BadgeComponent,
     OptionsDropdownComponent,
     CommentItemComponent,
-    ImageCarouselComponent
+    ImageCarouselComponent,
   ],
   templateUrl: './post-card-social.html',
   styleUrl: './post-card-social.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PostCardSocialComponent {
   private readonly commentService = inject(CommentService);
   private readonly authService = inject(AuthService);
   private readonly petService = inject(PetService);
+  private readonly userService = inject(UserService);
   private readonly router = inject(Router);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   // Inputs y Outputs
   report = input.required<PetReport>();
@@ -50,7 +61,7 @@ export class PostCardSocialComponent {
   isLoadingComments = signal<boolean>(false);
   isSendingComment = signal<boolean>(false);
   commentInput = signal<string>('');
-  
+
   // Conteo local reactivo para comentarios
   localCommentCount = signal<number | null>(null);
 
@@ -58,7 +69,7 @@ export class PostCardSocialComponent {
   displayCommentCount = computed(() =>
     this.localCommentCount() !== null
       ? this.localCommentCount()!
-      : (this.report().total_comentarios || 0)
+      : this.report().total_comentarios || 0,
   );
 
   // Hilo de Respuestas
@@ -81,12 +92,10 @@ export class PostCardSocialComponent {
   menuItems = computed(() => {
     if (this.isOwnReport()) {
       return [
-        { label: 'Eliminar publicación', icon: 'delete_outline', value: 'delete', danger: true }
+        { label: 'Eliminar publicación', icon: 'delete_outline', value: 'delete', danger: true },
       ];
     }
-    return [
-      { label: 'Denunciar publicación', icon: 'flag', value: 'report', danger: true }
-    ];
+    return [{ label: 'Denunciar publicación', icon: 'flag', value: 'report', danger: true }];
   });
 
   // Métodos de visualización
@@ -94,8 +103,11 @@ export class PostCardSocialComponent {
     const loc = this.report().ubicacion;
     if (!loc) return '';
 
-    const parts = loc.split(',').map(p => p.trim()).filter(Boolean);
-    const cleanedParts = parts.filter(p => {
+    const parts = loc
+      .split(',')
+      .map((p) => p.trim())
+      .filter(Boolean);
+    const cleanedParts = parts.filter((p) => {
       const lower = p.toLowerCase();
       if (lower === 'perú' || lower === 'peru') return false;
       if (/^\d+$/.test(lower)) return false;
@@ -127,7 +139,7 @@ export class PostCardSocialComponent {
       urls.push(r.imagen_principal.url);
     }
     if (r.imagenes && r.imagenes.length) {
-      r.imagenes.forEach(img => {
+      r.imagenes.forEach((img) => {
         if (img.url && img.url !== r.imagen_principal?.url) {
           urls.push(img.url);
         }
@@ -155,7 +167,7 @@ export class PostCardSocialComponent {
     const optimisticReport: PetReport = {
       ...reportVal,
       liked_por_usuario: !oldLiked,
-      total_likes: oldLiked ? Math.max(0, oldTotal - 1) : oldTotal + 1
+      total_likes: oldLiked ? Math.max(0, oldTotal - 1) : oldTotal + 1,
     };
     this.reportChange.emit(optimisticReport);
 
@@ -164,7 +176,7 @@ export class PostCardSocialComponent {
       const finalReport: PetReport = {
         ...reportVal,
         liked_por_usuario: res.liked_por_usuario,
-        total_likes: res.total_likes
+        total_likes: res.total_likes,
       };
       this.reportChange.emit(finalReport);
     } catch (err) {
@@ -173,7 +185,7 @@ export class PostCardSocialComponent {
       const revertReport: PetReport = {
         ...reportVal,
         liked_por_usuario: oldLiked,
-        total_likes: oldTotal
+        total_likes: oldTotal,
       };
       this.reportChange.emit(revertReport);
     }
@@ -194,7 +206,7 @@ export class PostCardSocialComponent {
     const optimisticReport: PetReport = {
       ...reportVal,
       esta_compartido: !yaCompartido,
-      total_compartidos: yaCompartido ? Math.max(0, totalComp - 1) : totalComp + 1
+      total_compartidos: yaCompartido ? Math.max(0, totalComp - 1) : totalComp + 1,
     };
     this.reportChange.emit(optimisticReport);
 
@@ -204,7 +216,7 @@ export class PostCardSocialComponent {
         const finalReport: PetReport = {
           ...reportVal,
           esta_compartido: false,
-          total_compartidos: Math.max(0, totalComp - 1)
+          total_compartidos: Math.max(0, totalComp - 1),
         };
         this.reportChange.emit(finalReport);
       } else {
@@ -212,7 +224,7 @@ export class PostCardSocialComponent {
         const finalReport: PetReport = {
           ...reportVal,
           esta_compartido: true,
-          total_compartidos: totalComp + 1
+          total_compartidos: totalComp + 1,
         };
         this.reportChange.emit(finalReport);
       }
@@ -222,7 +234,7 @@ export class PostCardSocialComponent {
       const revertReport: PetReport = {
         ...reportVal,
         esta_compartido: yaCompartido,
-        total_compartidos: totalComp
+        total_compartidos: totalComp,
       };
       this.reportChange.emit(revertReport);
     }
@@ -294,15 +306,15 @@ export class PostCardSocialComponent {
     this.isSendingComment.set(true);
     try {
       const newComment = await this.commentService.addComment(reportId, text);
-      
+
       // Insertar localmente
-      this.comments.update(list => [newComment, ...list]);
-      
+      this.comments.update((list) => [newComment, ...list]);
+
       // Inicializar contador de likes
       if (newComment.id_comentario) {
-        this.commentLikeCounts.update(prev => ({
+        this.commentLikeCounts.update((prev) => ({
           ...prev,
-          [newComment.id_comentario!]: 0
+          [newComment.id_comentario!]: 0,
         }));
       }
 
@@ -342,7 +354,7 @@ export class PostCardSocialComponent {
       return;
     }
 
-    this.sendingReplySet.update(s => {
+    this.sendingReplySet.update((s) => {
       const copy = new Set(s);
       copy.add(event.parentId);
       return copy;
@@ -350,15 +362,17 @@ export class PostCardSocialComponent {
 
     try {
       const newReply = await this.commentService.reply(reportId, event.parentId, text);
-      
+
       // Agregar localmente la respuesta de forma recursiva
-      this.comments.update(list => this.addReplyToParentRecursive(list, event.parentId, newReply));
+      this.comments.update((list) =>
+        this.addReplyToParentRecursive(list, event.parentId, newReply),
+      );
 
       // Inicializar contador de likes
       if (newReply.id_comentario) {
-        this.commentLikeCounts.update(prev => ({
+        this.commentLikeCounts.update((prev) => ({
           ...prev,
-          [newReply.id_comentario!]: 0
+          [newReply.id_comentario!]: 0,
         }));
       }
 
@@ -367,7 +381,7 @@ export class PostCardSocialComponent {
     } catch (err) {
       console.error('Error al responder comentario:', err);
     } finally {
-      this.sendingReplySet.update(s => {
+      this.sendingReplySet.update((s) => {
         const copy = new Set(s);
         copy.delete(event.parentId);
         return copy;
@@ -385,21 +399,21 @@ export class PostCardSocialComponent {
     const oldLiked = this.commentLikedSet().has(commentId);
     const oldTotal = this.commentLikeCounts()[commentId] || 0;
 
-    this.commentLikedSet.update(set => {
+    this.commentLikedSet.update((set) => {
       const copy = new Set(set);
       if (oldLiked) copy.delete(commentId);
       else copy.add(commentId);
       return copy;
     });
-    this.commentLikeCounts.update(prev => ({
+    this.commentLikeCounts.update((prev) => ({
       ...prev,
-      [commentId]: oldLiked ? Math.max(0, oldTotal - 1) : oldTotal + 1
+      [commentId]: oldLiked ? Math.max(0, oldTotal - 1) : oldTotal + 1,
     }));
 
     try {
       const res = await this.commentService.toggleCommentLike(commentId);
-      this.commentLikeCounts.update(prev => ({ ...prev, [commentId]: res.total }));
-      this.commentLikedSet.update(set => {
+      this.commentLikeCounts.update((prev) => ({ ...prev, [commentId]: res.total }));
+      this.commentLikedSet.update((set) => {
         const copy = new Set(set);
         if (res.liked) copy.add(commentId);
         else copy.delete(commentId);
@@ -408,13 +422,13 @@ export class PostCardSocialComponent {
     } catch (err) {
       console.error('Error al dar like al comentario:', err);
       // Revertir
-      this.commentLikedSet.update(set => {
+      this.commentLikedSet.update((set) => {
         const copy = new Set(set);
         if (oldLiked) copy.add(commentId);
         else copy.delete(commentId);
         return copy;
       });
-      this.commentLikeCounts.update(prev => ({ ...prev, [commentId]: oldTotal }));
+      this.commentLikeCounts.update((prev) => ({ ...prev, [commentId]: oldTotal }));
     }
   }
 
@@ -426,9 +440,9 @@ export class PostCardSocialComponent {
 
     try {
       await this.commentService.deleteComment(reportId, commentId);
-      
+
       // Remover de la lista local
-      this.comments.update(list => this.deleteCommentRecursive(list, commentId));
+      this.comments.update((list) => this.deleteCommentRecursive(list, commentId));
       this.incrementarContadorComentarios(-1);
     } catch (err) {
       console.error('Error al eliminar comentario:', err);
@@ -441,24 +455,24 @@ export class PostCardSocialComponent {
     const current = this.localCommentCount() ?? this.report().total_comentarios ?? 0;
     const nextCount = Math.max(0, current + cantidad);
     this.localCommentCount.set(nextCount);
-    
+
     // Emitir el cambio del reporte completo modificado de forma inmutable
     const updatedReport: PetReport = {
       ...this.report(),
-      total_comentarios: nextCount
+      total_comentarios: nextCount,
     };
     this.reportChange.emit(updatedReport);
   }
 
   private syncCommentLikesRecursive(comments: Comentario[]): void {
-    comments.forEach(c => {
+    comments.forEach((c) => {
       if (c.id_comentario) {
-        this.commentLikeCounts.update(prev => ({
+        this.commentLikeCounts.update((prev) => ({
           ...prev,
-          [c.id_comentario!]: c.total_likes || 0
+          [c.id_comentario!]: c.total_likes || 0,
         }));
         if (c.is_liked) {
-          this.commentLikedSet.update(prev => {
+          this.commentLikedSet.update((prev) => {
             const copy = new Set(prev);
             copy.add(c.id_comentario!);
             return copy;
@@ -473,32 +487,119 @@ export class PostCardSocialComponent {
 
   private deleteCommentRecursive(comments: Comentario[], targetId: string): Comentario[] {
     return comments
-      .filter(c => c.id_comentario !== targetId)
-      .map(c => {
+      .filter((c) => c.id_comentario !== targetId)
+      .map((c) => {
         if (c.respuestas && c.respuestas.length > 0) {
           return {
             ...c,
-            respuestas: this.deleteCommentRecursive(c.respuestas, targetId)
+            respuestas: this.deleteCommentRecursive(c.respuestas, targetId),
           };
         }
         return c;
       });
   }
 
-  private addReplyToParentRecursive(comments: Comentario[], parentId: string, newReply: Comentario): Comentario[] {
-    return comments.map(c => {
+  private addReplyToParentRecursive(
+    comments: Comentario[],
+    parentId: string,
+    newReply: Comentario,
+  ): Comentario[] {
+    return comments.map((c) => {
       if (c.id_comentario === parentId) {
         return {
           ...c,
-          respuestas: [...(c.respuestas || []), newReply]
+          respuestas: [...(c.respuestas || []), newReply],
         };
       } else if (c.respuestas && c.respuestas.length > 0) {
         return {
           ...c,
-          respuestas: this.addReplyToParentRecursive(c.respuestas, parentId, newReply)
+          respuestas: this.addReplyToParentRecursive(c.respuestas, parentId, newReply),
         };
       }
       return c;
     });
+  }
+
+  // --- LÓGICA DE POPOVER DE USUARIO ---
+  isPopoverVisible = signal<boolean>(false);
+  popoverUser = signal<any>(null);
+  isLoadingPopover = signal<boolean>(false);
+  private openTimeout: any = null;
+  private closeTimeout: any = null;
+
+  onUserEnter(): void {
+    if (this.closeTimeout) {
+      clearTimeout(this.closeTimeout);
+      this.closeTimeout = null;
+    }
+
+    if (this.isPopoverVisible()) return;
+
+    this.openTimeout = setTimeout(async () => {
+      this.isPopoverVisible.set(true);
+      this.cdr.detectChanges();
+
+      if (this.popoverUser()) return; // ya cargado
+
+      const idUsuario = this.report().usuario.id_usuario;
+      if (!idUsuario) return;
+
+      this.isLoadingPopover.set(true);
+      this.cdr.detectChanges();
+
+      try {
+        const otherUser: any = await this.userService.getUsuarioById(idUsuario);
+        const userDetails = otherUser?.data || otherUser || this.report().usuario;
+
+        // Obtener estadísticas
+        const reports = await this.petService.getReportesCreados(idUsuario);
+        const reunidos = reports.filter((r: any) => r.estado === 4).length;
+
+        this.popoverUser.set({
+          ...userDetails,
+          totalReports: reports.length,
+          totalReunidos: reunidos,
+        });
+      } catch (err) {
+        console.error('Error al cargar datos de popover:', err);
+      } finally {
+        this.isLoadingPopover.set(false);
+        this.cdr.detectChanges();
+      }
+    }, 300);
+  }
+
+  onUserLeave(): void {
+    if (this.openTimeout) {
+      clearTimeout(this.openTimeout);
+      this.openTimeout = null;
+    }
+
+    this.closeTimeout = setTimeout(() => {
+      this.isPopoverVisible.set(false);
+      this.cdr.detectChanges();
+    }, 200);
+  }
+
+  onPopoverEnter(): void {
+    if (this.closeTimeout) {
+      clearTimeout(this.closeTimeout);
+      this.closeTimeout = null;
+    }
+  }
+
+  onPopoverLeave(): void {
+    this.closeTimeout = setTimeout(() => {
+      this.isPopoverVisible.set(false);
+      this.cdr.detectChanges();
+    }, 200);
+  }
+
+  navigateToProfile(event: Event): void {
+    event.stopPropagation();
+    const idUsuario = this.report().usuario.id_usuario;
+    if (idUsuario) {
+      this.router.navigate(['/perfil', idUsuario]);
+    }
   }
 }

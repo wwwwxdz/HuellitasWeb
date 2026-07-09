@@ -1,7 +1,6 @@
 <app-navbar></app-navbar>
 
 <div class="pet-detail-page-container">
-  
   @if (isLoading()) {
     <div class="loading-state-box">
       <div class="spinner-modern"></div>
@@ -12,9 +11,9 @@
       <i class="material-icons">error_outline</i>
       <h3>No se encontró el reporte</h3>
       <button class="btn-back" (click)="goBack()">Volver al listado</button>
-    </div>  } @else {
+    </div>
+  } @else {
     <div class="pet-detail-content-wrapper">
-      
       <!-- Volver -->
       <nav class="detail-navigation-bar">
         <app-button variant="outline" icon="arrow_back" (btnClick)="goBack()">
@@ -23,26 +22,105 @@
       </nav>
 
       <!-- SECCIÓN 6: REPORTADO POR -->
-      <section class="detail-author-section">
-        <h2 class="section-subtitle" style="margin-bottom: 12px;">Reportado por</h2>
-        <div class="author-simple-card">
-          <img 
-            [src]="report()!.usuario.foto_perfil || 'assets/images/default-avatar.png'" 
-            class="author-avatar"
-            onerror="this.src='assets/images/default-avatar.png'"
-          >
-          <div class="author-info">
-            <span class="author-name">{{ report()!.usuario.nombre }}</span>
-            <span class="author-since">Miembro de la comunidad</span>
+      @if (report()?.usuario) {
+        <section class="detail-author-section">
+          <h2 class="section-subtitle" style="margin-bottom: 12px">Reportado por</h2>
+          <div class="author-simple-card">
+            <!-- Avatar interactivo -->
+            <div
+              class="user-hover-trigger"
+              (click)="navigateToProfile($event)"
+              (mouseenter)="onUserEnter()"
+              (mouseleave)="onUserLeave()"
+            >
+              <img
+                [src]="report()!.usuario.foto_perfil || 'assets/images/default-avatar.png'"
+                class="author-avatar clickable-user"
+                onerror="this.src = 'assets/images/default-avatar.png'"
+              />
+            </div>
+            <div class="author-info">
+              <!-- Nombre interactivo -->
+              <div
+                class="user-hover-trigger inline-trigger"
+                (click)="navigateToProfile($event)"
+                (mouseenter)="onUserEnter()"
+                (mouseleave)="onUserLeave()"
+              >
+                <span class="author-name clickable-user">{{ report()!.usuario.nombre }}</span>
+              </div>
+              <span class="author-since">Miembro de la comunidad</span>
+            </div>
+            <!-- Popover de Resumen de Perfil -->
+            <div
+              class="user-popover-card"
+              [class.visible]="isPopoverVisible()"
+              (mouseenter)="onPopoverEnter()"
+              (mouseleave)="onPopoverLeave()"
+            >
+              @if (isLoadingPopover()) {
+                <div class="popover-loading">
+                  <i class="material-icons loading-spin">sync</i>
+                  <span>Cargando perfil...</span>
+                </div>
+              } @else {
+                @if (popoverUser()) {
+                  <div class="popover-header">
+                    <img
+                      [src]="
+                        popoverUser().foto_perfil ||
+                        'https://ui-avatars.com/api/?name=User&background=3c818a&color=fff'
+                      "
+                      alt="Avatar"
+                      class="popover-avatar"
+                    />
+                    <div class="popover-user-meta">
+                      <span class="popover-name">{{ popoverUser().nombre }}</span>
+                      <span class="popover-email">{{
+                        popoverUser().email || 'Guardián de Huellitas'
+                      }}</span>
+                    </div>
+                  </div>
+                  <p class="popover-bio">
+                    {{
+                      popoverUser().bio ||
+                        'Colaborando activamente para ayudar a las mascotas de la comunidad.'
+                    }}
+                  </p>
+                  <div class="popover-stats">
+                    <div class="popover-stat-item">
+                      <span class="stat-count">{{ popoverUser().totalReports }}</span>
+                      <span class="stat-label">Alertas</span>
+                    </div>
+                    <div class="popover-stat-item">
+                      <span class="stat-count reunido-count">{{
+                        popoverUser().totalReunidos
+                      }}</span>
+                      <span class="stat-label">Reunidos</span>
+                    </div>
+                  </div>
+                  <div class="popover-actions">
+                    <button class="btn-popover-action" (click)="navigateToProfile($event)">
+                      <i class="material-icons">visibility</i> Ver perfil completo
+                    </button>
+                  </div>
+                } @else {
+                  <div class="popover-error">
+                    <i class="material-icons">error_outline</i>
+                    <span>No se pudo cargar la información</span>
+                  </div>
+                }
+              }
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      }
 
       <!-- SECCIÓN 2: GALERÍA -->
       <section class="detail-gallery-section">
         <div class="media-card-box">
-          <app-image-carousel 
-            [images]="getImages(report()!)" 
+          <app-image-carousel
+            [images]="getImages(report()!)"
             [alt]="report()!.nombre || 'Mascota'"
             [zoomable]="true"
             (imageClick)="activeViewerImage.set($event)"
@@ -56,7 +134,9 @@
         <div class="hero-header-row">
           <div class="hero-header-badge-group">
             <app-badge [status]="report()!.estado"></app-badge>
-            <span class="report-id-badge">Alerta #{{ report()!.id_reporte_mascota.substring(0, 8) }}</span>
+            <span class="report-id-badge"
+              >Alerta #{{ report()!.id_reporte_mascota.substring(0, 8) }}</span
+            >
           </div>
           @if (!isOwnReport()) {
             <app-options-dropdown
@@ -65,18 +145,24 @@
             ></app-options-dropdown>
           }
         </div>
-        
-        <h1 class="pet-detail-name" style="margin-top: 4px;">
+
+        <h1 class="pet-detail-name" style="margin-top: 4px">
           {{ report()!.nombre || 'Mascota sin nombre' }}
         </h1>
-        
-        <div class="hero-quick-meta" style="border-bottom: none; padding-bottom: 0;">
-          <span class="meta-item"><i class="material-icons">place</i> {{ report()!.distrito || report()!.ubicacion || 'Ubicación no indicada' }}</span>
-          <span class="meta-item"><i class="material-icons">schedule</i> {{ getFechaRelativa(report()!.creado_en) }}</span>
+
+        <div class="hero-quick-meta" style="border-bottom: none; padding-bottom: 0">
+          <span class="meta-item"
+            ><i class="material-icons">place</i>
+            {{ report()!.distrito || report()!.ubicacion || 'Ubicación no indicada' }}</span
+          >
+          <span class="meta-item"
+            ><i class="material-icons">schedule</i>
+            {{ getFechaRelativa(report()!.creado_en) }}</span
+          >
         </div>
 
         <!-- ACCIONES PRINCIPALES -->
-        <div class="hero-actions-container" style="margin-top: 4px;">
+        <div class="hero-actions-container" style="margin-top: 4px">
           @if (!isOwnReport()) {
             <app-button
               variant="primary"
@@ -96,7 +182,7 @@
             >
               Compartir
             </app-button>
-            
+
             @if (!isOwnReport()) {
               <app-button
                 id="btn-avisar-sighting"
@@ -111,7 +197,7 @@
           </div>
         </div>
 
-        <hr style="border: 0; border-top: 1px solid var(--border-color, #27272a); margin: 8px 0;" />
+        <hr style="border: 0; border-top: 1px solid var(--border-color, #27272a); margin: 8px 0" />
 
         <!-- DETALLES DE LA MASCOTA -->
         <h2 class="section-subtitle">Datos de la Mascota</h2>
@@ -122,28 +208,38 @@
           </div>
           <div class="spec-card">
             <span class="spec-label">Sexo</span>
-            <span class="spec-value">{{ report()!.caracteristicas?.sexo || 'No indicado' | titlecase }}</span>
+            <span class="spec-value">{{
+              report()!.caracteristicas?.sexo || 'No indicado' | titlecase
+            }}</span>
           </div>
           <div class="spec-card">
             <span class="spec-label">Edad</span>
-            <span class="spec-value">{{ report()!.caracteristicas?.edad || 'No indicada' | titlecase }}</span>
+            <span class="spec-value">{{
+              report()!.caracteristicas?.edad || 'No indicada' | titlecase
+            }}</span>
           </div>
           <div class="spec-card">
             <span class="spec-label">Tamaño</span>
-            <span class="spec-value">{{ report()!.caracteristicas?.tamano || 'No indicado' | titlecase }}</span>
+            <span class="spec-value">{{
+              report()!.caracteristicas?.tamano || 'No indicado' | titlecase
+            }}</span>
           </div>
           <div class="spec-card">
             <span class="spec-label">Color</span>
-            <span class="spec-value">{{ report()!.caracteristicas?.color || 'No indicado' | titlecase }}</span>
+            <span class="spec-value">{{
+              report()!.caracteristicas?.color || 'No indicado' | titlecase
+            }}</span>
           </div>
           <div class="spec-card">
             <span class="spec-label">Pelaje</span>
-            <span class="spec-value">{{ report()!.caracteristicas?.pelo || 'No indicado' | titlecase }}</span>
+            <span class="spec-value">{{
+              report()!.caracteristicas?.pelo || 'No indicado' | titlecase
+            }}</span>
           </div>
         </div>
 
         @if (report()!.descripcion) {
-          <div class="specs-description-box" style="margin-top: 8px;">
+          <div class="specs-description-box" style="margin-top: 8px">
             <span class="spec-label">Descripción</span>
             <p class="description-text" [innerHTML]="report()!.descripcion | mentionHighlight"></p>
           </div>
@@ -173,9 +269,11 @@
       @if (hasSightingsSection()) {
         <section class="detail-sightings-section">
           <h2 class="section-subtitle">
-            <i class="material-icons">visibility</i> Avistamientos ({{ sightingsVisibles().length }})
+            <i class="material-icons">visibility</i> Avistamientos ({{
+              sightingsVisibles().length
+            }})
           </h2>
-          
+
           @if (isLoadingSightings()) {
             <div class="sightings-loading-row">
               <div class="spinner-sm"></div>
@@ -189,13 +287,20 @@
           } @else {
             <div class="sightings-cards-grid">
               @for (s of sightingsLimitados(); track s.id_avistamiento) {
-                <div class="sighting-card-modern" [class.accepted]="s.estado === 1" [class.rejected]="s.estado === 3">
+                <div
+                  class="sighting-card-modern"
+                  [class.accepted]="s.estado === 1"
+                  [class.rejected]="s.estado === 3"
+                >
                   <!-- Indicador de Estado Flotante -->
-                  <div class="sighting-status-badge" [ngClass]="{
-                    'pendiente': s.estado === 2,
-                    'aceptado': s.estado === 1,
-                    'rechazado': s.estado === 3
-                  }">
+                  <div
+                    class="sighting-status-badge"
+                    [ngClass]="{
+                      pendiente: s.estado === 2,
+                      aceptado: s.estado === 1,
+                      rechazado: s.estado === 3,
+                    }"
+                  >
                     <i class="material-icons">
                       {{ s.estado === 1 ? 'check_circle' : s.estado === 3 ? 'cancel' : 'pending' }}
                     </i>
@@ -207,8 +312,8 @@
                   <!-- Imagen o Carrusel de Cabecera de la Tarjeta -->
                   @if (s.imagenes && s.imagenes.length > 1) {
                     <div class="sighting-card-photo-wrapper sighting-carousel-wrapper">
-                      <app-image-carousel 
-                        [images]="getSightingImages(s)" 
+                      <app-image-carousel
+                        [images]="getSightingImages(s)"
                         [alt]="'Fotos del avistamiento'"
                         [zoomable]="true"
                         (imageClick)="activeViewerImage.set($event)"
@@ -216,12 +321,12 @@
                     </div>
                   } @else if (s.imagenes && s.imagenes.length === 1) {
                     <div class="sighting-card-photo-wrapper">
-                      <img 
-                        [src]="s.imagenes[0].url" 
+                      <img
+                        [src]="s.imagenes[0].url"
                         class="sighting-card-photo"
                         alt="Foto del avistamiento"
                         (click)="activeViewerImage.set(s.imagenes[0].url)"
-                      >
+                      />
                     </div>
                   } @else {
                     <div class="sighting-card-no-photo">
@@ -235,13 +340,17 @@
                     <!-- Informante -->
                     <div class="sighting-card-header">
                       <div class="informant-avatar-name">
-                        <img 
-                          [src]="s.usuario_informante?.foto_perfil || 'assets/images/default-avatar.png'" 
+                        <img
+                          [src]="
+                            s.usuario_informante?.foto_perfil || 'assets/images/default-avatar.png'
+                          "
                           class="sighting-card-avatar"
-                          onerror="this.src='assets/images/default-avatar.png'"
-                        >
+                          onerror="this.src = 'assets/images/default-avatar.png'"
+                        />
                         <div class="informant-meta">
-                          <span class="sighting-user-name">{{ s.usuario_informante?.nombre || 'Usuario Anónimo' }}</span>
+                          <span class="sighting-user-name">{{
+                            s.usuario_informante?.nombre || 'Usuario Anónimo'
+                          }}</span>
                           <span class="sighting-date">{{ getFechaRelativa(s.creado_en) }}</span>
                         </div>
                       </div>
@@ -251,20 +360,25 @@
                     <div class="sighting-card-details">
                       <div class="sighting-info-row">
                         <i class="material-icons text-danger">place</i>
-                        <span class="sighting-info-text">{{ getFormattedLocation(s.ubicacion) }}</span>
+                        <span class="sighting-info-text">{{
+                          getFormattedLocation(s.ubicacion)
+                        }}</span>
                       </div>
 
                       @if (s.descripcion) {
                         <div class="sighting-info-row text-description">
                           <i class="material-icons">chat_bubble_outline</i>
-                          <span class="sighting-info-text" [innerHTML]="s.descripcion | mentionHighlight"></span>
+                          <span
+                            class="sighting-info-text"
+                            [innerHTML]="s.descripcion | mentionHighlight"
+                          ></span>
                         </div>
                       }
                     </div>
 
                     <!-- Botón de Mapa y Moderación -->
                     <div class="sighting-card-actions">
-                      <button 
+                      <button
                         class="btn-view-map-sighting"
                         (click)="openSightingMapModal(s)"
                         title="Ver ubicación en mapa"
@@ -302,12 +416,15 @@
             </div>
 
             @if (tieneMasSightings()) {
-              <div class="view-more-sightings-row" style="margin-top: 16px; display: flex; justify-content: center; width: 100%;">
-                <app-button 
+              <div
+                class="view-more-sightings-row"
+                style="margin-top: 16px; display: flex; justify-content: center; width: 100%"
+              >
+                <app-button
                   variant="outline"
                   icon="history"
                   (btnClick)="isAllSightingsModalOpen.set(true)"
-                  style="width: 100%;"
+                  style="width: 100%"
                 >
                   Ver todos los avistamientos ({{ sightingsVisibles().length }})
                 </app-button>
@@ -319,12 +436,10 @@
 
       <!-- SECCIÓN 5: COMENTARIOS -->
       <section class="detail-comments-section">
-        <h2 class="section-subtitle">
-          <i class="material-icons">forum</i> Conversación y Ayuda
-        </h2>
-        
+        <h2 class="section-subtitle"><i class="material-icons">forum</i> Conversación y Ayuda</h2>
+
         <div class="main-comment-editor">
-          <input 
+          <input
             type="text"
             mentionInput
             class="main-comment-input-field"
@@ -394,7 +509,7 @@
                 <div class="history-entry-item">
                   <div class="entry-dot"></div>
                   <div class="entry-meta">
-                    <span class="entry-date">{{ entry.modificado_en | date:'dd/MM/yyyy' }}</span>
+                    <span class="entry-date">{{ entry.modificado_en | date: 'dd/MM/yyyy' }}</span>
                     <span class="entry-desc">{{ getCambioDescriptivo(entry) }}</span>
                   </div>
                 </div>
@@ -403,7 +518,6 @@
           </details>
         </section>
       }
-
     </div>
   }
 
@@ -415,8 +529,18 @@
     size="md"
   >
     @if (selectedSightingForMap()) {
-      <div class="sighting-map-modal-body" style="padding: 8px 4px;">
-        <div class="map-container-sighting-view" style="width: 100%; height: 350px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); position: relative;">
+      <div class="sighting-map-modal-body" style="padding: 8px 4px">
+        <div
+          class="map-container-sighting-view"
+          style="
+            width: 100%;
+            height: 350px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            position: relative;
+          "
+        >
           <app-map-component
             [center]="[selectedSightingForMap()!.latitud, selectedSightingForMap()!.longitud]"
             [radiusKm]="selectedSightingForMap()!.radio / 1000"
@@ -426,11 +550,27 @@
             [showControls]="true"
           ></app-map-component>
         </div>
-        <div class="sighting-map-info-footer" style="margin-top: 12px; display: flex; align-items: flex-start; gap: 8px; font-size: 0.9rem; color: var(--text-main);">
-          <i class="material-icons" style="color: var(--primary-color, #106063); flex-shrink: 0; margin-top: 2px;">place</i>
+        <div
+          class="sighting-map-info-footer"
+          style="
+            margin-top: 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: var(--text-main);
+          "
+        >
+          <i
+            class="material-icons"
+            style="color: var(--primary-color, #106063); flex-shrink: 0; margin-top: 2px"
+            >place</i
+          >
           <div>
-            <p style="font-weight: 700; margin: 0 0 2px 0;">Dirección / Referencia:</p>
-            <p style="margin: 0; color: var(--text-secondary, #a1a1aa);">{{ getFormattedLocation(selectedSightingForMap()!.ubicacion) }}</p>
+            <p style="font-weight: 700; margin: 0 0 2px 0">Dirección / Referencia:</p>
+            <p style="margin: 0; color: var(--text-secondary, #a1a1aa)">
+              {{ getFormattedLocation(selectedSightingForMap()!.ubicacion) }}
+            </p>
           </div>
         </div>
       </div>
@@ -455,41 +595,41 @@
         <div class="sighting-modal-col-left">
           <div class="sm-form-group">
             <label class="sm-label">Ubicación / Referencia</label>
-            <input 
-              type="text" 
-              class="sm-input" 
+            <input
+              type="text"
+              class="sm-input"
               placeholder="Ej: Parque Central, cerca a la tienda de ropa..."
               [ngModel]="sightingForm().ubicacion"
               (ngModelChange)="updateSightingField('ubicacion', $event)"
-            >
+            />
           </div>
 
           <div class="sm-form-row">
             <div class="sm-form-group">
               <label class="sm-label">Fecha</label>
-              <input 
-                type="date" 
+              <input
+                type="date"
                 class="sm-input"
                 [ngModel]="sightingForm().fecha_avistamiento"
                 (ngModelChange)="updateSightingField('fecha_avistamiento', $event)"
-              >
+              />
             </div>
             <div class="sm-form-group">
               <label class="sm-label">Hora Aprox.</label>
-              <input 
-                type="time" 
+              <input
+                type="time"
                 class="sm-input"
                 [ngModel]="sightingForm().hora_avistamiento"
                 (ngModelChange)="updateSightingField('hora_avistamiento', $event)"
-              >
+              />
             </div>
           </div>
 
           <div class="sm-form-group">
             <label class="sm-label">Descripción (opcional)</label>
-            <textarea 
+            <textarea
               mentionInput
-              class="sm-input sm-textarea" 
+              class="sm-input sm-textarea"
               rows="3"
               placeholder="Ej: Se veía asustada, estaba cerca del parque..."
               [ngModel]="sightingForm().descripcion"
@@ -499,40 +639,91 @@
 
           <div class="sm-form-group">
             <label class="sm-label">Fotos de la mascota avistada (opcional, máx. 4)</label>
-            
-            <div class="sighting-images-uploader-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 8px;">
+
+            <div
+              class="sighting-images-uploader-grid"
+              style="
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 8px;
+                margin-bottom: 8px;
+              "
+            >
               @for (preview of sightingImagePreviews(); track preview; let idx = $index) {
-                <div class="uploader-preview-card" style="position: relative; aspect-ratio: 1; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color, #27272a); background-color: rgba(255, 255, 255, 0.02);">
-                  <img [src]="preview" alt="Vista previa" style="width: 100%; height: 100%; object-fit: cover;">
-                  <button 
+                <div
+                  class="uploader-preview-card"
+                  style="
+                    position: relative;
+                    aspect-ratio: 1;
+                    border-radius: 8px;
+                    overflow: hidden;
+                    border: 1px solid var(--border-color, #27272a);
+                    background-color: rgba(255, 255, 255, 0.02);
+                  "
+                >
+                  <img
+                    [src]="preview"
+                    alt="Vista previa"
+                    style="width: 100%; height: 100%; object-fit: cover"
+                  />
+                  <button
                     type="button"
-                    (click)="removeSelectedSightingImage(idx); $event.stopPropagation();"
-                    style="position: absolute; top: 4px; right: 4px; border: none; background-color: rgba(239, 68, 68, 0.9); color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;"
+                    (click)="removeSelectedSightingImage(idx); $event.stopPropagation()"
+                    style="
+                      position: absolute;
+                      top: 4px;
+                      right: 4px;
+                      border: none;
+                      background-color: rgba(239, 68, 68, 0.9);
+                      color: white;
+                      border-radius: 50%;
+                      width: 20px;
+                      height: 20px;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      cursor: pointer;
+                      transition: all 0.2s;
+                    "
                     title="Eliminar imagen"
                   >
-                    <i class="material-icons" style="font-size: 14px;">close</i>
+                    <i class="material-icons" style="font-size: 14px">close</i>
                   </button>
                 </div>
               }
-              
+
               @if (sightingImagePreviews().length < 4) {
-                <div 
-                  class="uploader-add-card" 
+                <div
+                  class="uploader-add-card"
                   (click)="fileInputRef.click()"
-                  style="aspect-ratio: 1; border: 1px dashed var(--border-color, #27272a); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; background-color: rgba(255,255,255,0.01); color: var(--text-muted, #94a3b8); transition: all 0.2s;"
+                  style="
+                    aspect-ratio: 1;
+                    border: 1px dashed var(--border-color, #27272a);
+                    border-radius: 8px;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    background-color: rgba(255, 255, 255, 0.01);
+                    color: var(--text-muted, #94a3b8);
+                    transition: all 0.2s;
+                  "
                 >
-                  <i class="material-icons" style="font-size: 1.5rem; margin-bottom: 2px;">add_a_photo</i>
-                  <span style="font-size: 0.65rem; text-align: center;">Subir</span>
+                  <i class="material-icons" style="font-size: 1.5rem; margin-bottom: 2px"
+                    >add_a_photo</i
+                  >
+                  <span style="font-size: 0.65rem; text-align: center">Subir</span>
                 </div>
               }
             </div>
-            
-            <input 
+
+            <input
               #fileInputRef
-              type="file" 
+              type="file"
               accept="image/*"
               multiple
-              style="display:none"
+              style="display: none"
               (change)="onSightingFilesSelected($event)"
             />
           </div>
@@ -543,7 +734,18 @@
           <!-- MAPA DE SELECCIÓN DE UBICACIÓN -->
           <div class="sm-form-group">
             <label class="sm-label">Marca el lugar exacto en el mapa</label>
-            <div class="map-container-sighting" style="width: 100%; height: 210px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); margin-top: 4px; position: relative;">
+            <div
+              class="map-container-sighting"
+              style="
+                width: 100%;
+                height: 210px;
+                border-radius: 12px;
+                overflow: hidden;
+                border: 1px solid var(--border-color);
+                margin-top: 4px;
+                position: relative;
+              "
+            >
               <app-map-component
                 [center]="[sightingForm().latitud, sightingForm().longitud]"
                 [radiusKm]="sightingForm().radio / 1000"
@@ -556,14 +758,18 @@
           </div>
 
           <div class="sm-form-group">
-            <label class="sm-label">Radio de Incertidumbre: <strong>{{ sightingForm().radio }}m</strong></label>
-            <input 
-              type="range" 
-              min="50" max="2000" step="50"
+            <label class="sm-label"
+              >Radio de Incertidumbre: <strong>{{ sightingForm().radio }}m</strong></label
+            >
+            <input
+              type="range"
+              min="50"
+              max="2000"
+              step="50"
               class="sm-slider"
               [ngModel]="sightingForm().radio"
               (ngModelChange)="updateSightingField('radio', +$event)"
-            >
+            />
             <div class="sm-slider-labels">
               <span>50m</span>
               <span>2000m</span>
@@ -573,7 +779,9 @@
       </div>
 
       <div class="sm-actions-row">
-        <app-button variant="outline" (btnClick)="isSightingModalOpen.set(false)">Cancelar</app-button>
+        <app-button variant="outline" (btnClick)="isSightingModalOpen.set(false)"
+          >Cancelar</app-button
+        >
         <app-button
           variant="primary"
           icon="send"
@@ -594,31 +802,100 @@
     [showFooter]="false"
     size="sm"
   >
-    <div class="contact-modal-body" style="display: flex; flex-direction: column; gap: 16px; padding: 8px 4px;">
-      <p class="modal-info-text" style="font-size: 0.95rem; line-height: 1.5; color: var(--text-main); margin: 0;">
-        Puedes comunicarte directamente con <strong>{{ report()?.usuario?.nombre || 'el dueño' }}</strong> a través de los siguientes canales:
+    <div
+      class="contact-modal-body"
+      style="display: flex; flex-direction: column; gap: 16px; padding: 8px 4px"
+    >
+      <p
+        class="modal-info-text"
+        style="font-size: 0.95rem; line-height: 1.5; color: var(--text-main); margin: 0"
+      >
+        Puedes comunicarte directamente con
+        <strong>{{ report()?.usuario?.nombre || 'el dueño' }}</strong> a través de los siguientes
+        canales:
       </p>
 
-      <div class="contact-options" style="display: flex; flex-direction: column; gap: 12px; margin-top: 8px;">
+      <div
+        class="contact-options"
+        style="display: flex; flex-direction: column; gap: 12px; margin-top: 8px"
+      >
         @if (report()?.usuario?.telefono) {
-          <a [href]="'https://wa.me/' + report()!.usuario.telefono" target="_blank" class="contact-option-btn whatsapp" style="display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px; border-radius: 12px; font-weight: 700; text-decoration: none; color: #fff; background-color: #25d366; transition: background-color 0.2s;">
+          <a
+            [href]="'https://wa.me/' + report()!.usuario.telefono"
+            target="_blank"
+            class="contact-option-btn whatsapp"
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 10px;
+              padding: 12px;
+              border-radius: 12px;
+              font-weight: 700;
+              text-decoration: none;
+              color: #fff;
+              background-color: #25d366;
+              transition: background-color 0.2s;
+            "
+          >
             <i class="material-icons">chat</i>
             <span>Enviar WhatsApp</span>
           </a>
-          <a [href]="'tel:' + report()!.usuario.telefono" class="contact-option-btn phone" style="display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px; border-radius: 12px; font-weight: 700; text-decoration: none; color: #fff; background-color: #3b82f6; transition: background-color 0.2s;">
+          <a
+            [href]="'tel:' + report()!.usuario.telefono"
+            class="contact-option-btn phone"
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 10px;
+              padding: 12px;
+              border-radius: 12px;
+              font-weight: 700;
+              text-decoration: none;
+              color: #fff;
+              background-color: #3b82f6;
+              transition: background-color 0.2s;
+            "
+          >
             <i class="material-icons">call</i>
             <span>Llamar por Teléfono ({{ report()!.usuario.telefono }})</span>
           </a>
         }
         @if (report()?.usuario?.email) {
-          <a [href]="'mailto:' + report()!.usuario.email" class="contact-option-btn email" style="display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px; border-radius: 12px; font-weight: 700; text-decoration: none; color: #fff; background-color: #4b5563; transition: background-color 0.2s;">
+          <a
+            [href]="'mailto:' + report()!.usuario.email"
+            class="contact-option-btn email"
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 10px;
+              padding: 12px;
+              border-radius: 12px;
+              font-weight: 700;
+              text-decoration: none;
+              color: #fff;
+              background-color: #4b5563;
+              transition: background-color 0.2s;
+            "
+          >
             <i class="material-icons">email</i>
             <span>Enviar Correo</span>
           </a>
         }
       </div>
 
-      <div class="modal-actions-row border-top" style="display: flex; justify-content: flex-end; padding-top: 14px; border-top: 1px solid var(--border-color, #334155); margin-top: 8px;">
+      <div
+        class="modal-actions-row border-top"
+        style="
+          display: flex;
+          justify-content: flex-end;
+          padding-top: 14px;
+          border-top: 1px solid var(--border-color, #334155);
+          margin-top: 8px;
+        "
+      >
         <app-button variant="outline" (btnClick)="isContactModalOpen.set(false)">Cerrar</app-button>
       </div>
     </div>
@@ -638,16 +915,26 @@
     [showFooter]="false"
     size="lg"
   >
-    <div class="all-sightings-modal-body" style="max-height: 70vh; overflow-y: auto; padding: 4px;">
-      <div class="sightings-cards-grid" style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px;">
+    <div class="all-sightings-modal-body" style="max-height: 70vh; overflow-y: auto; padding: 4px">
+      <div
+        class="sightings-cards-grid"
+        style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px"
+      >
         @for (s of sightingsOrdenados(); track s.id_avistamiento) {
-          <div class="sighting-card-modern" [class.accepted]="s.estado === 1" [class.rejected]="s.estado === 3">
+          <div
+            class="sighting-card-modern"
+            [class.accepted]="s.estado === 1"
+            [class.rejected]="s.estado === 3"
+          >
             <!-- Indicador de Estado Flotante -->
-            <div class="sighting-status-badge" [ngClass]="{
-              'pendiente': s.estado === 2,
-              'aceptado': s.estado === 1,
-              'rechazado': s.estado === 3
-            }">
+            <div
+              class="sighting-status-badge"
+              [ngClass]="{
+                pendiente: s.estado === 2,
+                aceptado: s.estado === 1,
+                rechazado: s.estado === 3,
+              }"
+            >
               <i class="material-icons">
                 {{ s.estado === 1 ? 'check_circle' : s.estado === 3 ? 'cancel' : 'pending' }}
               </i>
@@ -659,8 +946,8 @@
             <!-- Imagen o Carrusel de Cabecera de la Tarjeta -->
             @if (s.imagenes && s.imagenes.length > 1) {
               <div class="sighting-card-photo-wrapper sighting-carousel-wrapper">
-                <app-image-carousel 
-                  [images]="getSightingImages(s)" 
+                <app-image-carousel
+                  [images]="getSightingImages(s)"
                   [alt]="'Fotos del avistamiento'"
                   [zoomable]="true"
                   (imageClick)="activeViewerImage.set($event)"
@@ -668,12 +955,12 @@
               </div>
             } @else if (s.imagenes && s.imagenes.length === 1) {
               <div class="sighting-card-photo-wrapper">
-                <img 
-                  [src]="s.imagenes[0].url" 
+                <img
+                  [src]="s.imagenes[0].url"
                   class="sighting-card-photo"
                   alt="Foto del avistamiento"
                   (click)="activeViewerImage.set(s.imagenes[0].url)"
-                >
+                />
               </div>
             } @else {
               <div class="sighting-card-no-photo">
@@ -687,13 +974,15 @@
               <!-- Informante -->
               <div class="sighting-card-header">
                 <div class="informant-avatar-name">
-                  <img 
-                    [src]="s.usuario_informante?.foto_perfil || 'assets/images/default-avatar.png'" 
+                  <img
+                    [src]="s.usuario_informante?.foto_perfil || 'assets/images/default-avatar.png'"
                     class="sighting-card-avatar"
-                    onerror="this.src='assets/images/default-avatar.png'"
-                  >
+                    onerror="this.src = 'assets/images/default-avatar.png'"
+                  />
                   <div class="informant-meta">
-                    <span class="sighting-user-name">{{ s.usuario_informante?.nombre || 'Usuario Anónimo' }}</span>
+                    <span class="sighting-user-name">{{
+                      s.usuario_informante?.nombre || 'Usuario Anónimo'
+                    }}</span>
                     <span class="sighting-date">{{ getFechaRelativa(s.creado_en) }}</span>
                   </div>
                 </div>
@@ -709,14 +998,17 @@
                 @if (s.descripcion) {
                   <div class="sighting-info-row text-description">
                     <i class="material-icons">chat_bubble_outline</i>
-                    <span class="sighting-info-text" [innerHTML]="s.descripcion | mentionHighlight"></span>
+                    <span
+                      class="sighting-info-text"
+                      [innerHTML]="s.descripcion | mentionHighlight"
+                    ></span>
                   </div>
                 }
               </div>
 
               <!-- Botón de Mapa y Moderación -->
               <div class="sighting-card-actions">
-                <button 
+                <button
                   class="btn-view-map-sighting"
                   (click)="openSightingMapModal(s)"
                   title="Ver ubicación en mapa"
@@ -766,6 +1058,5 @@
     (confirmSubmit)="submitFlag()"
   ></app-flag-modal>
 
-<app-footer></app-footer>
-
+  <app-footer></app-footer>
 </div>

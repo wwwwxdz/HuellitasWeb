@@ -1,20 +1,19 @@
 import { Component, input, output, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-image-carousel',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './image-carousel.html',
-  styleUrl: './image-carousel.scss'
+  styleUrl: './image-carousel.scss',
 })
 export class ImageCarouselComponent {
   images = input.required<string[]>();
   alt = input('');
   zoomable = input<boolean>(true);
-  
+
   imageClick = output<string>();
-  
+
   currentIndex = signal(0);
 
   // Drag state
@@ -27,7 +26,7 @@ export class ImageCarouselComponent {
   onScroll(event: Event) {
     const element = event.target as HTMLElement;
     if (this.isDragging) return;
-    
+
     const index = Math.round(element.scrollLeft / element.clientWidth);
     if (this.currentIndex() !== index) {
       this.currentIndex.set(index);
@@ -44,7 +43,6 @@ export class ImageCarouselComponent {
     this.scrollLeft = container.scrollLeft;
   }
 
-
   onMouseMove(e: MouseEvent, container: HTMLElement) {
     if (!this.isDragging) return;
     e.preventDefault();
@@ -57,7 +55,7 @@ export class ImageCarouselComponent {
     if (!this.isDragging) return;
     this.isDragging = false;
     container.classList.remove('dragging');
-    
+
     const index = Math.round(container.scrollLeft / container.clientWidth);
     this.currentIndex.set(index);
     this.scrollTo(index, container);
@@ -66,7 +64,7 @@ export class ImageCarouselComponent {
   scrollTo(index: number, element: HTMLElement) {
     element.scrollTo({
       left: index * element.clientWidth,
-      behavior: 'smooth'
+      behavior: 'smooth',
     });
   }
 
@@ -82,4 +80,3 @@ export class ImageCarouselComponent {
     this.imageClick.emit(image);
   }
 }
-

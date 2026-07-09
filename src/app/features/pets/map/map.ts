@@ -7,12 +7,15 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { UserService } from '../../../core/services/user.service';
 import { MapComponent as LeafletMapComponent } from '../components/map-component/map-component';
 import { Navbar } from '../../../shared/components/navbar/navbar';
-import { ReporteMascotaPuntoMapa, PetReport, Especie } from '../../../core/models/pet.model';
+import { MiniPetCardComponent } from '../../../shared/components/mini-pet-card/mini-pet-card.component';
+import { ReporteMascotaPuntoMapa, PetReport, Especie, Avistamiento } from '../../../core/models/pet.model';
+import { LocationService } from '../../../core/services/location.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-pet-map-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, LeafletMapComponent, Navbar, RouterModule],
+  imports: [CommonModule, FormsModule, LeafletMapComponent, Navbar, RouterModule, MiniPetCardComponent],
   templateUrl: './map.html',
   styleUrl: './map.scss',
 })
@@ -20,9 +23,13 @@ export class MapComponent implements OnInit {
   private readonly petService = inject(PetService);
   private readonly authService = inject(AuthService);
   private readonly userService = inject(UserService);
+  private readonly locationService = inject(LocationService);
+  private readonly toastService = inject(ToastService);
 
   // Filtros reactivos con Signals
   searchQuery = signal<string>('');
+  addressQuery = signal<string>('');
+  isSearchingAddress = signal<boolean>(false);
   selectedStatuses = signal<number[]>([1, 2, 3]); // 1=encontrado, 2=perdido, 3=avistado, 4=reunido
   radiusKm = signal<number>(10);
   selectedEspecie = signal<string | null>(null);
@@ -44,8 +51,8 @@ export class MapComponent implements OnInit {
   resultsList = signal<PetReport[]>([]);
   selectedReport = signal<PetReport | null>(null);
 
-  // Avistamientos simulados para el panel de reportes seleccionado
-  sightings = signal<Array<{ id: string; fecha: string; descripcion: string; ubicacion: string }>>([]);
+  // Avistamientos para el panel de reportes seleccionado
+  sightings = signal<Avistamiento[]>([]);
 
   // Filtrado de puntos basado en los checkboxes de estados
   filteredPoints = computed(() => {
@@ -167,18 +174,62 @@ export class MapComponent implements OnInit {
           (pos) => {
             this.center.set([pos.coords.latitude, pos.coords.longitude]);
             this.zoom.set(13);
+            this.toastService.show('Ubicación de búsqueda actualizada mediante GPS.', 'success');
             resolve();
           },
           (err) => {
             console.warn('Error al obtener la ubicación actual:', err);
+            let msg = 'No se pudo obtener la ubicación actual.';
+            if (err.code === 1) {
+              msg = 'Permiso de geolocalización denegado.';
+            } else if (err.code === 2) {
+              msg = 'La ubicación GPS no está disponible.';
+            } else if (err.code === 3) {
+              msg = 'Tiempo de espera agotado al obtener el GPS.';
+            }
+            this.toastService.show(msg, 'warning');
             resolve();
           },
-          { timeout: 5000 }
+          { timeout: 7000 }
         );
       } else {
+        this.toastService.show('La geolocalización no está soportada por tu navegador.', 'warning');
         resolve();
       }
     });
+  }
+
+  // Buscar dirección o ciudad escrita por el usuario
+  async buscarDireccion(): Promise<void> {
+    const query = this.addressQuery().trim();
+    if (!query) {
+      this.toastService.show('Por favor ingresa una dirección o ciudad para buscar.', 'warning');
+      return;
+    }
+
+    this.isSearchingAddress.set(true);
+    try {
+      const results = await this.locationService.search(query);
+      if (results && results.length > 0) {
+        const first = results[0];
+        const lat = Number(first.lat);
+        const lon = Number(first.lon);
+        if (!isNaN(lat) && !isNaN(lon)) {
+          this.center.set([lat, lon]);
+          this.zoom.set(14);
+          this.toastService.show(`Ubicación encontrada: ${first.display_name.split(',')[0]}`, 'success');
+        } else {
+          this.toastService.show('No se pudieron procesar las coordenadas de la dirección.', 'error');
+        }
+      } else {
+        this.toastService.show('No se encontró ninguna ubicación con esa descripción.', 'warning');
+      }
+    } catch (err) {
+      console.error('Error al buscar dirección:', err);
+      this.toastService.show('Ocurrió un error al buscar la dirección.', 'error');
+    } finally {
+      this.isSearchingAddress.set(false);
+    }
   }
 
   // Manejar click en el mapa para recolocar el centro de búsqueda
@@ -192,21 +243,10 @@ export class MapComponent implements OnInit {
       const report = await this.petService.getReporte(idReporte);
       this.selectedReport.set(report);
       
-      // Simular avistamientos para este reporte
-      this.sightings.set([
-        {
-          id: 's1',
-          fecha: 'Hace 2 horas',
-          descripcion: 'Visto corriendo cerca del parque principal.',
-          ubicacion: 'Av. Brasil con Av. Pacifico'
-        },
-        {
-          id: 's2',
-          fecha: 'Ayer por la tarde',
-          descripcion: 'Buscando comida cerca a un puesto ambulante.',
-          ubicacion: 'Cerca al Mercado Buenos Aires'
-        }
-      ]);
+      // Cargar avistamientos reales para este reporte llamando al servicio y filtrando los aceptados (estado === 1)
+      const sightingsData = await this.petService.getSightings(idReporte);
+      const reportSightings = (sightingsData || []).filter(s => s.estado === 1);
+      this.sightings.set(reportSightings);
     } catch (error) {
       console.error('Error al cargar reporte:', error);
     }
@@ -226,6 +266,23 @@ export class MapComponent implements OnInit {
   clearSelectedReport(): void {
     this.selectedReport.set(null);
     this.sightings.set([]);
+  }
+
+  // Centrar el mapa en el reporte seleccionado
+  centerMapOnReport(): void {
+    const report = this.selectedReport();
+    if (report && typeof report.latitud === 'number' && typeof report.longitud === 'number') {
+      this.center.set([report.latitud, report.longitud]);
+      this.zoom.set(15);
+    }
+  }
+
+  // Centrar el mapa en las coordenadas de un avistamiento específico
+  centerMapOnSighting(sighting: Avistamiento): void {
+    if (sighting && typeof sighting.latitud === 'number' && typeof sighting.longitud === 'number') {
+      this.center.set([sighting.latitud, sighting.longitud]);
+      this.zoom.set(15);
+    }
   }
 
   // Filtrado rápido de tipo mascota por el navbar flotante

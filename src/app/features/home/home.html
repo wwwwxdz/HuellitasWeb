@@ -115,6 +115,47 @@
     </div>
   </section>
 
+  <!-- Alerts Map Section -->
+  <section class="alerts-map-section scroll-reveal container">
+    <div class="alerts-map-card">
+      <!-- Columna Izquierda: Información -->
+      <div class="alerts-map-info">
+        <div class="map-icon-badge">
+          <i class="material-icons">map</i>
+        </div>
+        <h2>Mapa de alertas en tiempo real</h2>
+        <p>
+          Explora tu zona para ver reportes recientes y únete a búsquedas activas cerca de ti.
+        </p>
+
+        <div class="map-filter-tags">
+          <div class="filter-tag">
+            <i class="material-icons check-blue">check_circle</i>
+            <span>Mascotas perdidas</span>
+          </div>
+          <div class="filter-tag">
+            <i class="material-icons check-green">check_circle</i>
+            <span>Mascotas encontradas</span>
+          </div>
+        </div>
+
+        <a routerLink="/pets/map" class="btn-map-full">
+          <span>Abrir mapa completo</span>
+          <i class="material-icons">open_in_new</i>
+        </a>
+      </div>
+
+      <!-- Columna Derecha: Mapa de Alerts Preview -->
+      <div class="alerts-map-preview">
+        <img 
+          src="/images/alerts-map.png" 
+          alt="Mapa de alertas en tiempo real" 
+          class="map-preview-img"
+        />
+      </div>
+    </div>
+  </section>
+
   <!-- Mission Section -->
   <section class="mission-section scroll-reveal">
     <div class="mission-container container">

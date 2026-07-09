@@ -37,8 +37,7 @@
     <div class="notif-body">
       <p class="message">
         <strong>{{ notification().actor?.nombre || 'Alguien' }}</strong>
-        <span> </span>
-        <span [innerHTML]="notification().mensaje | mentionHighlight"></span>
+        <span [innerHTML]="formattedMessage() | mentionHighlight"></span>
       </p>
       <span class="time">{{ notification().creado_en | timeAgo }}</span>
     </div>

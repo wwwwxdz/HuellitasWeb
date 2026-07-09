@@ -1,12 +1,11 @@
 import { Component, input, signal, computed, effect } from '@angular/core';
-import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-avatar',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './avatar.html',
-  styleUrl: './avatar.scss'
+  styleUrl: './avatar.scss',
 })
 export class AvatarComponent {
   src = input<string | null | undefined>(null);
@@ -50,12 +49,12 @@ export class AvatarComponent {
     const h = Math.abs(hash % 360);
     const s = 65; // saturación fija
     const l = 45; // luminosidad fija
-    
+
     // Gradiente sutil
     const color1 = `hsl(${h}, ${s}%, ${l}%)`;
     const color2 = `hsl(${(h + 40) % 360}, ${s}%, ${l - 5}%)`;
     return {
-      background: `linear-gradient(135deg, ${color1} 0%, ${color2} 100%)`
+      background: `linear-gradient(135deg, ${color1} 0%, ${color2} 100%)`,
     };
   });
 

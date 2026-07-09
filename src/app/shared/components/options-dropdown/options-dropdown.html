@@ -5,7 +5,7 @@
     (click)="toggleDropdown($event)"
     title="Opciones"
   >
-    <i class="material-icons">more_vert</i>
+    <i class="material-icons">{{ triggerIcon() }}</i>
   </button>
 
   @if (isOpen()) {

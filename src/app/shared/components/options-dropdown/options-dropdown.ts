@@ -1,5 +1,4 @@
 import { Component, input, output, signal, HostListener, ElementRef, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
 
 export interface DropdownOption {
   label: string;
@@ -11,21 +10,22 @@ export interface DropdownOption {
 @Component({
   selector: 'app-options-dropdown',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './options-dropdown.html',
-  styleUrl: './options-dropdown.scss'
+  styleUrl: './options-dropdown.scss',
 })
 export class OptionsDropdownComponent {
   private readonly elementRef = inject(ElementRef);
 
   options = input.required<DropdownOption[]>();
+  triggerIcon = input<string>('more_vert');
   optionSelected = output<DropdownOption>();
 
   isOpen = signal<boolean>(false);
 
   toggleDropdown(event: Event): void {
     event.stopPropagation();
-    this.isOpen.update(open => !open);
+    this.isOpen.update((open) => !open);
   }
 
   selectOption(option: DropdownOption, event: Event): void {

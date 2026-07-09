@@ -517,7 +517,7 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
 
   handleRecenter(): void {
     if (this.map) {
-      if (this.editable() && typeof navigator !== 'undefined' && navigator.geolocation) {
+      if (typeof navigator !== 'undefined' && navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (pos) => {
             const lat = pos.coords.latitude;

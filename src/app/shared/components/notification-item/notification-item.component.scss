@@ -28,6 +28,9 @@
     &::before {
       background: var(--primary-color, #106063);
     }
+    .message {
+      color: var(--text-main, #fff);
+    }
     .message strong {
       color: var(--primary-color, #106063);
     }
@@ -111,6 +114,7 @@
     strong {
       font-weight: 700;
       color: var(--text-main, #333);
+      margin-right: 4px;
     }
 
     ::ng-deep .mention-text {

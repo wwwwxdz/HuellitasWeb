@@ -36,4 +36,17 @@ export class LocationService {
       this.http.get<LocationSearchResult>('https://nominatim.openstreetmap.org/reverse', { params })
     );
   }
+
+  /** Busca ubicaciones a partir de un texto libre mediante Nominatim */
+  async search(query: string): Promise<LocationSearchResult[]> {
+    const params = new HttpParams()
+      .set('q', query)
+      .set('format', 'json')
+      .set('limit', '5')
+      .set('addressdetails', '1');
+
+    return firstValueFrom(
+      this.http.get<LocationSearchResult[]>('https://nominatim.openstreetmap.org/search', { params })
+    );
+  }
 }

@@ -57,6 +57,11 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'perfil/:id',
+    loadComponent: () => import('./features/perfil/perfil').then(m => m.PerfilComponent),
+    canActivate: [authGuard],
+  },
+  {
     path: 'ajustes',
     loadComponent: () => import('./features/ajustes/ajustes').then(m => m.AjustesComponent),
     canActivate: [authGuard],
@@ -68,8 +73,8 @@ export const routes: Routes = [
   },
   {
     path: 'mensajes',
-    loadComponent: () => import('./features/chats/preview/messages-preview.component').then(m => m.MessagesPreviewComponent),
-    canActivate: [authGuard],
+    redirectTo: 'chats',
+    pathMatch: 'full',
   },
   {
     path: 'notifications',

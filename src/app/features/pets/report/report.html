@@ -23,390 +23,523 @@
         </div>
       </div>
     } @else if (!isSubmitted()) {
-      <div class="single-page-form">
+      <div class="single-page-form wizard-form">
         <h2 class="form-title">Reportar una Mascota</h2>
-        <p class="form-subtitle">Completa los detalles de la mascota y la ubicación para publicar la alerta en tiempo real</p>
+        <p class="form-subtitle" style="margin-bottom: 2rem;">Completa los detalles de la mascota y la ubicación para publicar la alerta en tiempo real</p>
 
-        <div class="form-columns-grid">
+        <!-- Indicador de Pasos Premium (4 Pasos) -->
+        <div class="steps-indicator">
+          <div class="step-badge" [class.active]="currentStep() === 1" [class.completed]="currentStep() > 1" (click)="currentStep() > 1 ? currentStep.set(1) : null">
+            <div class="step-num">
+              @if (currentStep() > 1) {
+                <i class="material-icons">check</i>
+              } @else {
+                1
+              }
+            </div>
+            <span class="step-label">Mascota</span>
+          </div>
+          <div class="step-line" [class.active]="currentStep() >= 2"></div>
+          <div class="step-badge" [class.active]="currentStep() === 2" [class.completed]="currentStep() > 2" (click)="currentStep() > 2 ? currentStep.set(2) : null">
+            <div class="step-num">
+              @if (currentStep() > 2) {
+                <i class="material-icons">check</i>
+              } @else {
+                2
+              }
+            </div>
+            <span class="step-label">Detalles</span>
+          </div>
+          <div class="step-line" [class.active]="currentStep() >= 3"></div>
+          <div class="step-badge" [class.active]="currentStep() === 3" [class.completed]="currentStep() > 3" (click)="currentStep() > 3 ? currentStep.set(3) : null">
+            <div class="step-num">
+              @if (currentStep() > 3) {
+                <i class="material-icons">check</i>
+              } @else {
+                3
+              }
+            </div>
+            <span class="step-label">Ubicación</span>
+          </div>
+          <div class="step-line" [class.active]="currentStep() >= 4"></div>
+          <div class="step-badge" [class.active]="currentStep() === 4">
+            <div class="step-num">4</div>
+            <span class="step-label">Publicación</span>
+          </div>
+        </div>
+
+        <div class="wizard-step-container">
           
-          <!-- COLUMNA IZQUIERDA: Detalles de la Mascota -->
-          <div class="form-column left-column">
-            <!-- BLOQUE 1: Detalles de la Mascota -->
-            <div class="form-section-header" style="display: flex; align-items: center; gap: 10px; margin-bottom: 2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
-              <i class="material-icons" style="color: var(--primary-color); font-size: 1.75rem;">pets</i>
-              <h3 style="margin: 0; font-size: 1.25rem; font-weight: 700; color: var(--text-main);">1. Detalles de la Mascota</h3>
-            </div>
-
-            <!-- Selector del Estado (Tabs en Desktop, Select en Móvil) -->
-            <div class="form-group estado-selector-group" style="margin-bottom: 2rem;">
-              <app-label>¿Qué sucedió con la mascota?</app-label>
-              
-              <!-- Pestañas para pantallas grandes -->
-              <div class="desktop-only-tabs">
-                <app-tabs
-                  [options]="estadoOptions()"
-                  [value]="estado()"
-                  (valueChange)="estado.set($event)"
-                  variant="full-width"
-                ></app-tabs>
+          <!-- PASO 1: Datos Principales de la Mascota -->
+          @if (currentStep() === 1) {
+            <div class="step-content animate-slide-in">
+              <div class="form-section-header" style="display: flex; align-items: center; gap: 10px; margin-bottom: 2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                <i class="material-icons" style="color: var(--primary-color); font-size: 1.75rem;">pets</i>
+                <h3 style="margin: 0; font-size: 1.25rem; font-weight: 700; color: var(--text-main);">1. Datos Principales</h3>
               </div>
 
-              <!-- Selector desplegable para pantallas móviles -->
-              <div class="mobile-only-select">
-                <app-select
-                  id="estadoSelect"
-                  [options]="estadoSelectOptions()"
-                  [value]="estado().toString()"
-                  (valueChange)="estado.set(+$event)"
-                  placeholder="Seleccionar Estado..."
-                ></app-select>
-              </div>
-            </div>
+              <!-- Selector del Estado (Tabs en Desktop, Select en Móvil) -->
+              <div class="form-group estado-selector-group" style="margin-bottom: 2rem;">
+                <app-label>¿Qué sucedió con la mascota?</app-label>
+                
+                <!-- Pestañas para pantallas grandes -->
+                <div class="desktop-only-tabs">
+                  <app-tabs
+                    [options]="estadoOptions()"
+                    [value]="estado()"
+                    (valueChange)="estado.set($event)"
+                    variant="full-width"
+                  ></app-tabs>
+                </div>
 
-            <!-- Especie y Raza -->
-            <div class="form-row">
-              <div class="form-group">
-                <app-label forId="especie" [required]="true">Especie</app-label>
-                <app-select
-                  id="especie"
-                  [options]="especieOptions()"
-                  [value]="selectedEspecieId()"
-                  (valueChange)="selectedEspecieId.set($event); onEspecieChange($event)"
-                  placeholder="Seleccionar Especie..."
-                ></app-select>
-              </div>
-
-              <div class="form-group">
-                <app-label forId="raza">Raza</app-label>
-                <app-select
-                  id="raza"
-                  [options]="razaOptions()"
-                  [value]="selectedRazaId()"
-                  (valueChange)="selectedRazaId.set($event)"
-                  placeholder="Seleccionar Raza..."
-                ></app-select>
-              </div>
-            </div>
-
-            <!-- Nombre y Sexo -->
-            <div class="form-row">
-              <div class="form-group">
-                <app-label forId="nombre" [required]="estado() === 2">Nombre de la Mascota {{ estado() === 2 ? '' : '(Opcional)' }}</app-label>
-                <input 
-                  type="text" 
-                  id="nombre" 
-                  class="form-control" 
-                  placeholder="Ej: Max, Pelusa, Toby..."
-                  [ngModel]="nombre()"
-                  (ngModelChange)="nombre.set($event)"
-                />
+                <!-- Selector desplegable para pantallas móviles -->
+                <div class="mobile-only-select">
+                  <app-select
+                    id="estadoSelect"
+                    [options]="estadoSelectOptions()"
+                    [value]="estado().toString()"
+                    (valueChange)="estado.set(+$event)"
+                    placeholder="Seleccionar Estado..."
+                  ></app-select>
+                </div>
               </div>
 
-              <div class="form-group">
-                <app-label forId="sexo" [required]="true">Sexo</app-label>
-                <app-select
-                  id="sexo"
-                  [options]="sexoOptions()"
-                  [value]="sexo()"
-                  (valueChange)="sexo.set($event)"
-                  placeholder="Seleccionar Sexo..."
-                ></app-select>
-              </div>
-            </div>
+              <!-- Especie y Raza -->
+              <div class="form-row">
+                <div class="form-group">
+                  <app-label forId="especie" [required]="true">Especie</app-label>
+                  <app-select
+                    id="especie"
+                    [options]="especieOptions()"
+                    [value]="selectedEspecieId()"
+                    (valueChange)="selectedEspecieId.set($event); onEspecieChange($event)"
+                    placeholder="Seleccionar Especie..."
+                  ></app-select>
+                </div>
 
-            <!-- Color Principal y Secundario -->
-            <div class="form-row">
-              <div class="form-group">
-                <app-label [required]="true">Color Principal de Pelaje</app-label>
-                <app-select
-                  id="color"
-                  [options]="colorOptions()"
-                  [value]="color()"
-                  (valueChange)="color.set($event)"
-                  placeholder="Seleccionar Color Principal..."
-                ></app-select>
-              </div>
-
-              <div class="form-group">
-                <app-label>Color Secundario (Opcional)</app-label>
-                <app-select
-                  id="colorSecundario"
-                  [options]="colorSecundarioOptions()"
-                  [value]="colorSecundario()"
-                  (valueChange)="colorSecundario.set($event)"
-                  placeholder="Ninguno"
-                ></app-select>
-              </div>
-            </div>
-
-            <!-- Tamaño y Pelaje -->
-            <div class="form-row">
-              <div class="form-group">
-                <app-label forId="tamano">Tamaño aproximado</app-label>
-                <app-select
-                  id="tamano"
-                  [options]="tamanoOptions()"
-                  [value]="tamano()"
-                  (valueChange)="tamano.set($event)"
-                  placeholder="Seleccionar Tamaño..."
-                ></app-select>
+                <div class="form-group">
+                  <app-label forId="raza">Raza</app-label>
+                  <app-select
+                    id="raza"
+                    [options]="razaOptions()"
+                    [value]="selectedRazaId()"
+                    (valueChange)="selectedRazaId.set($event)"
+                    placeholder="Seleccionar Raza..."
+                  ></app-select>
+                </div>
               </div>
 
-              <div class="form-group">
-                <app-label forId="pelo">Pelaje</app-label>
-                <app-select
-                  id="pelo"
-                  [options]="pelajeOptions()"
-                  [value]="pelo()"
-                  (valueChange)="pelo.set($event)"
-                  placeholder="Seleccionar Pelaje..."
-                ></app-select>
-              </div>
-            </div>
-
-            <!-- Características Especiales (Badges) -->
-            <div class="form-group">
-              <app-label>Características Especiales (Separa con comas o enter)</app-label>
-              <div class="tags-input-container" (click)="tagInput.focus()">
-                <div class="tags-list-wrapper">
-                  @for (tag of caracteristicasTags(); track tag; let i = $index) {
-                    <span class="tag-badge animate-scale-in">
-                      {{ tag }}
-                      <button
-                        type="button"
-                        class="tag-remove-btn"
-                        (click)="removeTag(i); $event.stopPropagation()"
-                        aria-label="Eliminar característica"
-                      >
-                        <i class="material-icons">close</i>
-                      </button>
-                    </span>
-                  }
+              <!-- Nombre y Sexo -->
+              <div class="form-row">
+                <div class="form-group">
+                  <app-label forId="nombre" [required]="estado() === 2">Nombre de la Mascota {{ estado() === 2 ? '' : '(Opcional)' }}</app-label>
                   <input 
-                    #tagInput
                     type="text" 
-                    class="tag-inline-input" 
-                    placeholder="Ej: Cojea de una pata, collar de cuero..."
-                    [ngModel]="currentTagInput()"
-                    (ngModelChange)="currentTagInput.set($event)"
-                    (keydown)="onTagKeyDown($event, tagInput)"
+                    id="nombre" 
+                    class="form-control" 
+                    placeholder="Ej: Max, Pelusa, Toby..."
+                    [ngModel]="nombre()"
+                    (ngModelChange)="nombre.set($event)"
                   />
+                </div>
+
+                <div class="form-group">
+                  <app-label forId="sexo" [required]="true">Sexo</app-label>
+                  <app-select
+                    id="sexo"
+                    [options]="sexoOptions()"
+                    [value]="sexo()"
+                    (valueChange)="sexo.set($event)"
+                    placeholder="Seleccionar Sexo..."
+                  ></app-select>
                 </div>
               </div>
             </div>
+          }
 
-            <!-- Tiene Collar? -->
-            <div class="form-group" style="margin-top: 1.5rem;">
-              <app-checkbox
-                [value]="collar()"
-                (valueChange)="collar.set($event)"
-              >
-                ¿Llevaba collar cuando se le vio por última vez?
-              </app-checkbox>
-            </div>
+          <!-- PASO 2: Detalles y Características -->
+          @if (currentStep() === 2) {
+            <div class="step-content animate-slide-in">
+              <div class="form-section-header" style="display: flex; align-items: center; gap: 10px; margin-bottom: 2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                <i class="material-icons" style="color: var(--primary-color); font-size: 1.75rem;">palette</i>
+                <h3 style="margin: 0; font-size: 1.25rem; font-weight: 700; color: var(--text-main);">2. Detalles de la Mascota</h3>
+              </div>
 
-            @if (collar()) {
+              <!-- Color Principal y Secundario -->
+              <div class="form-row">
+                <div class="form-group">
+                  <app-label [required]="true">Color Principal de Pelaje</app-label>
+                  <app-select
+                    id="color"
+                    [options]="colorOptions()"
+                    [value]="color()"
+                    (valueChange)="color.set($event)"
+                    placeholder="Seleccionar Color Principal..."
+                  ></app-select>
+                </div>
+
+                <div class="form-group">
+                  <app-label>Color Secundario (Opcional)</app-label>
+                  <app-select
+                    id="colorSecundario"
+                    [options]="colorSecundarioOptions()"
+                    [value]="colorSecundario()"
+                    (valueChange)="colorSecundario.set($event)"
+                    placeholder="Ninguno"
+                  ></app-select>
+                </div>
+              </div>
+
+              <!-- Tamaño y Pelaje -->
+              <div class="form-row">
+                <div class="form-group">
+                  <app-label forId="tamano">Tamaño aproximado</app-label>
+                  <app-select
+                    id="tamano"
+                    [options]="tamanoOptions()"
+                    [value]="tamano()"
+                    (valueChange)="tamano.set($event)"
+                    placeholder="Seleccionar Tamaño..."
+                  ></app-select>
+                </div>
+
+                <div class="form-group">
+                  <app-label forId="pelo">Pelaje</app-label>
+                  <app-select
+                    id="pelo"
+                    [options]="pelajeOptions()"
+                    [value]="pelo()"
+                    (valueChange)="pelo.set($event)"
+                    placeholder="Seleccionar Pelaje..."
+                  ></app-select>
+                </div>
+              </div>
+
+              <!-- Características Especiales (Badges) -->
               <div class="form-group">
-                <app-label forId="collarColor">Color del collar</app-label>
-                <input 
-                  type="text" 
-                  id="collarColor" 
-                  class="form-control" 
-                  placeholder="Ej: Collar rojo con placa, collar azul con cascabel"
-                  [ngModel]="collarColor()"
-                  (ngModelChange)="collarColor.set($event)"
-                />
-              </div>
-            }
-
-            <!-- ¿Ofrece Recompensa? -->
-            <div class="form-group" style="margin-top: 1.5rem;">
-              <app-checkbox
-                [value]="recompensa()"
-                (valueChange)="recompensa.set($event)"
-              >
-                ¿Ofreces alguna recompensa económica por encontrarla? (Opcional)
-              </app-checkbox>
-            </div>
-
-            @if (recompensa()) {
-              <div class="form-group">
-                <app-label forId="montoRecompensa">Monto de la recompensa (S/.)</app-label>
-                <input 
-                  type="number" 
-                  id="montoRecompensa" 
-                  class="form-control" 
-                  placeholder="Ej: 200, 500, 1000..."
-                  [ngModel]="montoRecompensa()"
-                  (ngModelChange)="montoRecompensa.set($event)"
-                />
-              </div>
-            }
-
-            <!-- Descripción Adicional -->
-            <div class="form-group" style="margin-top: 1.5rem;">
-              <app-label forId="descripcion">Descripción adicional / señas particulares</app-label>
-              <textarea 
-                id="descripcion" 
-                mentionInput
-                class="form-control" 
-                placeholder="Menciona si es asustadizo, si cojea de alguna patita, o cualquier dato que ayude a identificarle..."
-                [ngModel]="descripcion()"
-                (ngModelChange)="descripcion.set($event)"
-              ></textarea>
-            </div>
-
-          </div>
-
-          <!-- COLUMNA DERECHA: Ubicación y Avistamiento -->
-          <div class="form-column right-column">
-            <!-- BLOQUE 2: Ubicación y Fecha -->
-            <div class="form-section-header" style="display: flex; align-items: center; gap: 10px; margin-bottom: 2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
-              <i class="material-icons" style="color: var(--primary-color); font-size: 1.75rem;">location_on</i>
-              <h3 style="margin: 0; font-size: 1.25rem; font-weight: 700; color: var(--text-main);">2. Ubicación y Avistamiento</h3>
-            </div>
-
-            <!-- Fecha y Hora -->
-            <div class="form-row">
-              <div class="form-group">
-                <app-label forId="fecha" [required]="true">Fecha del suceso</app-label>
-                <app-date-picker
-                  id="fecha"
-                  mode="single"
-                  placeholder="Seleccionar fecha..."
-                  [value]="fechaAvistamientoDate()"
-                  (valueChange)="fechaAvistamientoDate.set($event)"
-                ></app-date-picker>
+                <app-label>Características Especiales (Separa con comas o enter)</app-label>
+                <div class="tags-input-container" (click)="tagInput.focus()">
+                  <div class="tags-list-wrapper">
+                    @for (tag of caracteristicasTags(); track tag; let i = $index) {
+                      <span class="tag-badge animate-scale-in">
+                        {{ tag }}
+                        <button
+                          type="button"
+                          class="tag-remove-btn"
+                          (click)="removeTag(i); $event.stopPropagation()"
+                          aria-label="Eliminar característica"
+                        >
+                          <i class="material-icons">close</i>
+                        </button>
+                      </span>
+                    }
+                    <input 
+                      #tagInput
+                      type="text" 
+                      class="tag-inline-input" 
+                      placeholder="Ej: Cojea de una pata, collar de cuero..."
+                      [ngModel]="currentTagInput()"
+                      (ngModelChange)="currentTagInput.set($event)"
+                      (keydown)="onTagKeyDown($event, tagInput)"
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div class="form-group">
-                <app-label forId="hora" [required]="true">Hora aproximada</app-label>
-                <app-time-picker
-                  id="hora"
-                  [ngModel]="horaAvistamiento()"
-                  (ngModelChange)="horaAvistamiento.set($event)"
-                ></app-time-picker>
-              </div>
-            </div>
-
-            <!-- Referencia de Ubicación (Opcional, arriba del mapa) -->
-            <div class="form-group">
-              <app-label forId="referencia">Referencia de ubicación (Opcional)</app-label>
-              <input 
-                type="text" 
-                id="referencia" 
-                class="form-control" 
-                placeholder="Ej: Frente al parque central, al lado de la tienda..."
-                [ngModel]="referencia()"
-                (ngModelChange)="referencia.set($event)"
-              />
-            </div>
-
-            <!-- Selector en el Mapa -->
-            <div class="form-group">
-              <app-label [required]="true">Ubica el punto en el mapa (Haz clic para colocar el pin)</app-label>
-              <div class="map-selection-container">
-                <app-map-component
-                  [reports]="[]"
-                  [center]="mapCenter()"
-                  [zoom]="14"
-                  [radiusKm]="+radio() / 1000.0"
-                  [editable]="true"
-                  (mapClick)="onMapClick($event)"
-                />
-              </div>
-              <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; gap: 4px; margin-bottom: 1.5rem; flex-wrap: wrap;">
-                <span style="display: flex; align-items: center; gap: 4px;">
-                  @if (locationSelected()) {
-                    <i class="material-icons" style="font-size: 1.1rem; color: #10b981;">check_circle</i>
-                    <span style="color: #10b981; font-weight: 600;">Ubicación establecida</span>
-                  } @else {
-                    <i class="material-icons" style="font-size: 1.1rem; color: var(--danger-color, #ef4444);">warning</i>
-                    <span style="color: var(--danger-color, #ef4444); font-weight: 600;">Selección de ubicación requerida</span>
-                  }
-                </span>
-                @if (locationSelected()) {
-                  <span style="font-size: 0.7rem; color: var(--text-muted);">Coordenadas: {{ latitud().toFixed(5) }}, {{ longitud().toFixed(5) }}</span>
-                }
-              </div>
-            </div>
-
-            <!-- Dirección física (autocompletada) -->
-            <div class="form-group">
-              <app-label forId="direccion" [required]="true">Dirección física</app-label>
-              <input 
-                type="text" 
-                id="direccion" 
-                class="form-control" 
-                placeholder="Dirección aproximada (haz clic en el mapa)..."
-                [ngModel]="direccion()"
-                (ngModelChange)="direccion.set($event)"
-              />
-            </div>
-
-
-            <!-- Radio de Búsqueda -->
-            <div class="form-group" style="margin-bottom: 1.5rem;">
-              <app-label>Radio de búsqueda / cobertura: {{ radio() }} metros</app-label>
-              <div style="display: flex; gap: 1rem; align-items: center;">
-                <input 
-                  type="range" 
-                  min="50" 
-                  max="5000" 
-                  step="50" 
-                  [ngModel]="radio()" 
-                  (ngModelChange)="radio.set($event)" 
-                  style="flex: 1; accent-color: var(--primary-color); cursor: pointer;"
-                />
-                <span style="font-size: 0.95rem; font-weight: 700; color: var(--primary-color); min-width: 90px; text-align: right;">{{ radio() }} m</span>
-              </div>
-            </div>
-
-            <!-- Subida de Fotos -->
-            <div class="form-group" style="margin-top: 1.5rem; margin-bottom: 1.5rem;">
-              <app-label>Fotos de la Mascota</app-label>
-              <div class="photo-dropzone" (click)="fileInput.click()">
-                <i class="material-icons">cloud_upload</i>
-                <p>Haz clic para subir fotos</p>
-                <span>Formatos aceptados: PNG, JPG (Máx. 4 fotos)</span>
-                <input 
-                  #fileInput 
-                  type="file" 
-                  multiple 
-                  accept="image/*" 
-                  style="display: none;" 
-                  (change)="onFileSelected($event)"
-                />
-              </div>
-
-              <!-- Previsualización de Fotos Subidas -->
-              @if (uploadedImages().length > 0) {
-                <div class="preview-grid">
-                  @for (img of uploadedImages(); track img; let idx = $index) {
-                    <div class="preview-item">
-                      <img [src]="img" alt="Vista previa de mascota">
-                      <span class="remove-btn" (click)="removeImage(idx)">×</span>
+              <!-- Tiene Collar? y Recompensa en fila -->
+              <div class="form-row" style="margin-top: 1.5rem;">
+                <div class="form-group">
+                  <app-checkbox
+                    [value]="collar()"
+                    (valueChange)="collar.set($event)"
+                  >
+                    ¿Llevaba collar al perderse/avistarse?
+                  </app-checkbox>
+                  @if (collar()) {
+                    <div style="margin-top: 0.75rem;">
+                      <app-label forId="collarColor">Color del collar</app-label>
+                      <input 
+                        type="text" 
+                        id="collarColor" 
+                        class="form-control" 
+                        placeholder="Ej: Collar rojo con placa"
+                        [ngModel]="collarColor()"
+                        (ngModelChange)="collarColor.set($event)"
+                      />
                     </div>
                   }
                 </div>
-              }
+
+                <div class="form-group">
+                  <app-checkbox
+                    [value]="recompensa()"
+                    (valueChange)="recompensa.set($event)"
+                  >
+                    ¿Ofreces recompensa económica?
+                  </app-checkbox>
+                  @if (recompensa()) {
+                    <div style="margin-top: 0.75rem;">
+                      <app-label forId="montoRecompensa">Monto de la recompensa (S/.)</app-label>
+                      <input 
+                        type="number" 
+                        id="montoRecompensa" 
+                        class="form-control" 
+                        placeholder="Ej: 200, 500"
+                        [ngModel]="montoRecompensa()"
+                        (ngModelChange)="montoRecompensa.set($event)"
+                      />
+                    </div>
+                  }
+                </div>
+              </div>
             </div>
-          </div>
+          }
+
+          <!-- PASO 3: Ubicación y Fecha -->
+          @if (currentStep() === 3) {
+            <div class="step-content animate-slide-in">
+              <div class="form-section-header" style="display: flex; align-items: center; gap: 10px; margin-bottom: 2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                <i class="material-icons" style="color: var(--primary-color); font-size: 1.75rem;">location_on</i>
+                <h3 style="margin: 0; font-size: 1.25rem; font-weight: 700; color: var(--text-main);">3. Ubicación y Avistamiento</h3>
+              </div>
+
+              <!-- Fecha y Hora -->
+              <div class="form-row">
+                <div class="form-group">
+                  <app-label forId="fecha" [required]="true">Fecha del suceso</app-label>
+                  <app-date-picker
+                    id="fecha"
+                    mode="single"
+                    placeholder="Seleccionar fecha..."
+                    [value]="fechaAvistamientoDate()"
+                    (valueChange)="fechaAvistamientoDate.set($event)"
+                  ></app-date-picker>
+                </div>
+
+                <div class="form-group">
+                  <app-label forId="hora" [required]="true">Hora aproximada</app-label>
+                  <app-time-picker
+                    id="hora"
+                    [ngModel]="horaAvistamiento()"
+                    (ngModelChange)="horaAvistamiento.set($event)"
+                  ></app-time-picker>
+                </div>
+              </div>
+
+              <!-- Referencia de Ubicación -->
+              <div class="form-group">
+                <app-label forId="referencia">Referencia de ubicación (Opcional)</app-label>
+                <input 
+                  type="text" 
+                  id="referencia" 
+                  class="form-control" 
+                  placeholder="Ej: Frente al parque central, al lado de la tienda..."
+                  [ngModel]="referencia()"
+                  (ngModelChange)="referencia.set($event)"
+                />
+              </div>
+
+              <!-- Selector en el Mapa -->
+              <div class="form-group">
+                <app-label [required]="true">Ubica el punto en el mapa (Haz clic para colocar el pin)</app-label>
+                <div class="map-selection-container">
+                  <app-map-component
+                    [reports]="[]"
+                    [center]="mapCenter()"
+                    [zoom]="14"
+                    [radiusKm]="+radio() / 1000.0"
+                    [editable]="true"
+                    (mapClick)="onMapClick($event)"
+                  />
+                </div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; gap: 4px; margin-bottom: 1.5rem; flex-wrap: wrap;">
+                  <span style="display: flex; align-items: center; gap: 4px;">
+                    @if (locationSelected()) {
+                      <i class="material-icons" style="font-size: 1.1rem; color: #10b981;">check_circle</i>
+                      <span style="color: #10b981; font-weight: 600;">Ubicación establecida</span>
+                    } @else {
+                      <i class="material-icons" style="font-size: 1.1rem; color: var(--danger-color, #ef4444);">warning</i>
+                      <span style="color: var(--danger-color, #ef4444); font-weight: 600;">Selección de ubicación requerida</span>
+                    }
+                  </span>
+                  @if (locationSelected()) {
+                    <span style="font-size: 0.7rem; color: var(--text-muted);">Coordenadas: {{ latitud().toFixed(5) }}, {{ longitud().toFixed(5) }}</span>
+                  }
+                </div>
+              </div>
+
+              <!-- Dirección física (autocompletada) -->
+              <div class="form-group">
+                <app-label forId="direccion" [required]="true">Dirección física</app-label>
+                <input 
+                  type="text" 
+                  id="direccion" 
+                  class="form-control" 
+                  placeholder="Dirección aproximada (haz clic en el mapa)..."
+                  [ngModel]="direccion()"
+                  (ngModelChange)="direccion.set($event)"
+                />
+              </div>
+
+              <!-- Radio de Búsqueda -->
+              <div class="form-group" style="margin-bottom: 1.5rem;">
+                <app-label>Radio de búsqueda / cobertura: {{ radio() }} metros</app-label>
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                  <input 
+                    type="range" 
+                    min="50" 
+                    max="5000" 
+                    step="50" 
+                    [ngModel]="radio()" 
+                    (ngModelChange)="radio.set($event)" 
+                    style="flex: 1; accent-color: var(--primary-color); cursor: pointer;"
+                  />
+                  <span style="font-size: 0.95rem; font-weight: 700; color: var(--primary-color); min-width: 90px; text-align: right;">{{ radio() }} m</span>
+                </div>
+              </div>
+            </div>
+          }
+
+          <!-- PASO 4: Fotos, Descripción y Confirmación -->
+          @if (currentStep() === 4) {
+            <div class="step-content animate-slide-in">
+              <div class="form-columns-grid">
+                
+                <!-- Lado Izquierdo: Multimedia y Notas -->
+                <div class="form-column">
+                  <div class="form-section-header" style="display: flex; align-items: center; gap: 10px; margin-bottom: 2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                    <i class="material-icons" style="color: var(--primary-color); font-size: 1.75rem;">photo_camera</i>
+                    <h3 style="margin: 0; font-size: 1.25rem; font-weight: 700; color: var(--text-main);">4. Fotos y Descripción</h3>
+                  </div>
+
+                  <!-- Subida de Fotos -->
+                  <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <app-label [required]="true">Fotos de la Mascota (Mínimo 1, Máx. 4)</app-label>
+                    <div class="photo-dropzone" (click)="fileInput.click()">
+                      <i class="material-icons">cloud_upload</i>
+                      <p>Haz clic para subir fotos</p>
+                      <span>Formatos aceptados: PNG, JPG</span>
+                      <input 
+                        #fileInput 
+                        type="file" 
+                        multiple 
+                        accept="image/*" 
+                        style="display: none;" 
+                        (change)="onFileSelected($event)"
+                      />
+                    </div>
+
+                    <!-- Previsualización de Fotos Subidas -->
+                    @if (uploadedImages().length > 0) {
+                      <div class="preview-grid">
+                        @for (img of uploadedImages(); track img; let idx = $index) {
+                          <div class="preview-item">
+                            <img [src]="img" alt="Vista previa de mascota">
+                            <span class="remove-btn" (click)="removeImage(idx)">×</span>
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
+
+                  <!-- Descripción Adicional -->
+                  <div class="form-group">
+                    <app-label forId="descripcion">Descripción adicional / señas particulares</app-label>
+                    <textarea 
+                      id="descripcion" 
+                      mentionInput
+                      class="form-control" 
+                      placeholder="Menciona si es asustadizo, si cojea de alguna patita, o cualquier dato que ayude a identificarle..."
+                      [ngModel]="descripcion()"
+                      (ngModelChange)="descripcion.set($event)"
+                    ></textarea>
+                  </div>
+                </div>
+
+                <!-- Lado Derecho: Resumen Visual Premium -->
+                <div class="form-column report-summary-card">
+                  <h4 class="summary-title">Resumen del Reporte</h4>
+                  <div class="summary-details">
+                    <div class="summary-item">
+                      <span class="label">Estado:</span>
+                      <span class="value state-badge" [class.lost]="estado() === 2" [class.found]="estado() === 1" [class.sighted]="estado() === 3">
+                        {{ estado() === 2 ? 'Se Perdió' : estado() === 1 ? 'La Encontré' : 'La Avisté' }}
+                      </span>
+                    </div>
+                    @if (nombre().trim()) {
+                      <div class="summary-item">
+                        <span class="label">Nombre:</span>
+                        <span class="value">{{ nombre() }}</span>
+                      </div>
+                    }
+                    <div class="summary-item">
+                      <span class="label">Sexo:</span>
+                      <span class="value">{{ sexo() === 'M' ? 'Macho' : sexo() === 'H' ? 'Hembra' : 'Desconocido' }}</span>
+                    </div>
+                    <div class="summary-item">
+                      <span class="label">Color:</span>
+                      <span class="value">
+                        {{ color() }}@if(colorSecundario()){ y {{ colorSecundario() }} }
+                      </span>
+                    </div>
+                    <div class="summary-item">
+                      <span class="label">Tamaño / Pelo:</span>
+                      <span class="value" style="text-transform: capitalize;">{{ tamano() }} / {{ pelo() }}</span>
+                    </div>
+                    <div class="summary-item">
+                      <span class="label">Fecha / Hora:</span>
+                      <span class="value">{{ fechaAvistamiento() }} a las {{ horaAvistamiento() }}</span>
+                    </div>
+                    <div class="summary-item location-item">
+                      <span class="label">Dirección:</span>
+                      <span class="value">{{ direccion() }}</span>
+                    </div>
+                    @if (collar()) {
+                      <div class="summary-item">
+                        <span class="label">Collar:</span>
+                        <span class="value text-highlight">Sí ({{ collarColor() || 'Sin color especificado' }})</span>
+                      </div>
+                    }
+                    @if (recompensa()) {
+                      <div class="summary-item">
+                        <span class="label">Recompensa:</span>
+                        <span class="value text-success">Sí (S/. {{ montoRecompensa() }})</span>
+                      </div>
+                    }
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          }
 
         </div>
 
-        <!-- Acciones Finales -->
-        <div class="wizard-actions">
-          <a class="btn btn-outline" href="/pets/reports">
-            <i class="material-icons">arrow_back</i> Cancelar
-          </a>
-          <button class="btn btn-primary" (click)="submitReport()" [disabled]="isLoading()">
-            @if (isLoading()) {
-              <span>Publicando Alerta...</span>
-            } @else {
-              <span>Publicar Alerta <i class="material-icons">send</i></span>
-            }
-          </button>
+        <!-- Acciones del Asistente (Wizard Navigation) -->
+        <div class="wizard-actions" style="margin-top: 2rem;">
+          @if (currentStep() === 1) {
+            <a class="btn btn-outline" href="/pets/reports">
+              <i class="material-icons">arrow_back</i> Cancelar
+            </a>
+          } @else {
+            <button class="btn btn-outline" (click)="prevStep()">
+              <i class="material-icons">arrow_back</i> Anterior
+            </button>
+          }
+
+          @if (currentStep() < 4) {
+            <button class="btn btn-primary" (click)="nextStep()">
+              Siguiente <i class="material-icons">arrow_forward</i>
+            </button>
+          } @else {
+            <button class="btn btn-primary" (click)="submitReport()" [disabled]="isLoading()">
+              @if (isLoading()) {
+                <span>Publicando Alerta...</span>
+              } @else {
+                <span>Publicar Alerta <i class="material-icons">send</i></span>
+              }
+            </button>
+          }
         </div>
       </div>
     } @else {

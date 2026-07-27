@@ -3,7 +3,6 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { PetService } from '../../../core/services/pet.service';
-import { CommentService } from '../../../core/services/comment.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { CloudinaryService } from '../../../core/services/cloudinary.service';
 import { UserService } from '../../../core/services/user.service';
@@ -14,9 +13,9 @@ import { Navbar } from '../../../shared/components/navbar/navbar';
 import { Footer } from '../../../shared/components/footer/footer';
 import { MapComponent } from '../components/map-component/map-component';
 import { ImageCarouselComponent } from '../../../shared/components/image-carousel/image-carousel';
-import { CommentItemComponent } from '../../../shared/components/comment-item/comment-item';
 import { ImageViewerComponent } from '../../../shared/components/image-viewer/image-viewer.component';
 import { ModalComponent } from '../../../shared/components/modal/modal';
+import { PetCommentsComponent } from './components/pet-comments/pet-comments';
 
 import { AvatarComponent } from '../../../shared/components/avatar/avatar';
 import { BadgeComponent } from '../../../shared/components/badge/badge';
@@ -24,6 +23,7 @@ import { ButtonComponent } from '../../../shared/components/button/button';
 import { MentionInputDirective } from '../../../shared/directives/mention-input.directive';
 import { MentionHighlightPipe } from '../../../shared/pipes/mention-highlight.pipe';
 import { OptionsDropdownComponent } from '../../../shared/components/options-dropdown/options-dropdown';
+import { formatTimeAgo } from '../../../core/utils/date.utils';
 import { FlagModalComponent } from '../../../shared/components/flag-modal/flag-modal';
 import { FlagService } from '../../../core/services/flag.service';
 import { MotivoDenuncia } from '../../../core/models/flag.model';
@@ -39,7 +39,6 @@ import { MotivoDenuncia } from '../../../core/models/flag.model';
     Footer,
     MapComponent,
     ImageCarouselComponent,
-    CommentItemComponent,
     BadgeComponent,
     ButtonComponent,
     ImageViewerComponent,
@@ -47,7 +46,8 @@ import { MotivoDenuncia } from '../../../core/models/flag.model';
     MentionInputDirective,
     MentionHighlightPipe,
     OptionsDropdownComponent,
-    FlagModalComponent
+    FlagModalComponent,
+    PetCommentsComponent
   ],
   templateUrl: './detail.html',
   styleUrl: './detail.scss',
@@ -57,7 +57,6 @@ export class PetDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private petService = inject(PetService);
-  private commentService = inject(CommentService);
   private authService = inject(AuthService);
   private cloudinaryService = inject(CloudinaryService);
   private locationService = inject(LocationService);
@@ -72,19 +71,6 @@ export class PetDetailComponent implements OnInit {
   
   // Sesión
   usuario = this.authService.usuario;
-
-  // Comentarios
-  comments = signal<Comentario[]>([]);
-  isLoadingComments = signal<boolean>(false);
-  sendingComment = signal<boolean>(false);
-  commentInput = signal<string>('');
-  
-  replyingToId = signal<string | null>(null);
-  replyInput = signal<string>('');
-  sendingReplySet = signal<Set<string>>(new Set());
-  
-  commentLikedSet = signal<Set<string>>(new Set());
-  commentLikeCounts = signal<Record<string, number>>({});
 
   // Historial de cambios
   historial = signal<any[]>([]);
@@ -162,6 +148,11 @@ export class PetDetailComponent implements OnInit {
     );
   });
 
+  // Avistamientos aceptados que se graficarán en el mapa de "Última ubicación conocida"
+  sightingsAceptados = computed(() => {
+    return this.sightings().filter(s => s.estado === 1);
+  });
+
   // La sección solo se muestra al dueño o si hay avistamientos visibles
   hasSightingsSection = computed(() =>
     this.isOwnReport() || this.sightingsVisibles().length > 0
@@ -216,7 +207,6 @@ export class PetDetailComponent implements OnInit {
       const data = await this.petService.getReporte(id);
       this.report.set(data);
       await Promise.all([
-        this.loadComments(id),
         this.loadSightings(id),
         this.loadHistorial(id)
       ]);
@@ -225,19 +215,6 @@ export class PetDetailComponent implements OnInit {
       this.router.navigate(['/pets/reports']);
     } finally {
       this.isLoading.set(false);
-    }
-  }
-
-  async loadComments(reporteId: string): Promise<void> {
-    this.isLoadingComments.set(true);
-    try {
-      const list = await this.commentService.getComments(reporteId);
-      this.comments.set(list);
-      this.syncCommentLikesRecursive(list);
-    } catch (err) {
-      console.error('Error al cargar comentarios:', err);
-    } finally {
-      this.isLoadingComments.set(false);
     }
   }
 
@@ -263,7 +240,7 @@ export class PetDetailComponent implements OnInit {
 
   openSightingModal(): void {
     if (!this.usuario()) {
-      this.router.navigate(['/login'], { queryParams: { returnUrl: this.router.url } });
+      this.authService.openAuthModal();
       return;
     }
     const r = this.report();
@@ -429,6 +406,12 @@ export class PetDetailComponent implements OnInit {
     const r = this.report();
     if (!r) return;
 
+    // Solo el dueño del post puede aceptar o rechazar avistamientos
+    if (!this.isOwnReport()) {
+      alert('Solo el creador del reporte puede aceptar o rechazar avistamientos.');
+      return;
+    }
+
     this.resolvingSightings.update(set => {
       const copy = new Set(set);
       copy.add(idAvistamiento);
@@ -438,12 +421,19 @@ export class PetDetailComponent implements OnInit {
     try {
       await this.petService.updateSightingStatus(idAvistamiento, nuevoEstado);
       
+      if (nuevoEstado === 1) {
+        alert('El avistamiento ha sido aceptado correctamente.');
+      } else if (nuevoEstado === 3) {
+        alert('El avistamiento ha sido rechazado correctamente.');
+      }
+
       // Actualizar localmente el estado del avistamiento modificado
       this.sightings.update(list =>
         list.map(s => s.id_avistamiento === idAvistamiento ? { ...s, estado: nuevoEstado } : s)
       );
     } catch (err) {
       console.error('Error al actualizar el estado del avistamiento:', err);
+      alert('No se pudo actualizar el estado del avistamiento. Inténtalo de nuevo.');
     } finally {
       this.resolvingSightings.update(set => {
         const copy = new Set(set);
@@ -452,6 +442,8 @@ export class PetDetailComponent implements OnInit {
       });
     }
   }
+
+
 
   getImages(report: PetReport): string[] {
     const urls: string[] = [];
@@ -532,210 +524,7 @@ export class PetDetailComponent implements OnInit {
     this.router.navigate(['/pets/reports']);
   }
 
-  // --- INTERACCIÓN DE COMENTARIOS ---
 
-  async onSendComment(): Promise<void> {
-    const r = this.report();
-    if (!r) return;
-
-    const text = this.commentInput().trim();
-    if (!text) return;
-
-    if (!this.usuario()) {
-      this.router.navigate(['/login'], { queryParams: { returnUrl: this.router.url } });
-      return;
-    }
-
-    this.sendingComment.set(true);
-    try {
-      const newComment = await this.commentService.addComment(r.id_reporte_mascota, text);
-      this.comments.update(list => [...list, newComment]);
-      
-      if (newComment.id_comentario) {
-        this.commentLikeCounts.update(prev => ({ ...prev, [newComment.id_comentario!]: 0 }));
-      }
-
-      this.commentInput.set('');
-
-      // Incrementar contador
-      this.report.set({
-        ...r,
-        total_comentarios: (r.total_comentarios || 0) + 1
-      });
-    } catch (err) {
-      console.error('Error al enviar comentario:', err);
-    } finally {
-      this.sendingComment.set(false);
-    }
-  }
-
-  startReply(commentId: string): void {
-    this.replyingToId.set(commentId);
-    this.replyInput.set('');
-  }
-
-  cancelReply(): void {
-    this.replyingToId.set(null);
-    this.replyInput.set('');
-  }
-
-  async onSendReply(event: { text: string; parentId: string }): Promise<void> {
-    const r = this.report();
-    if (!r) return;
-
-    const text = event.text.trim();
-    if (!text) return;
-
-    if (!this.usuario()) {
-      this.router.navigate(['/login'], { queryParams: { returnUrl: this.router.url } });
-      return;
-    }
-
-    this.sendingReplySet.update(set => {
-      const copy = new Set(set);
-      copy.add(event.parentId);
-      return copy;
-    });
-
-    try {
-      const newReply = await this.commentService.reply(r.id_reporte_mascota, event.parentId, text);
-      
-      this.comments.update(list => this.addReplyToParentRecursive(list, event.parentId, newReply));
-
-      if (newReply.id_comentario) {
-        this.commentLikeCounts.update(prev => ({ ...prev, [newReply.id_comentario!]: 0 }));
-      }
-
-      this.cancelReply();
-
-      // Incrementar contador
-      this.report.set({
-        ...r,
-        total_comentarios: (r.total_comentarios || 0) + 1
-      });
-    } catch (err) {
-      console.error('Error al responder comentario:', err);
-    } finally {
-      this.sendingReplySet.update(set => {
-        const copy = new Set(set);
-        copy.delete(event.parentId);
-        return copy;
-      });
-    }
-  }
-
-  async onToggleCommentLike(commentId: string): Promise<void> {
-    if (!this.usuario()) {
-      this.router.navigate(['/login'], { queryParams: { returnUrl: this.router.url } });
-      return;
-    }
-
-    const oldLiked = this.commentLikedSet().has(commentId);
-    const oldTotal = this.commentLikeCounts()[commentId] || 0;
-
-    // Optimista
-    this.commentLikedSet.update(set => {
-      const copy = new Set(set);
-      if (oldLiked) copy.delete(commentId);
-      else copy.add(commentId);
-      return copy;
-    });
-    this.commentLikeCounts.update(prev => ({
-      ...prev,
-      [commentId]: oldLiked ? Math.max(0, oldTotal - 1) : oldTotal + 1
-    }));
-
-    try {
-      const res = await this.commentService.toggleCommentLike(commentId);
-      this.commentLikeCounts.update(prev => ({ ...prev, [commentId]: res.total }));
-      this.commentLikedSet.update(set => {
-        const copy = new Set(set);
-        if (res.liked) copy.add(commentId);
-        else copy.delete(commentId);
-        return copy;
-      });
-    } catch (err) {
-      console.error('Error al dar like al comentario:', err);
-      // Revertir
-      this.commentLikedSet.update(set => {
-        const copy = new Set(set);
-        if (oldLiked) copy.add(commentId);
-        else copy.delete(commentId);
-        return copy;
-      });
-      this.commentLikeCounts.update(prev => ({ ...prev, [commentId]: oldTotal }));
-    }
-  }
-
-  async onDeleteComment(event: { reporteId: string; commentId: string }): Promise<void> {
-    const r = this.report();
-    if (!r) return;
-
-    if (!confirm('¿Estás seguro de que deseas eliminar este comentario?')) return;
-
-    try {
-      await this.commentService.deleteComment(event.reporteId, event.commentId);
-      this.comments.update(list => this.deleteCommentRecursive(list, event.commentId));
-
-      // Decrementar contador
-      this.report.set({
-        ...r,
-        total_comentarios: Math.max(0, (r.total_comentarios || 0) - 1)
-      });
-    } catch (err) {
-      console.error('Error al eliminar comentario:', err);
-    }
-  }
-
-  // --- RECURSIVIDAD AUXILIAR ---
-  private syncCommentLikesRecursive(comments: Comentario[]): void {
-    comments.forEach(c => {
-      if (c.id_comentario) {
-        this.commentLikeCounts.update(prev => ({ ...prev, [c.id_comentario!]: c.total_likes || 0 }));
-        if (c.is_liked) {
-          this.commentLikedSet.update(prev => {
-            const copy = new Set(prev);
-            copy.add(c.id_comentario!);
-            return copy;
-          });
-        }
-      }
-      if (c.respuestas && c.respuestas.length > 0) {
-        this.syncCommentLikesRecursive(c.respuestas);
-      }
-    });
-  }
-
-  private deleteCommentRecursive(comments: Comentario[], targetId: string): Comentario[] {
-    return comments
-      .filter(c => c.id_comentario !== targetId)
-      .map(c => {
-        if (c.respuestas && c.respuestas.length > 0) {
-          return {
-            ...c,
-            respuestas: this.deleteCommentRecursive(c.respuestas, targetId)
-          };
-        }
-        return c;
-      });
-  }
-
-  private addReplyToParentRecursive(comments: Comentario[], parentId: string, newReply: Comentario): Comentario[] {
-    return comments.map(c => {
-      if (c.id_comentario === parentId) {
-        return {
-          ...c,
-          respuestas: [...(c.respuestas || []), newReply]
-        };
-      } else if (c.respuestas && c.respuestas.length > 0) {
-        return {
-          ...c,
-          respuestas: this.addReplyToParentRecursive(c.respuestas, parentId, newReply)
-        };
-      }
-      return c;
-    });
-  }
 
   async loadHistorial(reportId: string): Promise<void> {
     try {
@@ -747,27 +536,7 @@ export class PetDetailComponent implements OnInit {
   }
 
   getFechaRelativa(fecha: string | Date | undefined): string {
-    if (!fecha) return 'recientemente';
-    const date = typeof fecha === 'string' ? new Date(fecha) : fecha;
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    
-    if (isNaN(diffMs) || diffMs < 0) return 'recientemente';
-    
-    const diffMins = Math.floor(diffMs / 60000);
-    if (diffMins < 60) return `hace ${diffMins} min${diffMins !== 1 ? 's' : ''}`;
-    
-    const diffHours = Math.floor(diffMs / 3600000);
-    if (diffHours < 24) return `hace ${diffHours} hora${diffHours !== 1 ? 's' : ''}`;
-    
-    const diffDays = Math.floor(diffMs / 86400000);
-    if (diffDays < 7) return `hace ${diffDays} día${diffDays !== 1 ? 's' : ''}`;
-    
-    const diffWeeks = Math.floor(diffDays / 7);
-    if (diffWeeks < 4) return `hace ${diffWeeks} semana${diffWeeks !== 1 ? 's' : ''}`;
-    
-    const diffMonths = Math.floor(diffDays / 30);
-    return `hace ${diffMonths} me${diffMonths !== 1 ? 'ses' : 's'}`;
+    return formatTimeAgo(fecha);
   }
 
   getCambioDescriptivo(entry: any): string {
@@ -826,7 +595,7 @@ export class PetDetailComponent implements OnInit {
 
   onFlagPost(): void {
     if (!this.usuario()) {
-      this.router.navigate(['/login'], { queryParams: { returnUrl: this.router.url } });
+      this.authService.openAuthModal();
       return;
     }
     const r = this.report();
@@ -844,7 +613,7 @@ export class PetDetailComponent implements OnInit {
 
   onReportComment(c: Comentario): void {
     if (!this.usuario()) {
-      this.router.navigate(['/login'], { queryParams: { returnUrl: this.router.url } });
+      this.authService.openAuthModal();
       return;
     }
     if (!c.id_comentario) return;

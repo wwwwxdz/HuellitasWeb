@@ -5,19 +5,6 @@
     
     <!-- BARRA LATERAL IZQUIERDA: Filtros y Configuración -->
     <aside class="left-sidebar">
-      <div>
-        <h3>Buscar</h3>
-        <div class="search-box">
-          <i class="material-icons">search</i>
-          <input 
-            type="text" 
-            placeholder="Buscar por nombre o raza..."
-            [ngModel]="searchQuery()"
-            (ngModelChange)="searchQuery.set($event)"
-          />
-        </div>
-      </div>
-
       <div class="filter-section location-filter-section">
         <h3>Ubicación de Búsqueda</h3>
         
@@ -26,21 +13,42 @@
           Usar mi ubicación GPS
         </button>
 
-        <div class="address-search-box">
-          <input 
-            type="text" 
-            placeholder="Ciudad, distrito o calle..."
-            [ngModel]="addressQuery()"
-            (ngModelChange)="addressQuery.set($event)"
-            (keyup.enter)="buscarDireccion()"
-          />
-          <button class="btn-address-search" (click)="buscarDireccion()" [disabled]="isSearchingAddress()" title="Buscar ubicación">
-            <i class="material-icons" [class.spinning]="isSearchingAddress()">
-              {{ isSearchingAddress() ? 'autorenew' : 'travel_explore' }}
-            </i>
-          </button>
+        <div class="address-search-box-container">
+          <div class="address-search-box">
+            <input 
+              type="text" 
+              placeholder="Ciudad, distrito o calle..."
+              [ngModel]="addressQuery()"
+              (ngModelChange)="onAddressInputChange($event)"
+              (keyup.enter)="buscarDireccion()"
+            />
+            <button 
+              class="btn-address-search" 
+              (click)="buscarDireccion()" 
+              [disabled]="isSearchingAddress()" 
+              title="Buscar ubicación"
+            >
+              <i class="material-icons" [class.spinning]="isSearchingAddress()">
+                {{ isSearchingAddress() ? 'autorenew' : 'travel_explore' }}
+              </i>
+            </button>
+          </div>
+
+          @if (addressSuggestions().length > 0) {
+            <ul class="typeahead-suggestions-list">
+              @for (sug of addressSuggestions(); track sug.place_id) {
+                <li (click)="seleccionarSugerencia(sug)">
+                  <i class="material-icons">location_on</i>
+                  <span class="suggestion-text">{{ sug.display_name }}</span>
+                </li>
+              }
+            </ul>
+          }
         </div>
       </div>
+
+      <!-- Filtros scrolleables (debajo del buscador) -->
+      <div class="sidebar-filters-scroll">
 
       <div class="filter-section">
         <h3>Estados de Alerta</h3>
@@ -116,7 +124,8 @@
           <span>Suscribirme a Alertas</span>
           <p>Recibe notificaciones inmediatas si se reporta una mascota perdida en esta zona.</p>
         </div>
-      </div>
+      </div><!-- /alert-subscribe-box -->
+      </div><!-- /sidebar-filters-scroll -->
     </aside>
 
     <!-- ZONA CENTRAL: Mapa de Leaflet -->
@@ -165,6 +174,7 @@
         [center]="center()"
         [zoom]="zoom()"
         [radiusKm]="radiusKm()"
+        [sightingsTrajectory]="selectedSighting() ? [selectedSighting()] : []"
         (mapClick)="onMapClick($event)"
         (markerClick)="onMarkerClick($event)"
       />
@@ -286,7 +296,12 @@
           <h3>Avistamientos Recientes</h3>
           <div class="sightings-list">
             @for (sighting of sightings(); track sighting.id_avistamiento) {
-              <div class="sighting-item">
+              <div 
+                class="sighting-item" 
+                [class.active]="selectedSighting()?.id_avistamiento === sighting.id_avistamiento"
+                (click)="toggleSightingMarker(sighting)"
+                style="cursor: pointer;"
+              >
                 <div class="sighting-content-wrapper">
                   @if (sighting.imagenes && sighting.imagenes.length > 0) {
                     <div class="sighting-img-prev">
@@ -302,9 +317,16 @@
                     </p>
                   </div>
 
-                  <!-- Botón para ver y centrar el avistamiento en el mapa -->
-                  <button class="btn-sighting-map-link" (click)="centerMapOnSighting(sighting)" title="Ver en mapa">
-                    <i class="material-icons">map</i>
+                  <!-- Botón para ver, centrar y desactivar el avistamiento en el mapa -->
+                  <button 
+                    class="btn-sighting-map-link" 
+                    [class.active]="selectedSighting()?.id_avistamiento === sighting.id_avistamiento"
+                    (click)="toggleSightingMarker(sighting); $event.stopPropagation()" 
+                    [title]="selectedSighting()?.id_avistamiento === sighting.id_avistamiento ? 'Desactivar ubicación temporal' : 'Ver en mapa'"
+                  >
+                    <i class="material-icons">
+                      {{ selectedSighting()?.id_avistamiento === sighting.id_avistamiento ? 'location_off' : 'map' }}
+                    </i>
                   </button>
                 </div>
               </div>
@@ -315,9 +337,19 @@
         </div>
       } @else {
         <!-- Vista por defecto: Lista de Mascotas en el Radio de Búsqueda -->
-        <div class="sidebar-header">
+        <div class="sidebar-header" style="padding-bottom: 8px;">
           <h2>Mascotas Cerca</h2>
           <span class="result-count">{{ resultsList().length }} encontradas</span>
+        </div>
+
+        <div class="search-box" style="margin: 0 16px 16px 16px;">
+          <i class="material-icons">search</i>
+          <input 
+            type="text" 
+            placeholder="Buscar por nombre o raza..."
+            [ngModel]="searchQuery()"
+            (ngModelChange)="searchQuery.set($event)"
+          />
         </div>
 
         <div class="results-list">

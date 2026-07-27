@@ -9,7 +9,7 @@ import { MapComponent as LeafletMapComponent } from '../components/map-component
 import { Navbar } from '../../../shared/components/navbar/navbar';
 import { MiniPetCardComponent } from '../../../shared/components/mini-pet-card/mini-pet-card.component';
 import { ReporteMascotaPuntoMapa, PetReport, Especie, Avistamiento } from '../../../core/models/pet.model';
-import { LocationService } from '../../../core/services/location.service';
+import { LocationService, LocationSearchResult } from '../../../core/services/location.service';
 import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
@@ -29,6 +29,7 @@ export class MapComponent implements OnInit {
   // Filtros reactivos con Signals
   searchQuery = signal<string>('');
   addressQuery = signal<string>('');
+  addressSuggestions = signal<LocationSearchResult[]>([]);
   isSearchingAddress = signal<boolean>(false);
   selectedStatuses = signal<number[]>([1, 2, 3]); // 1=encontrado, 2=perdido, 3=avistado, 4=reunido
   radiusKm = signal<number>(10);
@@ -53,6 +54,16 @@ export class MapComponent implements OnInit {
 
   // Avistamientos para el panel de reportes seleccionado
   sightings = signal<Avistamiento[]>([]);
+  selectedSighting = signal<Avistamiento | null>(null);
+
+  currentUser = this.authService.usuario;
+
+  isOwnReport = computed(() => {
+    const report = this.selectedReport();
+    const user = this.currentUser();
+    if (!report || !user) return false;
+    return report.usuario?.id_usuario === user.id_usuario;
+  });
 
   // Filtrado de puntos basado en los checkboxes de estados
   filteredPoints = computed(() => {
@@ -232,6 +243,47 @@ export class MapComponent implements OnInit {
     }
   }
 
+  private addressDebounceTimer: any = null;
+
+  // Buscar sugerencias en tiempo real con debounce timer
+  onAddressInputChange(query: string): void {
+    this.addressQuery.set(query);
+    const trimmed = query.trim();
+    
+    if (this.addressDebounceTimer) {
+      clearTimeout(this.addressDebounceTimer);
+    }
+
+    if (trimmed.length < 3) {
+      this.addressSuggestions.set([]);
+      return;
+    }
+
+    // Esperar 1.5 segundos a que el usuario termine de escribir antes de consultar
+    this.addressDebounceTimer = setTimeout(async () => {
+      try {
+        const res = await this.locationService.search(trimmed);
+        this.addressSuggestions.set(res || []);
+      } catch (err) {
+        console.error('Error al obtener sugerencias de dirección:', err);
+      }
+    }, 1500);
+  }
+
+  // Seleccionar una dirección de la lista de sugerencias typeahead
+  seleccionarSugerencia(suggestion: LocationSearchResult): void {
+    const lat = Number(suggestion.lat);
+    const lon = Number(suggestion.lon);
+    if (!isNaN(lat) && !isNaN(lon)) {
+      this.center.set([lat, lon]);
+      this.zoom.set(14);
+      const shortName = suggestion.display_name.split(',')[0];
+      this.addressQuery.set(shortName);
+      this.toastService.show(`Ubicación seleccionada: ${shortName}`, 'success');
+    }
+    this.addressSuggestions.set([]);
+  }
+
   // Manejar click en el mapa para recolocar el centro de búsqueda
   onMapClick(coords: [number, number]): void {
     this.center.set(coords);
@@ -240,6 +292,7 @@ export class MapComponent implements OnInit {
   // Cargar detalles de un reporte específico al hacer click en su marcador
   async onMarkerClick(idReporte: string): Promise<void> {
     try {
+      this.selectedSighting.set(null); // Limpiar avistamiento temporal previo al cambiar de mascota
       const report = await this.petService.getReporte(idReporte);
       this.selectedReport.set(report);
       
@@ -266,6 +319,7 @@ export class MapComponent implements OnInit {
   clearSelectedReport(): void {
     this.selectedReport.set(null);
     this.sightings.set([]);
+    this.selectedSighting.set(null); // Limpiar avistamiento temporal al cerrar el detalle
   }
 
   // Centrar el mapa en el reporte seleccionado
@@ -284,6 +338,21 @@ export class MapComponent implements OnInit {
       this.zoom.set(15);
     }
   }
+
+  // Alternar el marcador temporal de avistamiento en el mapa
+  toggleSightingMarker(sighting: Avistamiento): void {
+    const current = this.selectedSighting();
+    if (current && current.id_avistamiento === sighting.id_avistamiento) {
+      // Si ya está seleccionado, lo desactivamos y removemos el marcador del mapa
+      this.selectedSighting.set(null);
+    } else {
+      // Si no está seleccionado, formamos la ubicación temporal y recentramos la cámara
+      this.selectedSighting.set(sighting);
+      this.centerMapOnSighting(sighting);
+    }
+  }
+
+
 
   // Filtrado rápido de tipo mascota por el navbar flotante
   filtrarPorEspecie(idEspecie: string | null): void {

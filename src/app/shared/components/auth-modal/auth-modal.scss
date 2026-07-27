@@ -1,0 +1,83 @@
+.auth-modal-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 16px 12px 12px 12px;
+}
+
+.icon-header {
+  margin-bottom: 24px;
+  
+  .icon-circle {
+    width: 72px;
+    height: 72px;
+    background-color: rgba(60, 129, 138, 0.12);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-color);
+    box-shadow: 0 8px 20px rgba(60, 129, 138, 0.15);
+    
+    i {
+      font-size: 2.75rem;
+    }
+  }
+}
+
+.auth-modal-title {
+  font-family: var(--font-brand), sans-serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 10px;
+}
+
+.auth-modal-desc {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-bottom: 28px;
+  max-width: 300px;
+}
+
+.auth-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 20px;
+
+  .w-full {
+    width: 100%;
+    display: block;
+    
+    ::ng-deep button {
+      width: 100% !important;
+      font-family: var(--font-brand), sans-serif;
+      border-radius: 12px;
+      padding: 12px 24px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+  }
+}
+
+.btn-cancel-modal {
+  background: none;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 10px 20px;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: var(--text-main);
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+}

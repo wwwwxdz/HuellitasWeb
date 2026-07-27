@@ -1,0 +1,207 @@
+/* --- Adoption Section --- */
+.adoption-section {
+  padding: 5rem 1rem;
+  
+  .adoption-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 2.5rem;
+    gap: 1.5rem;
+    
+    .header-left {
+      h2 {
+        font-family: var(--font-brand);
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--text-main);
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      p {
+        font-size: 1rem;
+        color: var(--text-muted);
+        max-width: 600px;
+      }
+    }
+    
+    .btn-view-all {
+      display: inline-flex;
+      align-items: center;
+      padding: 10px 24px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--primary-color);
+      border: 1.5px solid var(--primary-color);
+      border-radius: 100px;
+      text-decoration: none;
+      background: transparent;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      white-space: nowrap;
+      
+      &:hover {
+        background: rgba(60, 129, 138, 0.08);
+        transform: translateY(-1px);
+      }
+    }
+  }
+
+  .adoption-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    
+    @media (min-width: 576px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    @media (min-width: 992px) {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  .adoption-card {
+    background-color: var(--bg-card);
+    border-radius: 24px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-main);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    
+    &:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 16px 32px rgba(0, 0, 0, 0.15);
+      border-color: rgba(60, 129, 138, 0.2);
+      
+      .card-image-wrapper img {
+        transform: scale(1.05);
+      }
+    }
+    
+    .card-image-wrapper {
+      position: relative;
+      width: 100%;
+      padding-top: 100%; // Aspect Ratio 1:1 (Square)
+      overflow: hidden;
+      background-color: #fef08a; // Fondo amarillo pastel
+      
+      img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+      }
+      
+      .adoption-badge {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        z-index: 10;
+        background-color: #ffffff;
+        color: #b45309;
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 6px 12px;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        font-family: var(--font-brand);
+      }
+    }
+    
+    .card-details {
+      padding: 1.25rem;
+      
+      h3 {
+        font-family: var(--font-brand);
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--text-main);
+        margin-bottom: 4px;
+      }
+      
+      p {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+      }
+    }
+  }
+}
+
+/* --- Adopt Modal Content --- */
+.adopt-modal-content {
+  display: flex;
+  flex-direction: column;
+  border-radius: 16px;
+  overflow: hidden;
+  margin-top: 8px;
+
+  .adopt-modal-media {
+    width: 100%;
+    height: 240px;
+    overflow: hidden;
+    background-color: #fef08a;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  .adopt-modal-body {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+
+    .adopt-title {
+      font-family: var(--font-brand);
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 6px;
+    }
+
+    .adopt-meta-badge {
+      font-family: var(--font-brand);
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--primary-color);
+      margin-bottom: 16px;
+      display: inline-block;
+    }
+
+    .adopt-description {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    .adopt-modal-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+
+      .w-full {
+        width: 100%;
+        display: block;
+        
+        ::ng-deep button {
+          width: 100% !important;
+          font-family: var(--font-brand), sans-serif;
+          border-radius: 12px;
+          padding: 12px 24px;
+          font-size: 0.95rem;
+          font-weight: 600;
+        }
+      }
+    }
+  }
+}

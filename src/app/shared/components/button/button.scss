@@ -39,14 +39,14 @@
 
 /* Variantes */
 .btn-primary {
-  background: linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
   color: white;
-  box-shadow: 0 4px 15px -3px rgba(255, 107, 107, 0.4);
+  box-shadow: 0 4px 15px -3px rgba(60, 129, 138, 0.4);
 }
 .btn-primary:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px -3px rgba(255, 107, 107, 0.5);
-  background: linear-gradient(135deg, #ff5252 0%, #ff7b39 100%);
+  box-shadow: 0 6px 20px -3px rgba(60, 129, 138, 0.5);
+  background: linear-gradient(135deg, var(--primary-hover) 0%, var(--primary-color) 100%);
 }
 .btn-primary:active:not(:disabled) {
   transform: translateY(0);
@@ -82,11 +82,11 @@
 
 .btn-outline {
   background: transparent;
-  color: #ff6b6b;
-  border-color: #ff6b6b;
+  color: var(--primary-color);
+  border-color: var(--primary-color);
 }
 .btn-outline:hover:not(:disabled) {
-  background: rgba(255, 107, 107, 0.08);
+  background: rgba(60, 129, 138, 0.08);
 }
 
 .btn-text {

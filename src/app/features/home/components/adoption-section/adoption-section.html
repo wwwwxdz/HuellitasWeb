@@ -1,0 +1,103 @@
+<section class="adoption-section scroll-reveal container">
+  <div class="adoption-header">
+    <div class="header-left">
+      <h2>Adopta a tu nuevo mejor amigo 🐾</h2>
+      <p>Dale un hogar amoroso a una mascota y recibe amor incondicional a cambio.</p>
+    </div>
+    <a routerLink="/pets/reports" [queryParams]="{ estado: 'adopcion' }" class="btn-view-all">
+      Ver todas
+    </a>
+  </div>
+
+  <div class="adoption-grid">
+    <!-- Card 1 -->
+    <div class="adoption-card" (click)="openAdoptDetails('beagle')">
+      <div class="card-image-wrapper">
+        <img src="/images/adopt/beagle.png" alt="Beagle puppy" />
+        <span class="adoption-badge">En adopción</span>
+      </div>
+      <div class="card-details">
+        <h3>Toby</h3>
+        <p>Beagle • 2 meses</p>
+      </div>
+    </div>
+
+    <!-- Card 2 -->
+    <div class="adoption-card" (click)="openAdoptDetails('golden')">
+      <div class="card-image-wrapper">
+        <img src="/images/adopt/golden.png" alt="Golden retriever puppy" />
+        <span class="adoption-badge">En adopción</span>
+      </div>
+      <div class="card-details">
+        <h3>Simba</h3>
+        <p>Golden Retriever • 3 meses</p>
+      </div>
+    </div>
+
+    <!-- Card 3 -->
+    <div class="adoption-card" (click)="openAdoptDetails('corgi')">
+      <div class="card-image-wrapper">
+        <img src="/images/adopt/corgi.png" alt="Corgi puppy" />
+        <span class="adoption-badge">En adopción</span>
+      </div>
+      <div class="card-details">
+        <h3>Max</h3>
+        <p>Corgi • 2 meses</p>
+      </div>
+    </div>
+
+    <!-- Card 4 -->
+    <div class="adoption-card" (click)="openAdoptDetails('husky')">
+      <div class="card-image-wrapper">
+        <img src="/images/adopt/husky.png" alt="Husky puppy" />
+        <span class="adoption-badge">En adopción</span>
+      </div>
+      <div class="card-details">
+        <h3>Luna</h3>
+        <p>Siberian Husky • 2 meses</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Modal de detalles de adopción -->
+<app-modal
+  [isOpen]="isAdoptModalOpen()"
+  (closed)="closeAdoptModal()"
+  [showFooter]="false"
+  size="md"
+  title="Conoce a tu futuro mejor amigo"
+>
+  @if (selectedAdoptPet()) {
+    <div class="adopt-modal-content">
+      <div class="adopt-modal-media">
+        <img [src]="selectedAdoptPet().imagen" [alt]="selectedAdoptPet().nombre" />
+      </div>
+      <div class="adopt-modal-body">
+        <h3 class="adopt-title">{{ selectedAdoptPet().nombre }}</h3>
+        <span class="adopt-meta-badge">{{ selectedAdoptPet().raza }} • {{ selectedAdoptPet().edad }}</span>
+        
+        <p class="adopt-description">
+          {{ selectedAdoptPet().descripcion }}
+        </p>
+
+        <div class="adopt-modal-actions">
+          <app-button
+            variant="primary"
+            (btnClick)="contactOwner()"
+            class="w-full"
+          >
+            Contactar para adoptar
+          </app-button>
+          <app-button
+            variant="outline"
+            (btnClick)="closeAdoptModal()"
+            class="w-full"
+          >
+            Cancelar
+          </app-button>
+        </div>
+      </div>
+    </div>
+  }
+</app-modal>

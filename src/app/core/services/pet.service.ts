@@ -580,6 +580,16 @@ export class PetService {
   }
 
   /**
+   * Elimina un avistamiento del sistema de forma permanente.
+   * Endpoint: DELETE /api/v1/avistamientos/{id}
+   */
+  async deleteSighting(sightingId: string): Promise<void> {
+    await firstValueFrom(
+      this.http.delete<void>(`${this.apiUrl}/avistamientos/${sightingId}`)
+    );
+  }
+
+  /**
    * Obtiene el historial de cambios de un reporte.
    * Endpoint: GET /api/v1/reportes/{id}/historial
    */

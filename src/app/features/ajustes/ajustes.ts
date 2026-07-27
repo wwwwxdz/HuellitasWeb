@@ -30,10 +30,26 @@ interface SelectOption {
 
 type SettingsTab = 'perfil' | 'mapa' | 'seguridad';
 
+import { ButtonComponent } from '../../shared/components/button/button';
+import { CodeInputComponent } from '../../shared/components/code-input/code-input';
+import { ModalComponent } from '../../shared/components/modal/modal';
+import { Select } from '../../shared/components/select/select';
+
 @Component({
   selector: 'app-ajustes',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule, Navbar, Footer, MapComponent],
+  imports: [
+    CommonModule, 
+    ReactiveFormsModule, 
+    RouterModule, 
+    Navbar, 
+    Footer, 
+    MapComponent, 
+    ButtonComponent,
+    CodeInputComponent,
+    ModalComponent,
+    Select
+  ],
   templateUrl: './ajustes.html',
   styleUrl: './ajustes.scss',
 })
@@ -62,9 +78,16 @@ export class AjustesComponent implements OnInit {
   private ubigeoData: any = null;
 
   // Visibilidad de contraseñas
-  showPasswordActual = signal(false);
   showPasswordNuevo = signal(false);
   showPasswordConfirmar = signal(false);
+  
+  // Modal de advertencia de cambio de nombre (1 vez al mes)
+  mostrarModalNombre = signal(false);
+  pendingPerfilData: any = null;
+
+  // Flujo de código de verificación por correo
+  codigoEnviado = signal(false);
+  enviandoCodigo = signal(false);
 
   // Formulario de perfil
   perfilForm!: FormGroup;
@@ -132,7 +155,7 @@ export class AjustesComponent implements OnInit {
 
     this.seguridadForm = this.fb.group(
       {
-        password_actual: ['', [Validators.required, Validators.minLength(6)]],
+        codigo_verificacion: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(6)]],
         password_nuevo: ['', [Validators.required, Validators.minLength(6)]],
         password_confirmar: ['', Validators.required],
       },
@@ -203,6 +226,10 @@ export class AjustesComponent implements OnInit {
       this.perfilForm.patchValue({ distrito: '' }, { emitEvent: false });
     });
   }
+
+  // Aliases públicos para el template (la lógica real se ejecuta en setupListeners vía valueChanges)
+  onDepartamentoChange(_value: string): void { /* handled by valueChanges listener */ }
+  onProvinciaChange(_value: string): void { /* handled by valueChanges listener */ }
 
   onLocationChange(event: [number, number]): void {
     const [lat, lng] = event;
@@ -328,12 +355,36 @@ export class AjustesComponent implements OnInit {
     const user = this.usuario();
     if (!user) return;
 
+    const { foto_perfil, ...data } = this.perfilForm.value;
+
+    // Si el nombre cambió, mostrar modal de advertencia primero
+    if (data.nombre && data.nombre.trim() !== (user.nombre || '').trim()) {
+      this.pendingPerfilData = data;
+      this.mostrarModalNombre.set(true);
+      return;
+    }
+
+    await this.guardarPerfilData(user.id_usuario, data);
+  }
+
+  async confirmarCambioNombre(): Promise<void> {
+    const user = this.usuario();
+    if (!user || !this.pendingPerfilData) return;
+    this.mostrarModalNombre.set(false);
+    await this.guardarPerfilData(user.id_usuario, this.pendingPerfilData);
+    this.pendingPerfilData = null;
+  }
+
+  cancelarCambioNombre(): void {
+    this.mostrarModalNombre.set(false);
+    this.pendingPerfilData = null;
+  }
+
+  private async guardarPerfilData(idUsuario: string, data: any): Promise<void> {
     this.isSaving.set(true);
     this.clearMessages();
 
     try {
-      const { foto_perfil, ...data } = this.perfilForm.value;
-      
       if (data.latitud !== null && data.latitud !== undefined) {
         data.latitud = Number(data.latitud);
       }
@@ -344,18 +395,41 @@ export class AjustesComponent implements OnInit {
         data.radio = Number(data.radio);
       }
 
-      await this.userService.updateUsuario(user.id_usuario, data);
+      await this.userService.updateUsuario(idUsuario, data);
       this.authService.patchUsuario(data);
       await firstValueFrom(this.authService.refreshUser());
       this.saveSuccess.set('Datos guardados correctamente.');
-    } catch {
-      this.saveError.set('No se pudieron guardar los cambios. Inténtalo de nuevo.');
+    } catch (err: any) {
+      const msg = err?.error?.error || err?.message || 'No se pudieron guardar los cambios. Inténtalo de nuevo.';
+      this.saveError.set(msg);
     } finally {
       this.isSaving.set(false);
     }
   }
 
   // ── Cambio de contraseña ────────────────────────────────────────
+  async solicitarCodigoVerificacion(): Promise<void> {
+    const user = this.usuario();
+    if (!user || !user.email) {
+      this.saveError.set('No se encontró un correo electrónico asociado a tu cuenta.');
+      return;
+    }
+
+    this.enviandoCodigo.set(true);
+    this.clearMessages();
+
+    try {
+      await firstValueFrom(this.authService.requestCode(user.email));
+      this.codigoEnviado.set(true);
+      this.saveSuccess.set('Se ha enviado un código de verificación de 6 dígitos a tu correo.');
+    } catch (error: any) {
+      const msg = error?.error?.message || error?.error?.error || 'Error al enviar el código de verificación.';
+      this.saveError.set(msg);
+    } finally {
+      this.enviandoCodigo.set(false);
+    }
+  }
+
   async onSavePassword(): Promise<void> {
     if (this.seguridadForm.invalid) {
       this.seguridadForm.markAllAsTouched();
@@ -363,31 +437,29 @@ export class AjustesComponent implements OnInit {
     }
 
     const user = this.usuario();
-    if (!user) return;
+    if (!user || !user.email) return;
 
     this.isSaving.set(true);
     this.clearMessages();
 
     try {
-      const { password_nuevo } = this.seguridadForm.value;
-      // El backend requiere el teléfono registrado del usuario para verificar identidad (si no es admin)
-      await this.userService.updatePassword(
-        user.id_usuario,
-        user.telefono || '',
-        password_nuevo
+      const { codigo_verificacion, password_nuevo } = this.seguridadForm.value;
+      await firstValueFrom(
+        this.authService.resetPassword({
+          identifier: user.email,
+          code: codigo_verificacion,
+          new_password: password_nuevo
+        })
       );
       this.saveSuccess.set('Contraseña actualizada correctamente.');
       this.seguridadForm.reset();
+      this.codigoEnviado.set(false);
     } catch (error: any) {
-      const msg = error?.error?.error || 'Error al actualizar la contraseña.';
+      const msg = error?.error?.message || error?.error?.error || 'Error al actualizar la contraseña.';
       this.saveError.set(msg);
     } finally {
       this.isSaving.set(false);
     }
-  }
-
-  togglePasswordActual(): void {
-    this.showPasswordActual.update(v => !v);
   }
 
   togglePasswordNuevo(): void {

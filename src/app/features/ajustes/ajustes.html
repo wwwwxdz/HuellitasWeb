@@ -210,32 +210,37 @@
                 <div class="selectors-row-insta">
                   <!-- Departamento -->
                   <div class="select-wrapper-insta">
-                    <select id="departamento" formControlName="departamento">
-                      <option value="">Departamento</option>
-                      @for (dept of departamentos(); track dept.value) {
-                        <option [value]="dept.value">{{ dept.label }}</option>
-                      }
-                    </select>
+                    <app-select
+                      id="departamento"
+                      [options]="departamentos()"
+                      [value]="perfilForm.get('departamento')?.value || ''"
+                      (valueChange)="perfilForm.get('departamento')?.setValue($event); onDepartamentoChange($event)"
+                      placeholder="Departamento"
+                    ></app-select>
                   </div>
 
                   <!-- Provincia -->
                   <div class="select-wrapper-insta">
-                    <select id="provincia" formControlName="provincia">
-                      <option value="">Provincia</option>
-                      @for (prov of provincias(); track prov.value) {
-                        <option [value]="prov.value">{{ prov.label }}</option>
-                      }
-                    </select>
+                    <app-select
+                      id="provincia"
+                      [options]="provincias()"
+                      [value]="perfilForm.get('provincia')?.value || ''"
+                      (valueChange)="perfilForm.get('provincia')?.setValue($event); onProvinciaChange($event)"
+                      placeholder="Provincia"
+                      [disabled]="!perfilForm.get('departamento')?.value"
+                    ></app-select>
                   </div>
 
                   <!-- Distrito -->
                   <div class="select-wrapper-insta">
-                    <select id="distrito" formControlName="distrito">
-                      <option value="">Distrito</option>
-                      @for (dist of distritos(); track dist.value) {
-                        <option [value]="dist.value">{{ dist.label }}</option>
-                      }
-                    </select>
+                    <app-select
+                      id="distrito"
+                      [options]="distritos()"
+                      [value]="perfilForm.get('distrito')?.value || ''"
+                      (valueChange)="perfilForm.get('distrito')?.setValue($event)"
+                      placeholder="Distrito"
+                      [disabled]="!perfilForm.get('provincia')?.value"
+                    ></app-select>
                   </div>
                 </div>
                 <span class="field-help-text">Elige tu ubicación para ayudarnos a catalogar tu zona.</span>
@@ -300,78 +305,104 @@
         @if (activeTab() === 'seguridad') {
           <section class="settings-section">
             <h2 class="section-main-title">Seguridad y Contraseña</h2>
-            <p class="section-main-subtitle">Cambia tu contraseña periódicamente para asegurar tu cuenta.</p>
+            <p class="section-main-subtitle">Para actualizar tu contraseña, primero debemos verificar tu identidad enviando un código de seguridad.</p>
 
-            <form [formGroup]="seguridadForm" (ngSubmit)="onSavePassword()" class="settings-form-insta">
-              
-              <!-- Contraseña actual -->
-              <div class="form-field-insta" [class.has-error]="seguridadForm.get('password_actual')?.touched && seguridadForm.get('password_actual')?.invalid">
-                <label for="password_actual">Contraseña Actual</label>
-                <div class="password-wrapper-insta">
-                  <input
-                    id="password_actual"
-                    [type]="showPasswordActual() ? 'text' : 'password'"
-                    formControlName="password_actual"
-                    placeholder="Tu contraseña actual"
-                  />
-                  <button type="button" class="btn-toggle-insta" (click)="togglePasswordActual()">
-                    <i class="material-icons">{{ showPasswordActual() ? 'visibility_off' : 'visibility' }}</i>
-                  </button>
+            @if (!codigoEnviado()) {
+              <div class="security-intro-box" style="padding: 24px; background: rgba(60, 129, 138, 0.05); border: 1px solid var(--border-color); border-radius: 16px; display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px;">
+                <div style="display: flex; gap: 12px; align-items: flex-start;">
+                  <i class="material-icons" style="color: var(--primary-color); font-size: 2rem;">mark_email_read</i>
+                  <div>
+                    <h4 style="margin: 0 0 6px 0; color: var(--text-main); font-size: 1rem; font-weight: 700;">Verificación por Correo Requerida</h4>
+                    <p style="margin: 0; color: var(--text-muted); font-size: 0.9rem; line-height: 1.5;">
+                      Enviaremos un código de seguridad de 6 dígitos a tu correo registrado <strong>{{ usuario()?.email }}</strong>. Deberás introducirlo para poder registrar tu nueva contraseña.
+                    </p>
+                  </div>
                 </div>
-                @if (getError(seguridadForm, 'password_actual')) {
-                  <span class="field-error-insta">{{ getError(seguridadForm, 'password_actual') }}</span>
-                }
+                <app-button 
+                  variant="primary" 
+                  [loading]="enviandoCodigo()"
+                  (btnClick)="solicitarCodigoVerificacion()"
+                  style="align-self: flex-start;"
+                >
+                  Enviar código al correo
+                </app-button>
               </div>
-
-              <!-- Nueva contraseña -->
-              <div class="form-field-insta" [class.has-error]="seguridadForm.get('password_nuevo')?.touched && seguridadForm.get('password_nuevo')?.invalid">
-                <label for="password_nuevo">Nueva Contraseña</label>
-                <div class="password-wrapper-insta">
-                  <input
-                    id="password_nuevo"
-                    [type]="showPasswordNuevo() ? 'text' : 'password'"
-                    formControlName="password_nuevo"
-                    placeholder="Mínimo 6 caracteres"
-                  />
-                  <button type="button" class="btn-toggle-insta" (click)="togglePasswordNuevo()">
-                    <i class="material-icons">{{ showPasswordNuevo() ? 'visibility_off' : 'visibility' }}</i>
-                  </button>
-                </div>
-                @if (getError(seguridadForm, 'password_nuevo')) {
-                  <span class="field-error-insta">{{ getError(seguridadForm, 'password_nuevo') }}</span>
-                }
-              </div>
-
-              <!-- Confirmar nueva contraseña -->
-              <div class="form-field-insta" [class.has-error]="seguridadForm.get('password_confirmar')?.touched && (seguridadForm.get('password_confirmar')?.invalid || seguridadForm.errors?.['noMatch'])">
-                <label for="password_confirmar">Confirmar Nueva Contraseña</label>
-                <div class="password-wrapper-insta">
-                  <input
-                    id="password_confirmar"
-                    [type]="showPasswordConfirmar() ? 'text' : 'password'"
-                    formControlName="password_confirmar"
-                    placeholder="Repite la nueva contraseña"
-                  />
-                  <button type="button" class="btn-toggle-insta" (click)="togglePasswordConfirmar()">
-                    <i class="material-icons">{{ showPasswordConfirmar() ? 'visibility_off' : 'visibility' }}</i>
-                  </button>
-                </div>
-                @if (seguridadForm.errors?.['noMatch'] && seguridadForm.get('password_confirmar')?.touched) {
-                  <span class="field-error-insta">Las contraseñas no coinciden.</span>
-                }
-              </div>
-
-              <!-- Botón guardar -->
-              <div class="form-actions-insta">
-                <button type="submit" class="btn-save-insta" [disabled]="isSaving() || seguridadForm.invalid">
-                  @if (isSaving()) {
-                    <i class="material-icons spin-icon">sync</i> Guardando...
-                  } @else {
-                    <span>Actualizar Contraseña</span>
-                  }
+            } @else {
+              <div class="alert alert-success" style="margin-bottom: 20px;">
+                <i class="material-icons">info</i>
+                <span>Código enviado. Si no lo encuentras, revisa tu bandeja de spam.</span>
+                <button type="button" class="btn-resend-link" style="background: none; border: none; color: var(--primary-color); font-weight: 700; cursor: pointer; text-decoration: underline; margin-left: 8px;" (click)="solicitarCodigoVerificacion()" [disabled]="enviandoCodigo()">
+                  Reenviar código
                 </button>
               </div>
-            </form>
+
+              <form [formGroup]="seguridadForm" (ngSubmit)="onSavePassword()" class="settings-form-insta">
+                
+                <!-- Código de verificación -->
+                <div class="form-field-insta" [class.has-error]="seguridadForm.get('codigo_verificacion')?.touched && seguridadForm.get('codigo_verificacion')?.invalid">
+                  <label>Código de Verificación (6 dígitos)</label>
+                  <app-code-input 
+                    [codeValue]="seguridadForm.get('codigo_verificacion')?.value || ''" 
+                    (codeValueChange)="seguridadForm.get('codigo_verificacion')?.setValue($event); seguridadForm.get('codigo_verificacion')?.markAsTouched()"
+                  ></app-code-input>
+                  @if (getError(seguridadForm, 'codigo_verificacion')) {
+                    <span class="field-error-insta">{{ getError(seguridadForm, 'codigo_verificacion') }}</span>
+                  }
+                </div>
+
+                <!-- Nueva contraseña -->
+                <div class="form-field-insta" [class.has-error]="seguridadForm.get('password_nuevo')?.touched && seguridadForm.get('password_nuevo')?.invalid">
+                  <label for="password_nuevo">Nueva Contraseña</label>
+                  <div class="password-wrapper-insta">
+                    <input
+                      id="password_nuevo"
+                      [type]="showPasswordNuevo() ? 'text' : 'password'"
+                      formControlName="password_nuevo"
+                      placeholder="Mínimo 6 caracteres"
+                    />
+                    <button type="button" class="btn-toggle-insta" (click)="togglePasswordNuevo()">
+                      <i class="material-icons">{{ showPasswordNuevo() ? 'visibility_off' : 'visibility' }}</i>
+                    </button>
+                  </div>
+                  @if (getError(seguridadForm, 'password_nuevo')) {
+                    <span class="field-error-insta">{{ getError(seguridadForm, 'password_nuevo') }}</span>
+                  }
+                </div>
+
+                <!-- Confirmar nueva contraseña -->
+                <div class="form-field-insta" [class.has-error]="seguridadForm.get('password_confirmar')?.touched && (seguridadForm.get('password_confirmar')?.invalid || seguridadForm.errors?.['noMatch'])">
+                  <label for="password_confirmar">Confirmar Nueva Contraseña</label>
+                  <div class="password-wrapper-insta">
+                    <input
+                      id="password_confirmar"
+                      [type]="showPasswordConfirmar() ? 'text' : 'password'"
+                      formControlName="password_confirmar"
+                      placeholder="Repite la nueva contraseña"
+                    />
+                    <button type="button" class="btn-toggle-insta" (click)="togglePasswordConfirmar()">
+                      <i class="material-icons">{{ showPasswordConfirmar() ? 'visibility_off' : 'visibility' }}</i>
+                    </button>
+                  </div>
+                  @if (seguridadForm.errors?.['noMatch'] && seguridadForm.get('password_confirmar')?.touched) {
+                    <span class="field-error-insta">Las contraseñas no coinciden.</span>
+                  }
+                </div>
+
+                <!-- Botones -->
+                <div class="form-actions-insta" style="display: flex; gap: 12px; align-items: center;">
+                  <button type="submit" class="btn-save-insta" [disabled]="isSaving() || seguridadForm.invalid">
+                    @if (isSaving()) {
+                      <i class="material-icons spin-icon">sync</i> Guardando...
+                    } @else {
+                      <span>Actualizar Contraseña</span>
+                    }
+                  </button>
+                  <button type="button" class="btn-change-photo" style="background: transparent; color: var(--text-muted); border: 1px solid var(--border-color);" (click)="codigoEnviado.set(false)">
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            }
           </section>
         }
       </main>
@@ -380,3 +411,47 @@
 </div>
 
 <app-footer></app-footer>
+
+<!-- ══ Modal: Advertencia de Cambio de Nombre ═════════════════════════ -->
+<app-modal 
+  [(isOpen)]="mostrarModalNombre"
+  title="¿Cambiar tu nombre?"
+  size="sm"
+  [showFooter]="true"
+  (closed)="cancelarCambioNombre()"
+>
+  <div class="modal-nombre-body">
+    <div class="modal-nombre-icon-wrap">
+      <i class="material-icons">edit</i>
+    </div>
+    <p class="modal-nombre-desc">
+      Esta acción <strong>solo puedes realizarla una vez al mes</strong>. Si confirmas el cambio, no podrás volver a modificar tu nombre hasta dentro de 30 días.
+    </p>
+    <div class="modal-nombre-info-row">
+      <i class="material-icons">arrow_forward</i>
+      <span><strong>{{ perfilForm.get('nombre')?.value }}</strong></span>
+    </div>
+  </div>
+
+  <div footer class="modal-nombre-footer">
+    <button 
+      type="button" 
+      class="btn-modal-cancel" 
+      (click)="cancelarCambioNombre()"
+    >
+      Cancelar
+    </button>
+    <button 
+      type="button"
+      class="btn-modal-confirm"
+      [disabled]="isSaving()"
+      (click)="confirmarCambioNombre()"
+    >
+      @if (isSaving()) {
+        <i class="material-icons spin-icon">sync</i> Guardando...
+      } @else {
+        <i class="material-icons">check</i> Sí, cambiar nombre
+      }
+    </button>
+  </div>
+</app-modal>

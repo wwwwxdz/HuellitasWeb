@@ -1,0 +1,42 @@
+<app-modal
+  [isOpen]="authService.showAuthModal()"
+  (closed)="close()"
+  [showFooter]="false"
+  size="sm"
+  title=""
+>
+  <div class="auth-modal-content">
+    <div class="icon-header">
+      <div class="icon-circle">
+        <i class="material-icons">account_circle</i>
+      </div>
+    </div>
+    
+    <h3 class="auth-modal-title">Inicia sesión para continuar</h3>
+    <p class="auth-modal-desc">
+      Necesitas ingresar a tu cuenta de Huellitas para poder dar "Me gusta", comentar o reportar avistamientos.
+    </p>
+
+    <div class="auth-modal-actions">
+      <app-button
+        variant="primary"
+        (btnClick)="goToLogin()"
+        class="w-full btn-login-action"
+      >
+        Iniciar sesión
+      </app-button>
+      
+      <app-button
+        variant="outline"
+        (btnClick)="goToRegister()"
+        class="w-full btn-register-action"
+      >
+        Registrarse
+      </app-button>
+    </div>
+
+    <button type="button" class="btn-cancel-modal" (click)="close()">
+      Cancelar
+    </button>
+  </div>
+</app-modal>

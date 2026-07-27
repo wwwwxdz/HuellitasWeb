@@ -7,10 +7,13 @@ import { finalize } from 'rxjs';
 
 type AuthMode = 'login' | 'register';
 
+import { CodeInputComponent } from '../../../shared/components/code-input/code-input';
+import { computed } from '@angular/core';
+
 @Component({
   selector: 'app-auth-page',
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, CodeInputComponent],
   templateUrl: './auth.html',
   styleUrl: './auth.scss',
 })
@@ -27,9 +30,12 @@ export class AuthComponent {
 
   registerStep = signal(1);
   generatedCode = '';
-  code: string[] = ['', '', '', '', '', ''];
-  @ViewChildren('codeField') codeFields!: QueryList<ElementRef>;
-  isCodeValid = signal(false);
+  codigoOTP = signal<string>('');
+  
+  isCodeValid = computed(() => {
+    const fullCode = this.codigoOTP();
+    return fullCode.length === 6 && fullCode === this.generatedCode;
+  });
 
   loginData = { email: 'furinalove@huellitas.com', password: 'jesusdl11' };
   registerData = { nombre: '', email: '', password: '', confirmPassword: '' };
@@ -44,8 +50,7 @@ export class AuthComponent {
     this.error.set('');
     this.successMessage.set('');
     this.registerStep.set(1);
-    this.code = ['', '', '', '', '', ''];
-    this.isCodeValid.set(false);
+    this.codigoOTP.set('');
   }
 
   // --- LOGIN ---
@@ -112,7 +117,7 @@ export class AuthComponent {
           next: (res) => {
             this.registerStep.set(2);
             this.generatedCode = res.code || '';
-            this.isCodeValid.set(false);
+            this.codigoOTP.set('');
             if (this.generatedCode) {
               this.successMessage.set(`Código de prueba: ${this.generatedCode}`);
             } else {
@@ -127,7 +132,7 @@ export class AuthComponent {
     }
 
     // Step 2: Registro final
-    const fullCode = this.code.join('');
+    const fullCode = this.codigoOTP();
     if (fullCode !== this.generatedCode) {
       this.error.set('Código de verificación incorrecto.');
       return;
@@ -164,54 +169,6 @@ export class AuthComponent {
           this.error.set(err.error?.error || 'Error al crear la cuenta. Verifica el código.');
         },
       });
-  }
-
-  // --- Código input helpers ---
-
-  checkCodeValidity(): void {
-    const fullCode = this.code.join('');
-    const isValid = fullCode.length === 6 && fullCode === this.generatedCode;
-    this.isCodeValid.set(isValid);
-    if (isValid) {
-      this.error.set(''); // Limpiar cualquier error previo de código si ya coincide
-    }
-  }
-
-  onCodeInput(index: number, event: Event): void {
-    const target = event.target as HTMLInputElement;
-    const value = target.value;
-    if (value && !/^\d+$/.test(value)) {
-      this.code[index] = '';
-      this.checkCodeValidity();
-      return;
-    }
-    this.checkCodeValidity();
-    if (value.length === 1 && index < 5) {
-      const nextInput = this.codeFields.toArray()[index + 1].nativeElement;
-      nextInput.focus();
-    }
-  }
-
-  onCodeKeyDown(index: number, event: KeyboardEvent): void {
-    setTimeout(() => this.checkCodeValidity(), 0); // Esperar a que el DOM se actualice en Backspace
-    if (event.key === 'Backspace' && !this.code[index] && index > 0) {
-      const prevInput = this.codeFields.toArray()[index - 1].nativeElement;
-      prevInput.focus();
-    }
-  }
-
-  onPaste(event: ClipboardEvent): void {
-    const data = event.clipboardData?.getData('text');
-    if (!data || !/^\d{6}$/.test(data)) return;
-
-    event.preventDefault();
-    data.split('').forEach((digit, i) => {
-      if (i < 6) this.code[i] = digit;
-    });
-
-    this.checkCodeValidity();
-    const lastInput = this.codeFields.toArray()[5].nativeElement;
-    lastInput.focus();
   }
 
   /** Espacio → @ y bloquea espacios si ya hay un @ */

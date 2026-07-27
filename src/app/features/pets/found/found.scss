@@ -9,7 +9,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
   font-family: var(--font-main), sans-serif;
 }
 
@@ -91,8 +91,12 @@
 
 /* Skeletons */
 @keyframes shimmer {
-  0%   { background-position: -400px 0; }
-  100% { background-position: 400px 0; }
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
 }
 
 .skeleton-card {
@@ -105,12 +109,7 @@
 .skeleton-img {
   width: 100%;
   aspect-ratio: 4 / 3;
-  background: linear-gradient(
-    90deg,
-    var(--bg-input) 25%,
-    var(--border-color) 50%,
-    var(--bg-input) 75%
-  );
+  background: linear-gradient(90deg, var(--bg-input) 25%, var(--border-color) 50%, var(--bg-input) 75%);
   background-size: 400px 100%;
   animation: shimmer 1.4s ease infinite;
 }
@@ -125,12 +124,7 @@
 .skeleton-line {
   height: 14px;
   border-radius: 8px;
-  background: linear-gradient(
-    90deg,
-    var(--bg-input) 25%,
-    var(--border-color) 50%,
-    var(--bg-input) 75%
-  );
+  background: linear-gradient(90deg, var(--bg-input) 25%, var(--border-color) 50%, var(--bg-input) 75%);
   background-size: 400px 100%;
   animation: shimmer 1.4s ease infinite;
 }
@@ -214,7 +208,9 @@
   font-size: 0.92rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s ease, var(--theme-transition);
+  transition:
+    all 0.2s ease,
+    var(--theme-transition);
 }
 
 .load-more-btn:hover:not(:disabled) {

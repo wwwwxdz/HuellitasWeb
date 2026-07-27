@@ -64,11 +64,23 @@ export class TimePickerComponent implements ControlValueAccessor {
 
   writeValue(value: string): void {
     if (value && value.includes(':')) {
-      const [h, m] = value.split(':');
-      this.selectedHour.set(h);
-      // Redondear al cuarto de hora más cercano
-      const min = parseInt(m, 10);
-      const roundedMin = min < 8 ? '00' : min < 23 ? '15' : min < 38 ? '30' : min < 53 ? '45' : '00';
+      let [hStr, mStr] = value.split(':');
+      let hour = parseInt(hStr, 10);
+      const min = parseInt(mStr, 10);
+
+      let roundedMin = '00';
+      if (min >= 8 && min < 23) {
+        roundedMin = '15';
+      } else if (min >= 23 && min < 38) {
+        roundedMin = '30';
+      } else if (min >= 38 && min < 53) {
+        roundedMin = '45';
+      } else if (min >= 53) {
+        roundedMin = '00';
+        hour = (hour + 1) % 24;
+      }
+
+      this.selectedHour.set(String(hour).padStart(2, '0'));
       this.selectedMinute.set(roundedMin);
     }
   }

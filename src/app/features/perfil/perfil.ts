@@ -249,7 +249,14 @@ export class PerfilComponent implements OnInit {
         `usuarios/${user.id_usuario}/perfil`,
       );
       await this.userService.updateUsuario(user.id_usuario, { foto_perfil: secureUrl });
+
+      // Actualizar el signal local de authService (navbar lo lee de aquí)
       this.authService.patchUsuario({ foto_perfil: secureUrl });
+
+      // Actualizar también el perfil local del componente para que la cabecera cambie al instante
+      this.perfilUsuario.update(u => u ? { ...u, foto_perfil: secureUrl } : u);
+
+      // Confirmar con el servidor en background
       await firstValueFrom(this.authService.refreshUser());
     } catch (err: any) {
       console.error('Error al actualizar avatar:', err);

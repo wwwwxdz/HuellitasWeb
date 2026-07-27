@@ -1,6 +1,7 @@
 import { Component, input, signal, inject, effect } from '@angular/core';
 import { PetService } from '../../../../core/services/pet.service';
 import { AuthService } from '../../../../core/auth/auth.service';
+import { formatTimeAgo } from '../../../../core/utils/date.utils';
 
 @Component({
   selector: 'app-pet-card',
@@ -49,28 +50,12 @@ export class PetCard {
       return fallback ? fallback.charAt(0).toUpperCase() + fallback.slice(1) : '';
     }
 
-    const diff = Date.now() - new Date(dateStr).getTime();
-    const mins = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
-
     const verb = this.status() === 'encontrado' ? 'encontrado' : 
                  this.status() === 'avistado' ? 'avistado' : 
                  this.status() === 'reunido' ? 'reunido' : 'perdido';
 
-    let result = '';
-    if (days === 0) {
-      if (hours === 0) {
-        result = `${verb} hoy (hace ${mins} min)`;
-      } else {
-        result = `${verb} hoy (hace ${hours}h)`;
-      }
-    } else if (days === 1) {
-      result = `${verb} ayer`;
-    } else {
-      result = `${verb} hace ${days} días`;
-    }
-
+    const timeAgoStr = formatTimeAgo(dateStr);
+    const result = `${verb} ${timeAgoStr}`;
     return result.charAt(0).toUpperCase() + result.slice(1);
   }
 
@@ -150,7 +135,7 @@ export class PetCard {
 
   async handleLike(): Promise<void> {
     if (!this.authService.isAuthenticated()) {
-      alert('Debes iniciar sesión para dar "Me gusta" a las publicaciones.');
+      this.authService.openAuthModal();
       return;
     }
 

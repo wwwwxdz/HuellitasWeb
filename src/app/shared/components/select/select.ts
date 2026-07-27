@@ -1,4 +1,5 @@
-import { Component, input, model, HostListener, ElementRef, inject, signal } from '@angular/core';
+import { Component, input, model, HostListener, ElementRef, inject, signal, computed } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 
 export interface SelectOption {
   value: string;
@@ -9,6 +10,7 @@ export interface SelectOption {
 @Component({
   selector: 'app-select',
   standalone: true,
+  imports: [FormsModule],
   template: `
     <div 
       class="select-container"
@@ -41,38 +43,60 @@ export interface SelectOption {
 
       <!-- Lista de opciones desplegable personalizada -->
       @if (isOpen() && !disabled()) {
-        <ul class="select-dropdown">
-          @if (placeholder()) {
-            <li
-              (click)="handleSelect('')"
-              class="select-option placeholder-option"
-            >
-              {{ placeholder() }}
-            </li>
-          }
-          @for (opt of options(); track opt.value) {
-            <li
-              (click)="handleSelect(opt.value)"
-              class="select-option"
-              [class.selected]="opt.value === value()"
-            >
-              <div style="display: flex; align-items: center; gap: 8px;">
-                @if (opt.hex) {
-                  <span 
-                    [style.backgroundColor]="opt.hex" 
-                    style="width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid rgba(255, 255, 255, 0.2); display: inline-block; box-shadow: var(--shadow-sm);"
-                  ></span>
-                }
-                <span>{{ opt.label }}</span>
-              </div>
-              @if (opt.value === value()) {
-                <i class="material-icons" style="font-size: 1.1rem; color: var(--primary-color);">
-                  check
-                </i>
+        <div class="select-dropdown-wrapper">
+          @if (searchable()) {
+            <div class="select-search-box">
+              <i class="material-icons search-icon">search</i>
+              <input
+                type="text"
+                class="select-search-input"
+                [placeholder]="searchPlaceholder()"
+                [ngModel]="searchQuery()"
+                (ngModelChange)="searchQuery.set($event)"
+                (click)="$event.stopPropagation()"
+              />
+              @if (searchQuery()) {
+                <i class="material-icons clear-icon" (click)="searchQuery.set(''); $event.stopPropagation()">close</i>
               }
-            </li>
+            </div>
           }
-        </ul>
+          <ul class="select-dropdown" [class.has-search]="searchable()">
+            @if (placeholder() && !searchQuery()) {
+              <li
+                (click)="handleSelect('')"
+                class="select-option placeholder-option"
+              >
+                {{ placeholder() }}
+              </li>
+            }
+            @for (opt of filteredOptions(); track opt.value) {
+              <li
+                (click)="handleSelect(opt.value)"
+                class="select-option"
+                [class.selected]="opt.value === value()"
+              >
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  @if (opt.hex) {
+                    <span 
+                      [style.backgroundColor]="opt.hex" 
+                      style="width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid rgba(255, 255, 255, 0.2); display: inline-block; box-shadow: var(--shadow-sm);"
+                    ></span>
+                  }
+                  <span>{{ opt.label }}</span>
+                </div>
+                @if (opt.value === value()) {
+                  <i class="material-icons" style="font-size: 1.1rem; color: var(--primary-color);">
+                    check
+                  </i>
+                }
+              </li>
+            } @empty {
+              <li class="select-option no-results">
+                No se encontraron resultados
+              </li>
+            }
+          </ul>
+        </div>
       }
     </div>
   `,
@@ -129,22 +153,71 @@ export interface SelectOption {
       }
     }
 
-    .select-dropdown {
+    .select-dropdown-wrapper {
       position: absolute;
       top: calc(100% + 6px);
       left: 0;
       width: 100%;
-      background-color: var(--bg-card, #18181b) !important; /* Fondo opaco sólido del contenedor */
+      background-color: var(--bg-card, #18181b) !important;
       border: 1px solid var(--border-color);
       border-radius: 16px;
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.45);
       z-index: 99999 !important;
       padding: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .select-search-box {
+      position: relative;
+      display: flex;
+      align-items: center;
+      padding: 6px 10px 8px 10px;
+      border-bottom: 1px solid var(--border-color);
+
+      .search-icon {
+        position: absolute;
+        left: 14px;
+        font-size: 1.1rem;
+        color: var(--text-muted);
+        pointer-events: none;
+      }
+
+      .clear-icon {
+        position: absolute;
+        right: 14px;
+        font-size: 1rem;
+        color: var(--text-muted);
+        cursor: pointer;
+        &:hover {
+          color: var(--text-main);
+        }
+      }
+
+      .select-search-input {
+        width: 100%;
+        padding: 8px 30px 8px 30px;
+        border-radius: 0;
+        border: none;
+        background: transparent;
+        color: var(--text-main);
+        font-size: 0.88rem;
+        outline: none;
+
+        &:focus {
+          border-color: transparent;
+          box-shadow: none;
+        }
+      }
+    }
+
+    .select-dropdown {
       margin: 0;
+      padding: 0;
       list-style: none;
-      max-height: 260px;
+      max-height: 220px;
       overflow-y: auto;
-      backdrop-filter: none !important;
     }
 
     .select-option {
@@ -157,7 +230,7 @@ export interface SelectOption {
       align-items: center;
       justify-content: space-between;
       color: var(--text-main);
-      background-color: var(--bg-card, #18181b) !important; /* Fondo opaco sólido por cada opción */
+      background-color: var(--bg-card, #18181b) !important;
 
       &.selected {
         color: var(--primary-color);
@@ -169,7 +242,18 @@ export interface SelectOption {
         color: var(--text-muted);
       }
 
-      &:hover {
+      &.no-results {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        cursor: default;
+        justify-content: center;
+        &:hover {
+          background-color: transparent !important;
+          color: var(--text-muted) !important;
+        }
+      }
+
+      &:hover:not(.no-results) {
         background-color: var(--bg-dark, #09090b) !important;
         color: var(--primary-color) !important;
       }
@@ -184,8 +268,17 @@ export class Select {
   placeholder = input<string>('');
   disabled = input<boolean>(false);
   id = input<string>('');
+  searchable = input<boolean>(false);
+  searchPlaceholder = input<string>('Buscar...');
 
   isOpen = signal<boolean>(false);
+  searchQuery = signal<string>('');
+
+  filteredOptions = computed(() => {
+    const query = this.searchQuery().toLowerCase().trim();
+    if (!query) return this.options();
+    return this.options().filter(opt => opt.label.toLowerCase().includes(query));
+  });
 
   get selectedOption(): SelectOption | undefined {
     return this.options().find((opt) => opt.value === this.value());
@@ -197,7 +290,11 @@ export class Select {
 
   toggleOpen(): void {
     if (!this.disabled()) {
-      this.isOpen.update((open) => !open);
+      const nextState = !this.isOpen();
+      this.isOpen.set(nextState);
+      if (!nextState) {
+        this.searchQuery.set('');
+      }
     }
   }
 
@@ -205,13 +302,17 @@ export class Select {
     if (this.disabled()) return;
     this.value.set(val);
     this.isOpen.set(false);
+    this.searchQuery.set('');
   }
 
   // Cerrar el dropdown al hacer click afuera
   @HostListener('document:mousedown', ['$event'])
   handleClickOutside(event: MouseEvent): void {
     if (!this.elRef.nativeElement.contains(event.target)) {
-      this.isOpen.set(false);
+      if (this.isOpen()) {
+        this.isOpen.set(false);
+        this.searchQuery.set('');
+      }
     }
   }
 }

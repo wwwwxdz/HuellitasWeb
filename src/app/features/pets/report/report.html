@@ -118,13 +118,15 @@
                 </div>
 
                 <div class="form-group">
-                  <app-label forId="raza">Raza</app-label>
+                  <app-label forId="raza" [required]="true">Raza</app-label>
                   <app-select
                     id="raza"
                     [options]="razaOptions()"
                     [value]="selectedRazaId()"
                     (valueChange)="selectedRazaId.set($event)"
                     placeholder="Seleccionar Raza..."
+                    [searchable]="true"
+                    searchPlaceholder="Buscar raza..."
                   ></app-select>
                 </div>
               </div>

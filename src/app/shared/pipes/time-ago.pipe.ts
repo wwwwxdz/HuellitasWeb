@@ -1,4 +1,5 @@
 import { Pipe, PipeTransform, NgZone, OnDestroy, inject, signal } from '@angular/core';
+import { formatTimeAgo } from '../../core/utils/date.utils';
 
 @Pipe({ name: 'timeAgo', pure: false, standalone: true })
 export class TimeAgoPipe implements PipeTransform, OnDestroy {
@@ -24,17 +25,8 @@ export class TimeAgoPipe implements PipeTransform, OnDestroy {
       }, intervalo * 1000);
     });
 
-    return this.formatear(diff);
-  }
-
-  private formatear(diff: number): string {
-    if (diff < 60)       return 'Hace un momento';
-    if (diff < 3600)     return `Hace ${Math.floor(diff / 60)} min`;
-    if (diff < 86400)    return `Hace ${Math.floor(diff / 3600)} hr`;
-    if (diff < 604800)   return `Hace ${Math.floor(diff / 86400)} días`;
-    if (diff < 2592000)  return `Hace ${Math.floor(diff / 604800)} sem`;
-    if (diff < 31536000) return `Hace ${Math.floor(diff / 2592000)} meses`;
-    return `Hace ${Math.floor(diff / 31536000)} años`;
+    const formatted = formatTimeAgo(fecha);
+    return formatted.charAt(0).toUpperCase() + formatted.slice(1);
   }
 
   private getIntervalo(diff: number): number {

@@ -168,22 +168,10 @@
 
             <!-- STEP 2: Code + Data -->
             @if (registerStep() === 2) {
-              <div class="code-container">
-                @for (digit of code; track $index) {
-                  <input
-                    #codeField
-                    type="text"
-                    maxlength="1"
-                    class="code-input"
-                    [(ngModel)]="code[$index]"
-                    [name]="'code-' + $index"
-                    (input)="onCodeInput($index, $event)"
-                    (keydown)="onCodeKeyDown($index, $event)"
-                    (paste)="onPaste($event)"
-                    required
-                  />
-                }
-              </div>
+              <app-code-input 
+                [codeValue]="codigoOTP()" 
+                (codeValueChange)="codigoOTP.set($event)"
+              ></app-code-input>
 
               <div class="form-group">
                 <label for="reg-nombre">Nombre Completo</label>

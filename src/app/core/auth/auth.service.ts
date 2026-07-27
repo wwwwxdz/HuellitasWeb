@@ -34,6 +34,17 @@ export class AuthService {
   readonly restricciones = computed(() => this.usuario()?.restricciones ?? ([] as Restriccion[]));
   readonly isLoading = signal<boolean>(false);
 
+  // Modal global para solicitar inicio de sesión
+  readonly showAuthModal = signal<boolean>(false);
+
+  openAuthModal(): void {
+    this.showAuthModal.set(true);
+  }
+
+  closeAuthModal(): void {
+    this.showAuthModal.set(false);
+  }
+
   // --- Persistencia en localStorage ---
 
   private loadFromStorage(): UsuarioSession | null {

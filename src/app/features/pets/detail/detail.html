@@ -259,7 +259,7 @@
               [editable]="false"
               [radiusKm]="(report()?.radio || 0) / 1000"
               [reports]="pawPoint()"
-              [sightingsTrajectory]="sightingsVisibles()"
+              [sightingsTrajectory]="sightingsAceptados()"
             ></app-map-component>
           </div>
         </section>
@@ -409,6 +409,7 @@
                           </app-button>
                         </div>
                       }
+
                     </div>
                   </div>
                 </div>
@@ -435,66 +436,7 @@
       }
 
       <!-- SECCIÓN 5: COMENTARIOS -->
-      <section class="detail-comments-section">
-        <h2 class="section-subtitle"><i class="material-icons">forum</i> Conversación y Ayuda</h2>
-
-        <div class="main-comment-editor">
-          <input
-            type="text"
-            mentionInput
-            class="main-comment-input-field"
-            placeholder="Aporta pistas, avistamientos o mensajes de apoyo..."
-            [ngModel]="commentInput()"
-            (ngModelChange)="commentInput.set($event)"
-            (keydown.enter)="onSendComment()"
-          />
-          <app-button
-            variant="primary"
-            [loading]="sendingComment()"
-            [disabled]="!commentInput().trim()"
-            icon="send"
-            (btnClick)="onSendComment()"
-          >
-            Comentar
-          </app-button>
-        </div>
-
-        @if (isLoadingComments()) {
-          <div class="comments-loading-box">
-            <div class="spinner-modern-sm"></div>
-            <span>Cargando conversación...</span>
-          </div>
-        }
-
-        <div class="comments-flow-container">
-          @for (c of comments(); track c.id_comentario) {
-            <app-comment-item
-              [comment]="c"
-              [reporteId]="report()!.id_reporte_mascota"
-              [depth]="0"
-              [commentLiked]="commentLikedSet()"
-              [commentLikeCounts]="commentLikeCounts()"
-              [replyingToId]="replyingToId()"
-              [sendingSet]="sendingReplySet()"
-              [replyInput]="replyInput()"
-              (replyInputChange)="replyInput.set($event)"
-              (deleteComment)="onDeleteComment($event)"
-              (toggleLike)="onToggleCommentLike($event)"
-              (startReply)="startReply($event)"
-              (cancelReply)="cancelReply()"
-              (sendReply)="onSendReply($event)"
-              (reportComment)="onReportComment($event)"
-            ></app-comment-item>
-          } @empty {
-            @if (!isLoadingComments()) {
-              <div class="no-comments-box">
-                <i class="material-icons">chat_bubble_outline</i>
-                <p>Aún no hay comentarios. ¡Aporta la primera pista!</p>
-              </div>
-            }
-          }
-        </div>
-      </section>
+      <app-pet-comments [reporteId]="report()!.id_reporte_mascota" (reportComment)="onReportComment($event)"></app-pet-comments>
 
       <!-- SECCIÓN 7: HISTORIAL (Acordeón) -->
       @if (historial() && historial().length > 0) {
@@ -1039,6 +981,7 @@
                     </app-button>
                   </div>
                 }
+
               </div>
             </div>
           </div>

@@ -127,7 +127,7 @@ export class ReportComponent implements OnInit {
   selectedRazaId = signal<string>('');
   nombre = signal<string>('');
   estado = signal<number>(2); // 2 = Perdido (defecto), 1 = Encontrado, 3 = Avistado
-  sexo = signal<string>('M');
+  sexo = signal<string>('');
   color = signal<string>('');
   colorSecundario = signal<string>('');
   tamano = signal<string>('mediano'); // pequeño, mediano, grande
@@ -153,7 +153,7 @@ export class ReportComponent implements OnInit {
     const day = String(d.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   });
-  horaAvistamiento = signal<string>(new Date().toTimeString().substring(0, 5));
+  horaAvistamiento = signal<string>(this.obtenerHoraActualRedondeada());
   direccion = signal<string>('');
   referencia = signal<string>('');
 
@@ -162,6 +162,26 @@ export class ReportComponent implements OnInit {
   longitud = signal<number>(-78.5308);
   mapCenter = signal<[number, number]>([-9.1214, -78.5308]);
   locationSelected = signal<boolean>(false);
+
+  private obtenerHoraActualRedondeada(): string {
+    const now = new Date();
+    let hours = now.getHours();
+    const minutes = now.getMinutes();
+    let roundedMin = '00';
+
+    if (minutes >= 8 && minutes < 23) {
+      roundedMin = '15';
+    } else if (minutes >= 23 && minutes < 38) {
+      roundedMin = '30';
+    } else if (minutes >= 38 && minutes < 53) {
+      roundedMin = '45';
+    } else if (minutes >= 53) {
+      roundedMin = '00';
+      hours = (hours + 1) % 24;
+    }
+
+    return `${String(hours).padStart(2, '0')}:${roundedMin}`;
+  }
 
   async ngOnInit(): Promise<void> {
     // Validar si el usuario está verificado
@@ -175,17 +195,9 @@ export class ReportComponent implements OnInit {
     try {
       const espList = await this.petService.getEspecies();
       this.especies.set(espList);
-      if (espList.length > 0) {
-        this.selectedEspecieId.set(espList[0].id_especie);
-        this.onEspecieChange(espList[0].id_especie);
-      }
 
       const colList = await this.petService.getColores();
       this.coloresList.set(colList);
-      // Pre-seleccionar el primer color si hay disponibles
-      if (colList.length > 0) {
-        this.color.set(colList[0].nombre);
-      }
     } catch (err) {
       console.error('Error al inicializar formulario de reportes:', err);
     }
@@ -221,14 +233,14 @@ export class ReportComponent implements OnInit {
 
   // Cargar razas asociadas a la especie seleccionada
   async onEspecieChange(idEspecie: string): Promise<void> {
+    this.selectedRazaId.set('');
+    if (!idEspecie) {
+      this.razas.set([]);
+      return;
+    }
     try {
       const razasFiltered = await this.petService.getRazas(idEspecie);
       this.razas.set(razasFiltered);
-      if (razasFiltered.length > 0) {
-        this.selectedRazaId.set(razasFiltered[0].id_raza);
-      } else {
-        this.selectedRazaId.set('');
-      }
     } catch (err) {
       console.error('Error al cargar razas:', err);
     }
@@ -279,6 +291,14 @@ export class ReportComponent implements OnInit {
     if (this.currentStep() === 1) {
       if (!this.selectedEspecieId()) {
         this.toastService.warning('Por favor selecciona una especie.');
+        return;
+      }
+      if (this.razas().length > 0 && !this.selectedRazaId()) {
+        this.toastService.warning('Por favor selecciona una raza.');
+        return;
+      }
+      if (!this.sexo()) {
+        this.toastService.warning('Por favor selecciona el sexo de la mascota.');
         return;
       }
       if (this.estado() === 2 && !this.nombre().trim()) {

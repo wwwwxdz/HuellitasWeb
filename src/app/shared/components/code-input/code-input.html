@@ -1,0 +1,17 @@
+<div class="code-inputs-wrapper">
+  @for (d of digits; track $index) {
+    <input
+      #inputField
+      type="text"
+      maxlength="1"
+      pattern="[0-9]*"
+      inputmode="numeric"
+      class="otp-digit-input"
+      [(ngModel)]="digits[$index]"
+      (input)="onInput($index, $event)"
+      (keydown)="onKeyDown($index, $event)"
+      (paste)="onPaste($event)"
+      required
+    />
+  }
+</div>

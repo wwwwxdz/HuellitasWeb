@@ -10,11 +10,12 @@ import { ProfileDropdown } from '../profile-dropdown/profile-dropdown';
 import { NotificationItemComponent } from '../notification-item/notification-item.component';
 
 import { TimeAgoPipe } from '../../pipes/time-ago.pipe';
+import { AuthModalComponent } from '../auth-modal/auth-modal';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, ProfileDropdown, NotificationItemComponent, TimeAgoPipe],
+  imports: [RouterLink, RouterLinkActive, ProfileDropdown, NotificationItemComponent, TimeAgoPipe, AuthModalComponent],
   templateUrl: './navbar.html',
   styleUrl: './navbar.scss',
 })

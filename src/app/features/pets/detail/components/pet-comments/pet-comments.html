@@ -1,0 +1,59 @@
+<section class="detail-comments-section">
+  <h2 class="section-subtitle"><i class="material-icons">forum</i> Conversación y Ayuda</h2>
+
+  <div class="main-comment-editor">
+    <input
+      type="text"
+      class="main-comment-input-field"
+      placeholder="Aporta pistas, avistamientos o mensajes de apoyo..."
+      [ngModel]="commentInput()"
+      (ngModelChange)="commentInput.set($event)"
+      (keydown.enter)="onSendComment()"
+    />
+    <app-button
+      variant="primary"
+      [loading]="sendingComment()"
+      [disabled]="!commentInput().trim()"
+      icon="send"
+      (btnClick)="onSendComment()"
+    >
+      Comentar
+    </app-button>
+  </div>
+
+  @if (isLoadingComments()) {
+    <div class="comments-loading-box">
+      <div class="spinner-modern-sm"></div>
+      <span>Cargando conversación...</span>
+    </div>
+  }
+
+  <div class="comments-flow-container">
+    @for (c of comments(); track c.id_comentario) {
+      <app-comment-item
+        [comment]="c"
+        [reporteId]="reporteId()"
+        [depth]="0"
+        [commentLiked]="commentLikedSet()"
+        [commentLikeCounts]="commentLikeCounts()"
+        [replyingToId]="replyingToId()"
+        [sendingSet]="sendingReplySet()"
+        [replyInput]="replyInput()"
+        (replyInputChange)="replyInput.set($event)"
+        (deleteComment)="onDeleteComment($event)"
+        (toggleLike)="onToggleCommentLike($event)"
+        (startReply)="startReply($event)"
+        (cancelReply)="cancelReply()"
+        (sendReply)="onSendReply($event)"
+        (reportComment)="reportComment.emit($event)"
+      ></app-comment-item>
+    } @empty {
+      @if (!isLoadingComments()) {
+        <div class="no-comments-box">
+          <i class="material-icons">chat_bubble_outline</i>
+          <p>Aún no hay comentarios. ¡Aporta la primera pista!</p>
+        </div>
+      }
+    }
+  </div>
+</section>

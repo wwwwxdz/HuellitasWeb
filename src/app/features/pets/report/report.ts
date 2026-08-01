@@ -18,6 +18,7 @@ import { TimePickerComponent } from '../../../shared/components/time-picker/time
 import { CloudinaryService } from '../../../core/services/cloudinary.service';
 import { MentionInputDirective } from '../../../shared/directives/mention-input.directive';
 import { ToastService } from '../../../core/services/toast.service';
+import { FacebookService } from '../../../core/services/facebook.service';
 
 @Component({
   selector: 'app-report-page',
@@ -45,6 +46,7 @@ export class ReportComponent implements OnInit {
   private readonly locationService = inject(LocationService);
   private readonly cloudinaryService = inject(CloudinaryService);
   private readonly toastService = inject(ToastService);
+  private readonly facebookService = inject(FacebookService);
 
   isSubmitted = signal<boolean>(false);
   isLoading = signal<boolean>(false);
@@ -437,9 +439,19 @@ export class ReportComponent implements OnInit {
     };
 
     try {
-      await this.petService.createReporte(request);
+      const nuevoReporte = await this.petService.createReporte(request);
       this.isSubmitted.set(true);
       this.toastService.success('¡Alerta de mascota publicada exitosamente!');
+
+      // Publicar en la página de Facebook en segundo plano
+      this.facebookService.publicarReporte({
+        nombre: this.nombre().trim() || undefined,
+        estado: this.estado(),
+        descripcion: desc || undefined,
+        ubicacion: this.direccion().trim() || 'Ubicación registrada',
+        imagenesUrls: imageUrls,
+        imagenUrl: imageUrls.length > 0 ? imageUrls[0] : undefined,
+      });
     } catch (err) {
       console.error('Error al guardar reporte:', err);
       this.toastService.error('Hubo un error al guardar el reporte. Inténtalo de nuevo.');

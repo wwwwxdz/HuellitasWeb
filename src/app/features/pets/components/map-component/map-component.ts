@@ -264,7 +264,7 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
         zoomControl: false,
       }).setView(this.center(), this.zoom());
 
-      // Agregar capa base Voyager
+      // Agregar capa base CARTO Voyager
       L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
         maxZoom: 20,

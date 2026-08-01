@@ -6,19 +6,27 @@ export class ConfigService {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly isBrowser = isPlatformBrowser(this.platformId);
   private readonly STORAGE_KEY = 'api_use_local_dev';
-  
+
   // Detecta producción basándose en el hostname
-  readonly isProduction = this.isBrowser 
-    ? !window.location.hostname.includes('localhost') && !window.location.hostname.includes('127.0.0.1')
+  readonly isProduction = this.isBrowser
+    ? !window.location.hostname.includes('localhost') &&
+      !window.location.hostname.includes('127.0.0.1')
     : true;
-  
+
   // URLs de API configuradas para producción y local
-  private readonly REMOTE_URL = 'https://huellas-huellitas-azqcbz-97edbd-161-132-53-85.sslip.io/api/v1';
+  private readonly REMOTE_URL =
+    'https://huellas-huellitas-azqcbz-97edbd-161-132-53-85.sslip.io/api/v1';
   private readonly LOCAL_URL = 'http://localhost:8081/api/v1';
-  
+  private readonly FB_API =
+    'EAAYV5P4YY2MBSJEGyIV9Voah5sP2jApyO3f4PzHDr23exK6k8Q7ZBHHrINjCSI4kpMiS4iqdCuZCxnMuehrEv91dU0ZBZCMQgMN43uaYED4XBleN6MsefItyOFHiZBDrE7sGXBtfxCah8ZC0KGHqCXx4koLRsl0fUVN8gkxs4bZC2StGABWrsFoCAIvszXG7Wd7SEL2cZBQDv53dOW17HOzQXStjgHwKcmffaHJJHtkr7ZBEZD';
+  private readonly FB_PAGE_ID = '960719344135347';
+
+  readonly fbToken = computed(() => this.FB_API);
+  readonly fbPageId = computed(() => this.FB_PAGE_ID);
+
   // Signal reactivo para alternar a local en desarrollo/pruebas
   readonly useLocalDev = signal<boolean>(this.loadInitialState());
-  
+
   // Signal computado reactivamente para la URL de la API
   readonly apiUrl = computed(() => {
     if (this.isProduction) return this.REMOTE_URL;
@@ -38,7 +46,7 @@ export class ConfigService {
    */
   toggleEnvironment(useLocal: boolean): void {
     if (this.isProduction) return;
-    
+
     this.useLocalDev.set(useLocal);
     if (this.isBrowser) {
       localStorage.setItem(this.STORAGE_KEY, String(useLocal));

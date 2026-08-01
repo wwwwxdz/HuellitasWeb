@@ -11,12 +11,14 @@ export const tokenInterceptor: HttpInterceptorFn = (req, next) => {
   const platformId = inject(PLATFORM_ID);
   const isBrowser = isPlatformBrowser(platformId);
 
-  // No agregar token a peticiones externas (Cloudinary, CDNs, etc.)
-  if (
+  // No agregar token a peticiones externas (Cloudinary, Facebook, CDNs, etc.)
+  const isExternalApi =
     req.url.startsWith('http') &&
     !req.url.includes('localhost') &&
-    !req.url.includes('127.0.0.1')
-  ) {
+    !req.url.includes('127.0.0.1') &&
+    !req.url.includes('sslip.io');
+
+  if (isExternalApi) {
     return next(req);
   }
 

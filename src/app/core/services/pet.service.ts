@@ -2,15 +2,15 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { ConfigService } from './config.service';
-import { 
-  PetReport, 
-  ReporteMascotaPuntoMapa, 
-  Especie, 
-  Raza, 
+import {
+  PetReport,
+  ReporteMascotaPuntoMapa,
+  Especie,
+  Raza,
   Color,
-  GetReportesFilters, 
-  CreateReporteMascotaRequest, 
-  UpdateReporteMascotaRequest 
+  GetReportesFilters,
+  CreateReporteMascotaRequest,
+  UpdateReporteMascotaRequest,
 } from '../models/pet.model';
 
 @Injectable({
@@ -19,7 +19,7 @@ import {
 export class PetService {
   private readonly http = inject(HttpClient);
   private readonly configService = inject(ConfigService);
-  
+
   private get apiUrl(): string {
     return this.configService.apiUrl();
   }
@@ -28,22 +28,24 @@ export class PetService {
    * Lista reportes con filtros opcionales.
    * Endpoint: GET /api/v1/reportes
    */
-  async getReportes(filters: GetReportesFilters = {}): Promise<{ data: PetReport[]; hasMore: boolean; total: number }> {
+  async getReportes(
+    filters: GetReportesFilters = {},
+  ): Promise<{ data: PetReport[]; hasMore: boolean; total: number }> {
     let params = new HttpParams();
 
-    if (filters.search)     params = params.set('search', filters.search);
-    if (filters.estado)     params = params.set('estado', String(filters.estado));
-    if (filters.ubicacion)  params = params.set('ubicacion', filters.ubicacion);
+    if (filters.search) params = params.set('search', filters.search);
+    if (filters.estado) params = params.set('estado', String(filters.estado));
+    if (filters.ubicacion) params = params.set('ubicacion', filters.ubicacion);
     if (filters.start_date) params = params.set('start_date', filters.start_date);
-    if (filters.end_date)   params = params.set('end_date', filters.end_date);
-    if (filters.lat)        params = params.set('lat', String(filters.lat));
-    if (filters.lng)        params = params.set('lng', String(filters.lng));
-    if (filters.radio)      params = params.set('radio', String(filters.radio));
+    if (filters.end_date) params = params.set('end_date', filters.end_date);
+    if (filters.lat) params = params.set('lat', String(filters.lat));
+    if (filters.lng) params = params.set('lng', String(filters.lng));
+    if (filters.radio) params = params.set('radio', String(filters.radio));
     if (filters.id_especie) params = params.set('id_especie', filters.id_especie);
-    if (filters.id_raza)    params = params.set('id_raza', filters.id_raza);
-    if (filters.order)      params = params.set('order', filters.order);
-    if (filters.page)       params = params.set('page', String(filters.page));
-    if (filters.limit)      params = params.set('limit', String(filters.limit));
+    if (filters.id_raza) params = params.set('id_raza', filters.id_raza);
+    if (filters.order) params = params.set('order', filters.order);
+    if (filters.page) params = params.set('page', String(filters.page));
+    if (filters.limit) params = params.set('limit', String(filters.limit));
 
     interface PaginatedResponse {
       data: PetReport[];
@@ -54,28 +56,27 @@ export class PetService {
     }
 
     try {
-      console.info(`[PET SERVICE] HTTP GET a: ${this.apiUrl}/reportes con params:`, params.toString());
+      console.info(
+        `[PET SERVICE] HTTP GET a: ${this.apiUrl}/reportes con params:`,
+        params.toString(),
+      );
       const response = await firstValueFrom(
-        this.http.get<PaginatedResponse>(`${this.apiUrl}/reportes`, { params })
+        this.http.get<PaginatedResponse>(`${this.apiUrl}/reportes`, { params }),
       );
       const data = response.data || [];
 
       // Fallback de filtrado en cliente para tipo y raza por texto libre (si no se enviaron IDs)
       let result = data;
       if (filters.tipo && !filters.id_especie) {
-        result = result.filter((r) =>
-          r.tipo?.toLowerCase() === filters.tipo!.toLowerCase()
-        );
+        result = result.filter((r) => r.tipo?.toLowerCase() === filters.tipo!.toLowerCase());
       }
       if (filters.raza && !filters.id_raza) {
-        result = result.filter((r) =>
-          r.raza?.toLowerCase().includes(filters.raza!.toLowerCase())
-        );
+        result = result.filter((r) => r.raza?.toLowerCase().includes(filters.raza!.toLowerCase()));
       }
 
       // Deduplicar por ID de reporte (defensa ante duplicados del backend)
       const seen = new Set<string>();
-      const deduplicated = result.filter(r => {
+      const deduplicated = result.filter((r) => {
         if (seen.has(r.id_reporte_mascota)) return false;
         seen.add(r.id_reporte_mascota);
         return true;
@@ -84,7 +85,7 @@ export class PetService {
       return {
         data: deduplicated,
         hasMore: response.has_more ?? false,
-        total: response.total ?? 0
+        total: response.total ?? 0,
       };
     } catch (error) {
       console.warn('Error al obtener reportes reales del backend. Usando mocks locales:', error);
@@ -108,16 +109,16 @@ export class PetService {
             id_reporte_mascota: '1',
             url: '/images/pet-max.png',
             es_principal: true,
-            creado_en: new Date().toISOString()
+            creado_en: new Date().toISOString(),
           },
           usuario: {
             id_usuario: 'usr1',
             nombre: 'Juan Pérez',
-            foto_perfil: '/images/avatar-maria.png'
+            foto_perfil: '/images/avatar-maria.png',
           },
           total_likes: 12,
           total_comentarios: 3,
-          liked_por_usuario: false
+          liked_por_usuario: false,
         },
         {
           id_reporte_mascota: '2',
@@ -129,24 +130,24 @@ export class PetService {
           departamento: 'Ancash',
           provincia: 'Santa',
           distrito: 'Nuevo Chimbote',
-          latitud: -9.1250,
-          longitud: -78.5280,
+          latitud: -9.125,
+          longitud: -78.528,
           creado_en: new Date(Date.now() - 3600000 * 4).toISOString(),
           imagen_principal: {
             id_imagen_mascota: 'img2',
             id_reporte_mascota: '2',
             url: '/images/pet-cat.png',
             es_principal: true,
-            creado_en: new Date().toISOString()
+            creado_en: new Date().toISOString(),
           },
           usuario: {
             id_usuario: 'usr2',
             nombre: 'Lucía Gómez',
-            foto_perfil: '/images/avatar-lucia.png'
+            foto_perfil: '/images/avatar-lucia.png',
           },
           total_likes: 24,
           total_comentarios: 8,
-          liked_por_usuario: true
+          liked_por_usuario: true,
         },
         {
           id_reporte_mascota: '3',
@@ -158,39 +159,43 @@ export class PetService {
           departamento: 'Ancash',
           provincia: 'Santa',
           distrito: 'Nuevo Chimbote',
-          latitud: -9.1300,
-          longitud: -78.5350,
+          latitud: -9.13,
+          longitud: -78.535,
           creado_en: new Date(Date.now() - 3600000 * 24).toISOString(),
           imagen_principal: {
             id_imagen_mascota: 'img3',
             id_reporte_mascota: '3',
             url: '/images/pet-toby.png',
             es_principal: true,
-            creado_en: new Date().toISOString()
+            creado_en: new Date().toISOString(),
           },
           usuario: {
             id_usuario: 'usr3',
             nombre: 'Carlos Soto',
-            foto_perfil: '/images/avatar-carlos.png'
+            foto_perfil: '/images/avatar-carlos.png',
           },
           total_likes: 5,
           total_comentarios: 1,
-          liked_por_usuario: false
-        }
+          liked_por_usuario: false,
+        },
       ];
 
       let filtered = mockReports;
       if (filters.estado) {
-        filtered = filtered.filter(r => r.estado === filters.estado);
+        filtered = filtered.filter((r) => r.estado === filters.estado);
       }
       if (filters.search) {
-        filtered = filtered.filter(r => r.nombre.toLowerCase().includes(filters.search!.toLowerCase()) || r.raza.toLowerCase().includes(filters.search!.toLowerCase()));
+        filtered = filtered.filter(
+          (r) =>
+            r.nombre.toLowerCase().includes(filters.search!.toLowerCase()) ||
+            r.raza.toLowerCase().includes(filters.search!.toLowerCase()),
+        );
       }
 
       return {
         data: filtered,
         hasMore: false,
-        total: filtered.length
+        total: filtered.length,
       };
     }
   }
@@ -199,23 +204,28 @@ export class PetService {
    * Obtiene puntos de mapa.
    * Endpoint: GET /api/v1/reportes/mapa
    */
-  async getMapPoints(filters: {
-    lat?: number;
-    lng?: number;
-    radio?: number;
-    estado?: number | null;
-    id_especie?: string;
-  } = {}): Promise<{ data: ReporteMascotaPuntoMapa[] }> {
+  async getMapPoints(
+    filters: {
+      lat?: number;
+      lng?: number;
+      radio?: number;
+      estado?: number | null;
+      id_especie?: string;
+    } = {},
+  ): Promise<{ data: ReporteMascotaPuntoMapa[] }> {
     let params = new HttpParams();
     if (filters.lat !== undefined) params = params.set('lat', String(filters.lat));
     if (filters.lng !== undefined) params = params.set('lng', String(filters.lng));
     if (filters.radio !== undefined) params = params.set('radio', String(filters.radio));
-    if (filters.estado !== undefined && filters.estado !== null) params = params.set('estado', String(filters.estado));
+    if (filters.estado !== undefined && filters.estado !== null)
+      params = params.set('estado', String(filters.estado));
     if (filters.id_especie) params = params.set('id_especie', filters.id_especie);
 
     try {
       return await firstValueFrom(
-        this.http.get<{ data: ReporteMascotaPuntoMapa[] }>(`${this.apiUrl}/reportes/mapa`, { params })
+        this.http.get<{ data: ReporteMascotaPuntoMapa[] }>(`${this.apiUrl}/reportes/mapa`, {
+          params,
+        }),
       );
     } catch (error) {
       console.warn('Error al obtener puntos del mapa reales. Usando mocks locales:', error);
@@ -228,26 +238,26 @@ export class PetService {
           latitud: -9.1214,
           longitud: -78.5308,
           id_especie: 'esp-dog-id',
-          foto_principal: '/images/pet-max.png'
+          foto_principal: '/images/pet-max.png',
         },
         {
           id_reporte_mascota: '2',
           nombre: 'Pelusa',
           estado: 1, // encontrado (azul)
-          latitud: -9.1250,
-          longitud: -78.5280,
+          latitud: -9.125,
+          longitud: -78.528,
           id_especie: 'esp-cat-id',
-          foto_principal: '/images/pet-cat.png'
+          foto_principal: '/images/pet-cat.png',
         },
         {
           id_reporte_mascota: '3',
           nombre: 'Toby',
           estado: 3, // avistado (naranja)
-          latitud: -9.1300,
-          longitud: -78.5350,
+          latitud: -9.13,
+          longitud: -78.535,
           id_especie: 'esp-dog-id',
-          foto_principal: '/images/pet-toby.png'
-        }
+          foto_principal: '/images/pet-toby.png',
+        },
       ];
       return { data: mockPoints };
     }
@@ -259,15 +269,13 @@ export class PetService {
    */
   async getEspecies(): Promise<Especie[]> {
     try {
-      return await firstValueFrom(
-        this.http.get<Especie[]>(`${this.apiUrl}/especies`)
-      );
+      return await firstValueFrom(this.http.get<Especie[]>(`${this.apiUrl}/especies`));
     } catch (error) {
       console.warn('Error al obtener especies reales. Usando mocks locales:', error);
       return [
         { id_especie: 'esp-dog-id', nombre: 'Perro' },
         { id_especie: 'esp-cat-id', nombre: 'Gato' },
-        { id_especie: 'esp-bird-id', nombre: 'Ave' }
+        { id_especie: 'esp-bird-id', nombre: 'Ave' },
       ];
     }
   }
@@ -281,9 +289,7 @@ export class PetService {
     if (idEspecie) params = params.set('id_especie', idEspecie);
 
     try {
-      return await firstValueFrom(
-        this.http.get<Raza[]>(`${this.apiUrl}/razas`, { params })
-      );
+      return await firstValueFrom(this.http.get<Raza[]>(`${this.apiUrl}/razas`, { params }));
     } catch (error) {
       console.warn('Error al obtener razas reales. Usando mocks locales:', error);
       const allRazas: Raza[] = [
@@ -292,10 +298,10 @@ export class PetService {
         { id_raza: 'rz-schnauzer', id_especie: 'esp-dog-id', nombre: 'Schnauzer' },
         { id_raza: 'rz-siames', id_especie: 'esp-cat-id', nombre: 'Siamés' },
         { id_raza: 'rz-persa', id_especie: 'esp-cat-id', nombre: 'Persa' },
-        { id_raza: 'rz-canario', id_especie: 'esp-bird-id', nombre: 'Canario' }
+        { id_raza: 'rz-canario', id_especie: 'esp-bird-id', nombre: 'Canario' },
       ];
       if (idEspecie) {
-        return allRazas.filter(r => r.id_especie === idEspecie);
+        return allRazas.filter((r) => r.id_especie === idEspecie);
       }
       return allRazas;
     }
@@ -307,9 +313,7 @@ export class PetService {
    */
   async getColores(): Promise<Color[]> {
     try {
-      return await firstValueFrom(
-        this.http.get<Color[]>(`${this.apiUrl}/colores`)
-      );
+      return await firstValueFrom(this.http.get<Color[]>(`${this.apiUrl}/colores`));
     } catch (error) {
       console.warn('Error al obtener colores reales. Usando mocks locales:', error);
       return [
@@ -318,7 +322,7 @@ export class PetService {
         { id_color: '3', nombre: 'Marrón', hex: '#8B4513' },
         { id_color: '4', nombre: 'Gris', hex: '#808080' },
         { id_color: '5', nombre: 'Dorado', hex: '#FFD700' },
-        { id_color: '6', nombre: 'Naranja', hex: '#FFA500' }
+        { id_color: '6', nombre: 'Naranja', hex: '#FFA500' },
       ];
     }
   }
@@ -329,39 +333,47 @@ export class PetService {
    */
   async getReporte(id: string): Promise<PetReport> {
     try {
-      return await firstValueFrom(
-        this.http.get<PetReport>(`${this.apiUrl}/reportes/${id}`)
-      );
+      return await firstValueFrom(this.http.get<PetReport>(`${this.apiUrl}/reportes/${id}`));
     } catch (error) {
       console.warn(`Error al obtener reporte real para ID ${id}. Usando mock local:`, error);
       return {
         id_reporte_mascota: id,
-        nombre: id === '1' ? 'Max' : (id === '2' ? 'Pelusa' : 'Toby'),
+        nombre: id === '1' ? 'Max' : id === '2' ? 'Pelusa' : 'Toby',
         tipo: id === '2' ? 'gato' : 'perro',
-        raza: id === '1' ? 'Golden Retriever' : (id === '2' ? 'Siamés' : 'Schnauzer'),
+        raza: id === '1' ? 'Golden Retriever' : id === '2' ? 'Siamés' : 'Schnauzer',
         estado: id === '2' ? 1 : 2,
-        ubicacion: id === '1' ? 'Barrio San Martin, Zona Norte' : (id === '2' ? 'Plaza Central, Centro' : 'Avenida Libertad, Sur'),
+        ubicacion:
+          id === '1'
+            ? 'Barrio San Martin, Zona Norte'
+            : id === '2'
+              ? 'Plaza Central, Centro'
+              : 'Avenida Libertad, Sur',
         departamento: 'Ancash',
         provincia: 'Santa',
         distrito: 'Nuevo Chimbote',
-        latitud: id === '1' ? -9.1214 : (id === '2' ? -9.1250 : -9.1300),
-        longitud: id === '1' ? -78.5308 : (id === '2' ? -78.5280 : -78.5350),
+        latitud: id === '1' ? -9.1214 : id === '2' ? -9.125 : -9.13,
+        longitud: id === '1' ? -78.5308 : id === '2' ? -78.528 : -78.535,
         creado_en: new Date().toISOString(),
         imagen_principal: {
           id_imagen_mascota: 'img-' + id,
           id_reporte_mascota: id,
-          url: id === '1' ? '/images/pet-max.png' : (id === '2' ? '/images/pet-cat.png' : '/images/pet-toby.png'),
+          url:
+            id === '1'
+              ? '/images/pet-max.png'
+              : id === '2'
+                ? '/images/pet-cat.png'
+                : '/images/pet-toby.png',
           es_principal: true,
-          creado_en: new Date().toISOString()
+          creado_en: new Date().toISOString(),
         },
         usuario: {
           id_usuario: 'usr-' + id,
           nombre: 'Usuario Guardián',
-          foto_perfil: '/images/avatar-maria.png'
+          foto_perfil: '/images/avatar-maria.png',
         },
         total_likes: 15,
         total_comentarios: 2,
-        liked_por_usuario: false
+        liked_por_usuario: false,
       };
     }
   }
@@ -372,9 +384,7 @@ export class PetService {
    */
   async createReporte(data: CreateReporteMascotaRequest): Promise<PetReport> {
     try {
-      return await firstValueFrom(
-        this.http.post<PetReport>(`${this.apiUrl}/reportes`, data)
-      );
+      return await firstValueFrom(this.http.post<PetReport>(`${this.apiUrl}/reportes`, data));
     } catch (error) {
       console.warn('Error al crear reporte real en backend. Simulando éxito local:', error);
       const newReport: PetReport = {
@@ -390,29 +400,32 @@ export class PetService {
         latitud: data.latitud || -9.1214,
         longitud: data.longitud || -78.5308,
         creado_en: new Date().toISOString(),
-        imagen_principal: data.imagenes && data.imagenes.length > 0 ? {
-          id_imagen_mascota: 'img-new',
-          id_reporte_mascota: 'new',
-          url: data.imagenes[0],
-          es_principal: true,
-          creado_en: new Date().toISOString()
-        } : null,
+        imagen_principal:
+          data.imagenes && data.imagenes.length > 0
+            ? {
+                id_imagen_mascota: 'img-new',
+                id_reporte_mascota: 'new',
+                url: data.imagenes[0],
+                es_principal: true,
+                creado_en: new Date().toISOString(),
+              }
+            : null,
         usuario: {
           id_usuario: data.id_usuario,
           nombre: 'Guardián Activo',
-          foto_perfil: '/images/avatar-maria.png'
+          foto_perfil: '/images/avatar-maria.png',
         },
         total_likes: 0,
         total_comentarios: 0,
-        liked_por_usuario: false
+        liked_por_usuario: false,
       };
-      
+
       // Lanzar evento global para recargar en caso de que otras pantallas estén escuchando
       if (typeof window !== 'undefined') {
         const event = new CustomEvent('pet-report-created');
         window.dispatchEvent(event);
       }
-      
+
       return newReport;
     }
   }
@@ -422,9 +435,7 @@ export class PetService {
    * Endpoint: PUT /api/v1/reportes/{id}
    */
   async updateReporte(id: string, data: UpdateReporteMascotaRequest): Promise<PetReport> {
-    return firstValueFrom(
-      this.http.put<PetReport>(`${this.apiUrl}/reportes/${id}`, data)
-    );
+    return firstValueFrom(this.http.put<PetReport>(`${this.apiUrl}/reportes/${id}`, data));
   }
 
   /**
@@ -432,9 +443,7 @@ export class PetService {
    * Endpoint: DELETE /api/v1/reportes/{id}
    */
   async deleteReporte(id: string): Promise<{ message: string }> {
-    return firstValueFrom(
-      this.http.delete<{ message: string }>(`${this.apiUrl}/reportes/${id}`)
-    );
+    return firstValueFrom(this.http.delete<{ message: string }>(`${this.apiUrl}/reportes/${id}`));
   }
 
   /**
@@ -446,11 +455,14 @@ export class PetService {
       return await firstValueFrom(
         this.http.post<{ liked_por_usuario: boolean; total_likes: number }>(
           `${this.apiUrl}/reportes/${id}/likes`,
-          {}
-        )
+          {},
+        ),
       );
     } catch (error) {
-      console.warn(`Error al dar/quitar like real en backend para ID ${id}. Simulando localmente:`, error);
+      console.warn(
+        `Error al dar/quitar like real en backend para ID ${id}. Simulando localmente:`,
+        error,
+      );
       return { liked_por_usuario: true, total_likes: 1 };
     }
   }
@@ -462,7 +474,7 @@ export class PetService {
   async getReportesCreados(idUsuario: string): Promise<PetReport[]> {
     try {
       const res = await firstValueFrom(
-        this.http.get<{ data: PetReport[] }>(`${this.apiUrl}/usuarios/${idUsuario}/reportes`)
+        this.http.get<{ data: PetReport[] }>(`${this.apiUrl}/usuarios/${idUsuario}/reportes`),
       );
       return res.data || [];
     } catch (error) {
@@ -484,9 +496,9 @@ export class PetService {
         reporte_mascota: PetReport;
       }
       const res = await firstValueFrom(
-        this.http.get<LikeResponse[]>(`${this.apiUrl}/usuarios/${idUsuario}/likes`)
+        this.http.get<LikeResponse[]>(`${this.apiUrl}/usuarios/${idUsuario}/likes`),
       );
-      return (res || []).map(item => item.reporte_mascota).filter(Boolean);
+      return (res || []).map((item) => item.reporte_mascota).filter(Boolean);
     } catch (error) {
       console.error(`Error al obtener reportes gustados para usuario ${idUsuario}:`, error);
       return [];
@@ -507,9 +519,9 @@ export class PetService {
         reporte_mascota: PetReport;
       }
       const res = await firstValueFrom(
-        this.http.get<CompartidoResponse[]>(`${this.apiUrl}/usuarios/${idUsuario}/compartidos`)
+        this.http.get<CompartidoResponse[]>(`${this.apiUrl}/usuarios/${idUsuario}/compartidos`),
       );
-      return (res || []).map(item => item.reporte_mascota).filter(Boolean);
+      return (res || []).map((item) => item.reporte_mascota).filter(Boolean);
     } catch (error) {
       console.error(`Error al obtener reportes compartidos para usuario ${idUsuario}:`, error);
       return [];
@@ -522,9 +534,7 @@ export class PetService {
    */
   async compartirReporte(id: string): Promise<void> {
     try {
-      await firstValueFrom(
-        this.http.post(`${this.apiUrl}/reportes/${id}/compartir`, {})
-      );
+      await firstValueFrom(this.http.post(`${this.apiUrl}/reportes/${id}/compartir`, {}));
     } catch (error) {
       console.error(`Error al compartir reporte ${id}:`, error);
     }
@@ -536,9 +546,7 @@ export class PetService {
    */
   async descompartirReporte(id: string): Promise<void> {
     try {
-      await firstValueFrom(
-        this.http.delete(`${this.apiUrl}/reportes/${id}/compartir`)
-      );
+      await firstValueFrom(this.http.delete(`${this.apiUrl}/reportes/${id}/compartir`));
     } catch (error) {
       console.error(`Error al descompartir reporte ${id}:`, error);
     }
@@ -551,7 +559,9 @@ export class PetService {
   async getSightings(reportId: string): Promise<import('../models/pet.model').Avistamiento[]> {
     try {
       return await firstValueFrom(
-        this.http.get<import('../models/pet.model').Avistamiento[]>(`${this.apiUrl}/reportes/${reportId}/avistamientos`)
+        this.http.get<import('../models/pet.model').Avistamiento[]>(
+          `${this.apiUrl}/reportes/${reportId}/avistamientos`,
+        ),
       );
     } catch (error) {
       console.error(`Error al obtener avistamientos del reporte ${reportId}:`, error);
@@ -563,9 +573,15 @@ export class PetService {
    * Crea un nuevo avistamiento para un reporte.
    * Endpoint: POST /api/v1/reportes/{id}/avistamientos
    */
-  async createSighting(reportId: string, data: import('../models/pet.model').CreateAvistamientoRequest): Promise<import('../models/pet.model').Avistamiento> {
+  async createSighting(
+    reportId: string,
+    data: import('../models/pet.model').CreateAvistamientoRequest,
+  ): Promise<import('../models/pet.model').Avistamiento> {
     return firstValueFrom(
-      this.http.post<import('../models/pet.model').Avistamiento>(`${this.apiUrl}/reportes/${reportId}/avistamientos`, data)
+      this.http.post<import('../models/pet.model').Avistamiento>(
+        `${this.apiUrl}/reportes/${reportId}/avistamientos`,
+        data,
+      ),
     );
   }
 
@@ -575,7 +591,7 @@ export class PetService {
    */
   async updateSightingStatus(sightingId: string, estado: number): Promise<void> {
     await firstValueFrom(
-      this.http.put<void>(`${this.apiUrl}/avistamientos/${sightingId}/estado`, { estado })
+      this.http.put<void>(`${this.apiUrl}/avistamientos/${sightingId}/estado`, { estado }),
     );
   }
 
@@ -584,9 +600,7 @@ export class PetService {
    * Endpoint: DELETE /api/v1/avistamientos/{id}
    */
   async deleteSighting(sightingId: string): Promise<void> {
-    await firstValueFrom(
-      this.http.delete<void>(`${this.apiUrl}/avistamientos/${sightingId}`)
-    );
+    await firstValueFrom(this.http.delete<void>(`${this.apiUrl}/avistamientos/${sightingId}`));
   }
 
   /**
@@ -594,12 +608,10 @@ export class PetService {
    * Endpoint: GET /api/v1/reportes/{id}/historial
    */
   async getHistorial(id: string, page = 1, limit = 50): Promise<{ data: any[] }> {
-    const params = new HttpParams()
-      .set('page', String(page))
-      .set('limit', String(limit));
+    const params = new HttpParams().set('page', String(page)).set('limit', String(limit));
     try {
       return await firstValueFrom(
-        this.http.get<{ data: any[] }>(`${this.apiUrl}/reportes/${id}/historial`, { params })
+        this.http.get<{ data: any[] }>(`${this.apiUrl}/reportes/${id}/historial`, { params }),
       );
     } catch (error) {
       console.warn('Error al obtener historial de cambios:', error);

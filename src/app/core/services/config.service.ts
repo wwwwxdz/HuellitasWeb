@@ -14,6 +14,7 @@ export class ConfigService {
     : true;
 
   // URLs de API configuradas para producción y local
+
   private readonly REMOTE_URL =
     'https://huellas-huellitas-azqcbz-97edbd-161-132-53-85.sslip.io/api/v1';
   private readonly LOCAL_URL = 'http://localhost:8081/api/v1';

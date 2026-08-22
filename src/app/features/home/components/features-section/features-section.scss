@@ -1,11 +1,11 @@
+@use "../../../../../styles/breakpoints" as *;
+
 /* --- Features Section --- */
 .features-section {
-  padding: 4rem 1rem;
-}
+  padding: 6rem 1rem;
 
-@media (min-width: 768px) {
-  .features-section {
-    padding: 6rem 1rem;
+  @include mobile {
+    padding: 4rem 1rem;
   }
 }
 
@@ -34,20 +34,16 @@
 
 .features-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(4, 1fr);
   gap: 2rem;
   width: 100%;
-}
 
-@media (min-width: 576px) {
-  .features-grid {
+  @include tablet {
     grid-template-columns: repeat(2, 1fr);
   }
-}
 
-@media (min-width: 992px) {
-  .features-grid {
-    grid-template-columns: repeat(4, 1fr);
+  @include mobile {
+    grid-template-columns: 1fr;
   }
 }
 

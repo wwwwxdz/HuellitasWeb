@@ -1,3 +1,5 @@
+@use "../../../../../styles/breakpoints" as *;
+
 /* --- Adoption Section --- */
 .adoption-section {
   padding: 5rem 1rem;
@@ -8,6 +10,12 @@
     align-items: flex-end;
     margin-bottom: 2.5rem;
     gap: 1.5rem;
+
+    @include mobile {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+    }
     
     .header-left {
       h2 {
@@ -51,14 +59,15 @@
 
   .adoption-grid {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(4, 1fr);
     gap: 1.5rem;
-    
-    @media (min-width: 576px) {
+
+    @include tablet {
       grid-template-columns: repeat(2, 1fr);
     }
-    @media (min-width: 992px) {
-      grid-template-columns: repeat(4, 1fr);
+
+    @include mobile {
+      grid-template-columns: 1fr;
     }
   }
 

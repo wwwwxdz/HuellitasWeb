@@ -1,70 +1,58 @@
 <section class="hero">
+  <!-- Polaroid Izquierda (Flotante) -->
+  <div class="hero-polaroid polaroid-left">
+    <img src="/images/hero/Hero 1.png" alt="Mascota con su dueña" />
+  </div>
+
   <div class="hero-container container">
-    <!-- Columna Izquierda -->
-    <div class="hero-content">
-      <h1>Cada mascota merece volver a casa.</h1>
-      <p>
-        Una plataforma solidaria para reportar, buscar y reunir mascotas perdidas con sus familias. Conectamos corazones a través de la tecnología y la comunidad.
-      </p>
-      
-      <div class="hero-actions">
-        <a routerLink="/pets/report" class="btn-report">
-          Reportar mascota <i class="material-icons">pets</i>
-        </a>
-        <a routerLink="/pets/lost" class="btn-explore">
-          Explorar reportes <i class="material-icons">search</i>
-        </a>
+    <div class="hero-center-content">
+      <div class="hero-header-group">
+        <h1 class="hero-title">Cada huellita merece volver a casa</h1>
+        <p class="hero-description">
+          Somos una comunidad que une corazones para ayudar a mascotas a reencontrarse con sus familias o encontrar un hogar donde sean felices.
+        </p>
       </div>
 
-      <hr class="hero-divider" />
-
-      <div class="hero-stats">
-        <div class="stat-item">
-          <span class="stat-num blue">12k+</span>
-          <span class="stat-label">REUNIONES</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-num green">850</span>
-          <span class="stat-label">REPORTES ACTIVOS</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-num orange">45k</span>
-          <span class="stat-label">USUARIOS</span>
-        </div>
+      <div class="hero-actions-new">
+        <app-button routerLink="/pets/report" variant="primary" size="lg" shape="pill">
+          <img src="/icons/HuellaIcon.svg" alt="Huella" />
+          Reportar Mascota
+        </app-button>
+        <app-button routerLink="/pets/map" variant="outline" size="lg" shape="pill">
+          Explorar el mapa
+        </app-button>
       </div>
-    </div>
 
-    <!-- Columna Derecha -->
-    <div class="hero-media">
-      <div class="image-wrapper">
-        <img 
-          src="/images/hero-dog.png" 
-          alt="Happy Golden Retriever being hugged" 
-          class="main-img"
-        />
-
-        <!-- Badge Flotante Superior Izquierdo -->
-        <div class="floating-badge top-left">
-          <div class="badge-avatar">
-            <img src="/images/luna-cat.png" alt="Luna Cat" />
-          </div>
-          <div class="badge-text">
-            <span class="badge-tag-green">¡REUNIDO!</span>
-            <span class="badge-msg">Luna volvió a casa</span>
-          </div>
+      <div class="hero-stats-new">
+        <div class="stat-item-new">
+          <img src="/icons/MapIcon.svg" alt="Mapa" class="stat-icon" />
+          <span>Mapa interactivo</span>
         </div>
-
-        <!-- Badge Flotante Inferior Derecho -->
-        <div class="floating-badge bottom-right">
-          <div class="badge-icon-red">
-            <i class="material-icons">location_on</i>
-          </div>
-          <div class="badge-text">
-            <span class="badge-tag-red">ALERTA CERCANA</span>
-            <span class="badge-msg">Perro visto en Parque Central</span>
-          </div>
+        <div class="stat-item-new">
+          <img src="/icons/CampanaIcon.svg" alt="Campana" class="stat-icon" />
+          <span>Alertas cercanas</span>
+        </div>
+        <div class="stat-item-new">
+          <img src="/icons/ApoyoIcon.svg" alt="Apoyo" class="stat-icon" />
+          <span>Apoyo comunitario</span>
         </div>
       </div>
     </div>
   </div>
+
+  <!-- Polaroid Derecha (Flotante) -->
+  <div class="hero-polaroid polaroid-right">
+    <img src="/images/hero/hero 2.png" alt="Mascotas rescatadas" />
+  </div>
+
+  <!-- Ola de transición al final del hero -->
+  <div class="hero-wave">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 100" preserveAspectRatio="none">
+      <path
+        d="M0,60 C240,100 480,0 720,50 C960,100 1200,20 1440,60 L1440,100 L0,100 Z"
+        fill="var(--bg-dark)"
+      />
+    </svg>
+  </div>
 </section>
+

@@ -1,5 +1,6 @@
 import { Injectable, signal, computed, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class ConfigService {
@@ -7,31 +8,19 @@ export class ConfigService {
   private readonly isBrowser = isPlatformBrowser(this.platformId);
   private readonly STORAGE_KEY = 'api_use_local_dev';
 
-  // Detecta producción basándose en el hostname
-  readonly isProduction = this.isBrowser
-    ? !window.location.hostname.includes('localhost') &&
-      !window.location.hostname.includes('127.0.0.1')
-    : true;
+  readonly isProduction = environment.production;
 
-  // URLs de API configuradas para producción y local
-
-  private readonly REMOTE_URL =
-    'https://huellas-huellitas-azqcbz-97edbd-161-132-53-85.sslip.io/api/v1';
-  private readonly LOCAL_URL = 'http://localhost:8081/api/v1';
-  private readonly FB_API =
-    'EAAYV5P4YY2MBSJEGyIV9Voah5sP2jApyO3f4PzHDr23exK6k8Q7ZBHHrINjCSI4kpMiS4iqdCuZCxnMuehrEv91dU0ZBZCMQgMN43uaYED4XBleN6MsefItyOFHiZBDrE7sGXBtfxCah8ZC0KGHqCXx4koLRsl0fUVN8gkxs4bZC2StGABWrsFoCAIvszXG7Wd7SEL2cZBQDv53dOW17HOzQXStjgHwKcmffaHJJHtkr7ZBEZD';
-  private readonly FB_PAGE_ID = '960719344135347';
-
-  readonly fbToken = computed(() => this.FB_API);
-  readonly fbPageId = computed(() => this.FB_PAGE_ID);
+  // Facebook Config desde el entorno activo
+  readonly fbToken = computed(() => environment.fbToken);
+  readonly fbPageId = computed(() => environment.fbPageId);
 
   // Signal reactivo para alternar a local en desarrollo/pruebas
   readonly useLocalDev = signal<boolean>(this.loadInitialState());
 
   // Signal computado reactivamente para la URL de la API
   readonly apiUrl = computed(() => {
-    if (this.isProduction) return this.REMOTE_URL;
-    return this.useLocalDev() ? this.LOCAL_URL : this.REMOTE_URL;
+    if (this.isProduction) return environment.apiUrl;
+    return this.useLocalDev() ? environment.apiUrl : environment.remoteApiUrl;
   });
 
   private loadInitialState(): boolean {

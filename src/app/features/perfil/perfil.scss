@@ -1,3 +1,5 @@
+@use "../../../styles/breakpoints" as *;
+
 .perfil-page {
   min-height: calc(100vh - 70px);
   padding: 3rem 1rem;
@@ -26,14 +28,14 @@
 }
 
 .profile-banner {
-  height: 140px;
+  height: 180px;
   background: linear-gradient(135deg, #106063 0%, #1e3c72 100%);
   position: relative;
   border-top-left-radius: 23px;
   border-top-right-radius: 23px;
   
-  @media (min-width: 600px) {
-    height: 180px;
+  @include mobile {
+    height: 140px;
   }
 
   .banner-overlay {
@@ -51,14 +53,14 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  padding: 0 16px;
-  margin-top: -55px;
+  padding: 0 24px;
+  margin-top: -75px;
   position: relative;
   z-index: 5;
 
-  @media (min-width: 600px) {
-    padding: 0 24px;
-    margin-top: -75px;
+  @include mobile {
+    padding: 0 16px;
+    margin-top: -55px;
   }
 }
 

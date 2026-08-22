@@ -1,12 +1,22 @@
+@use "../../../../styles/breakpoints" as *;
+
 .navbar {
-  background-color: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border-color);
-  position: sticky;
-  top: 0;
-  z-index: 2000; /* Mayor que el filtro (1010) para evitar que se solape al desplegar dropdowns */
-  transition: var(--theme-transition);
-  font-family: var(--font-brand), sans-serif;
+  // background-color: var(--glass-bg, rgba(9, 9, 11, 0.85));
+  // backdrop-filter: blur(14px);
+  // -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid transparent;
+  position: relative;
+  width: 100%;
+  z-index: 2000;
+  transition:
+    border-color 0.35s ease,
+    box-shadow 0.35s ease,
+    background-color 0.35s ease;
+
+  &.is-scrolled {
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: 0 0.8rem 2.4rem -0.8rem rgba(0, 0, 0, 0.5);
+  }
 }
 
 .nav-container {
@@ -37,26 +47,25 @@
   color: var(--primary-color);
 }
 
-/* --- Desktop Layout --- */
+/* --- Desktop Layout (Default) --- */
 .nav-links-desktop {
-  display: none;
-}
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
 
-@media (min-width: 768px) {
-  .nav-links-desktop {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
+  @include mobile {
+    display: none;
   }
 }
 
 .nav-links-desktop a {
   font-size: var(--font-sm);
-  font-weight: var(--weight-medium);
-  color: var(--text-muted);
+  font-weight: 500;
+  color: rgb(241, 237, 237);
   padding: 0.5rem 0.75rem;
   border-radius: var(--border-radius-sm);
   transition: all 0.2s ease;
+  font-family: var(--font-body), sans-serif;
 }
 
 .nav-links-desktop a:hover {
@@ -71,14 +80,12 @@
 }
 
 .nav-actions-desktop {
-  display: none;
-}
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 
-@media (min-width: 768px) {
-  .nav-actions-desktop {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
+  @include mobile {
+    display: none;
   }
 }
 
@@ -144,7 +151,10 @@
   max-height: 0;
   opacity: 0;
   visibility: hidden;
-  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease, visibility 0.2s;
+  transition:
+    max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.2s ease,
+    visibility 0.2s;
   z-index: 99;
 }
 
@@ -162,7 +172,7 @@
 }
 
 .mobile-links a {
-  font-family: var(--font-main);
+  font-family: var(--font-body), sans-serif;
   font-size: var(--font-lg);
   font-weight: var(--weight-semibold);
   color: var(--text-main);
@@ -280,7 +290,8 @@
 
   .capsule-item {
     color: #ffffff;
-    i, span {
+    i,
+    span {
       color: #ffffff !important;
     }
   }
@@ -292,10 +303,11 @@
     background: rgba(255, 255, 255, 0.12);
     border-color: rgba(255, 255, 255, 0.85);
     box-shadow: 0 0 10px rgba(255, 255, 255, 0.12);
-    
+
     .capsule-item {
       color: #ffffff;
-      i, span {
+      i,
+      span {
         color: #ffffff !important;
       }
     }
@@ -309,10 +321,11 @@
     border-color: #ffffff;
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
-    
+
     .capsule-item {
       color: #ffffff;
-      i, span {
+      i,
+      span {
         color: #ffffff !important;
       }
     }
@@ -356,7 +369,7 @@
   width: 1px;
   height: 14px;
   background-color: rgba(255, 255, 255, 0.25);
-  margin: 0 2px;;
+  margin: 0 2px;
 }
 
 .notification-dropdown {
@@ -375,7 +388,7 @@
   overflow: hidden;
 
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     top: -6px;
     right: 24px;
@@ -436,7 +449,9 @@
     font-size: 0.78rem;
     font-weight: 700;
     cursor: pointer;
-    transition: opacity 0.2s, color 0.2s;
+    transition:
+      opacity 0.2s,
+      color 0.2s;
     padding: 0;
 
     &:hover {
@@ -533,7 +548,7 @@
   overflow: hidden;
 
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     top: -6px;
     right: 76px; // Alineado con el botón de chat en la cápsula
@@ -594,7 +609,7 @@
   -webkit-tap-highlight-color: transparent;
 
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     left: 0;
     top: 8px;
@@ -619,7 +634,8 @@
     }
   }
 
-  &:hover, &:focus-visible {
+  &:hover,
+  &:focus-visible {
     background: var(--bg-input, rgba(0, 0, 0, 0.03));
     outline: none;
   }
@@ -657,10 +673,10 @@
     border: 2px solid var(--bg-card, #fff);
     background: var(--primary-color, #106063);
 
-    i { 
-      font-size: 10px; 
-      color: #fff; 
-      line-height: 1; 
+    i {
+      font-size: 10px;
+      color: #fff;
+      line-height: 1;
     }
   }
 }
@@ -775,5 +791,31 @@
   }
 }
 
+/* --- Nuevos Estilos del Navbar (Mockup) --- */
+.nav-divider-vertical {
+  width: 1px;
+  height: 28px;
+  border-left: 1px dashed rgba(255, 255, 255, 0.45);
+  margin: 0 0.5rem;
+}
 
+.btn-iniciar-sesion {
+  background-color: transparent;
+  color: #ffffff !important;
+  font-size: var(--font-sm);
+  font-weight: var(--weight-semibold);
+  padding: 7px 22px;
+  border-radius: 50px;
+  text-align: center;
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
+  transition: all 0.2s ease-in-out;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: #ffffff;
+    transform: translateY(-1px);
+  }
+}

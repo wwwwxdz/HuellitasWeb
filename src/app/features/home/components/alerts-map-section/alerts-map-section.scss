@@ -1,10 +1,10 @@
-.alerts-map-section {
-  padding: 3rem 1.5rem;
-}
+@use "../../../../../styles/breakpoints" as *;
 
-@media (min-width: 768px) {
-  .alerts-map-section {
-    padding: 6rem 1.5rem;
+.alerts-map-section {
+  padding: 6rem 1.5rem;
+
+  @include mobile {
+    padding: 3rem 1.5rem;
   }
 }
 
@@ -13,34 +13,31 @@
   border-radius: 40px;
   border: 1px solid var(--border-color);
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: stretch;
+  min-height: 480px;
   overflow: hidden;
   box-shadow: var(--shadow-main);
   transition: var(--theme-transition);
-}
 
-@media (min-width: 992px) {
-  .alerts-map-card {
-    flex-direction: row;
-    align-items: stretch;
-    min-height: 480px;
+  @include tablet {
+    flex-direction: column;
+    min-height: auto;
   }
 }
 
 .alerts-map-info {
   flex: 1;
-  padding: 2.5rem 2rem;
+  padding: 4rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: flex-start;
   gap: 1.5rem;
   background-color: var(--bg-card);
-}
 
-@media (min-width: 992px) {
-  .alerts-map-info {
-    padding: 4rem;
+  @include tablet {
+    padding: 2.5rem 2rem;
   }
 }
 
@@ -61,16 +58,14 @@
 
 .alerts-map-info h2 {
   font-family: var(--font-brand);
-  font-size: 2rem;
+  font-size: 2.5rem;
   font-weight: 800;
   color: var(--text-main);
   line-height: 1.2;
   letter-spacing: -0.02em;
-}
 
-@media (min-width: 768px) {
-  .alerts-map-info h2 {
-    font-size: 2.5rem;
+  @include mobile {
+    font-size: 2rem;
   }
 }
 

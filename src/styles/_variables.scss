@@ -1,0 +1,317 @@
+/* 🎨 Variables y Tokens SCSS / CSS Globales */
+
+/* --- Brand Colors --- */
+$primary-color: #5f6600;
+$primary-rgb: 0, 121, 115;
+$primary-hover: #005d58;
+$secondary-color: #ad811a;
+$tertiary-color: #a66c44;
+$neutral-color: #747878;
+
+/* --- Brand Color Palette --- */
+$brand-10: #141500;
+$brand-20: #212300;
+$brand-30: #2e3100;
+$brand-40: #3c4000;
+$brand-50: #4b5000;
+$brand-60: #5f6600;
+$brand-70: #7b8217;
+$brand-80: #939b27;
+$brand-90: #949a42;
+$brand-100: #b1b757;
+$brand-110: #bcc270;
+$brand-120: #ccd279;
+$brand-130: #d4d98c;
+$brand-140: #dbdf9f;
+$brand-150: #dee0b8;
+$brand-160: #ebedd4;
+
+/* --- Brand 02 Color Palette --- */
+$brand-02-10: #151200;
+$brand-02-20: #231e00;
+$brand-02-30: #312a00;
+$brand-02-40: #403700;
+$brand-02-50: #483f08;
+$brand-02-60: #5c510a;
+$brand-02-70: #917f08;
+$brand-02-80: #c2a800;
+$brand-02-90: #e5c700;
+$brand-02-100: #ffdd00;
+$brand-02-110: #ffe433;
+$brand-02-120: #ffe74c;
+$brand-02-130: #f0df75;
+$brand-02-140: #e5db99;
+$brand-02-150: #e0dbb8;
+$brand-02-160: #ede9d4;
+
+/* --- Layout Sizes --- */
+$sidebar-width: 28rem;
+$sidebar-collapsed-width: 8rem;
+$header-height: 7rem;
+$content-max-width: 140rem;
+$container-md: 120rem;
+$container-sm: 80rem;
+$container-xs: 30rem;
+$form-max-width: 60rem;
+$card-max-width: 48rem;
+$mobile-max-width: 32rem;
+
+/* --- Border Radius --- */
+$border-radius-sm: 0.8rem;
+$border-radius-md: 1.2rem;
+$border-radius-lg: 1.6rem;
+$border-radius-xl: 2.4rem;
+
+/* --- Spacing Tokens --- */
+$space-xs: 0.4rem;
+$space-sm: 0.8rem;
+$space-md: 1.6rem;
+$space-lg: 5.6rem;
+$space-xl: 3.2rem;
+$space-2xl: 4.8rem;
+$space-3xl: 6.4rem;
+
+/* --- Font Sizes (Base 62.5% -> 10px = 1rem) --- */
+$font-xs: 1.2rem; /* 12px */
+$font-sm: 1.4rem; /* 14px */
+$font-md: 1.6rem; /* 16px */
+$font-lg: 1.8rem; /* 18px */
+$font-xl: 2rem; /* 20px */
+$font-2xl: 2.4rem; /* 24px */
+$font-3xl: 3rem; /* 30px */
+$font-4xl: 3.6rem; /* 36px */
+
+/* --- Global Typography Scale --- */
+$fs-display: 6rem; /* 60px */
+$lh-display: 5.5rem; /* 55px */
+
+$fs-large-title: 4rem; /* 40px */
+$lh-large-title: 4.4rem; /* 44px */
+
+$fs-title-1: 3.2rem; /* 32px */
+$lh-title-1: 3.6rem; /* 36px */
+
+$fs-title-2: 2.8rem; /* 28px */
+$lh-title-2: 3.2rem; /* 32px */
+
+$fs-title-3: 2rem; /* 20px */
+$lh-title-3: 2.4rem; /* 24px */
+
+$fs-subtitle-1: 1.8rem; /* 18px */
+$lh-subtitle-1: 2.2rem; /* 22px */
+
+$fs-subtitle-2: 1.6rem; /* 16px */
+$lh-subtitle-2: 1.9rem; /* 19px */
+
+$fs-body-1: 1.6rem; /* 16px */
+$lh-body-1: 1.9rem; /* 19px */
+
+$fs-body-2: 2rem; /* 20px */
+$lh-body-2: 2.2rem; /* 22px */
+
+$fs-caption-1: 1.4rem; /* 14px */
+$lh-caption-1: 1.8rem; /* 18px */
+
+$fs-caption-2: 1.2rem; /* 12px */
+$lh-caption-2: 1.6rem; /* 16px */
+
+$weight-normal: 400;
+$weight-medium: 500;
+$weight-semibold: 600;
+$weight-bold: 700;
+
+/* --- Typography Fonts --- */
+$font-main: "IBM Plex Sans", sans-serif;
+$font-brand: "Outfit", sans-serif;
+$font-body: "IBM Plex Sans", sans-serif;
+$font-single-sleeve: "Single Sleeve", cursive;
+$font-house: "House Easter", cursive;
+
+/* --- Theme Colors & UI Variables --- */
+$bg-dark: #09090b;
+$bg-card: #18181b;
+$bg-sidebar: #121214;
+$bg-input: rgba(255, 255, 255, 0.03);
+$text-main: #f8fafc;
+$text-muted: #94a3b8;
+$border-color: rgba(255, 255, 255, 0.08);
+$border-glass: rgba(255, 255, 255, 0.05);
+$glass-bg: rgba(24, 24, 27, 0.7);
+
+$shadow-main: 0 1rem 3rem -1rem rgba(0, 0, 0, 0.5);
+
+$success: #10b981;
+$success-rgb: 16, 185, 129;
+$warning: #f59e0b;
+$warning-rgb: 245, 158, 11;
+$danger: #ef4444;
+$danger-rgb: 239, 68, 68;
+
+:root {
+  --font-main: #{$font-main};
+  --font-brand: #{$font-brand};
+  --font-body: #{$font-body};
+  --font-single-sleeve: #{$font-single-sleeve};
+
+  /* Brand Colors */
+  --primary-color: #{$primary-color};
+  --primary-rgb: #{$primary-rgb};
+  --primary-hover: #{$primary-hover};
+  --secondary-color: #{$secondary-color};
+  --tertiary-color: #{$tertiary-color};
+  --neutral-color: #{$neutral-color};
+
+  /* Brand Color Palette */
+  --brand-10: #{$brand-10};
+  --brand-20: #{$brand-20};
+  --brand-30: #{$brand-30};
+  --brand-40: #{$brand-40};
+  --brand-50: #{$brand-50};
+  --brand-60: #{$brand-60};
+  --brand-70: #{$brand-70};
+  --brand-80: #{$brand-80};
+  --brand-90: #{$brand-90};
+  --brand-100: #{$brand-100};
+  --brand-110: #{$brand-110};
+  --brand-120: #{$brand-120};
+  --brand-130: #{$brand-130};
+  --brand-140: #{$brand-140};
+  --brand-150: #{$brand-150};
+  --brand-160: #{$brand-160};
+
+  /* Brand 02 Color Palette */
+  --brand-02-10: #{$brand-02-10};
+  --brand-02-20: #{$brand-02-20};
+  --brand-02-30: #{$brand-02-30};
+  --brand-02-40: #{$brand-02-40};
+  --brand-02-50: #{$brand-02-50};
+  --brand-02-60: #{$brand-02-60};
+  --brand-02-70: #{$brand-02-70};
+  --brand-02-80: #{$brand-02-80};
+  --brand-02-90: #{$brand-02-90};
+  --brand-02-100: #{$brand-02-100};
+  --brand-02-110: #{$brand-02-110};
+  --brand-02-120: #{$brand-02-120};
+  --brand-02-130: #{$brand-02-130};
+  --brand-02-140: #{$brand-02-140};
+  --brand-02-150: #{$brand-02-150};
+  --brand-02-160: #{$brand-02-160};
+
+  /* Transitions */
+  --theme-transition: all 0.3s ease;
+
+  /* Dark Theme (Default) */
+  --bg-dark: #{$bg-dark};
+  --bg-card: #{$bg-card};
+  --bg-sidebar: #{$bg-sidebar};
+  --bg-input: #{$bg-input};
+  --text-main: #{$text-main};
+  --text-muted: #{$text-muted};
+  --border-color: #{$border-color};
+  --border-glass: #{$border-glass};
+  --glass-bg: #{$glass-bg};
+
+  /* Effects */
+  --shadow-main: #{$shadow-main};
+
+  /* States */
+  --success: #{$success};
+  --success-rgb: #{$success-rgb};
+  --warning: #{$warning};
+  --warning-rgb: #{$warning-rgb};
+  --danger: #{$danger};
+  --danger-rgb: #{$danger-rgb};
+  --info: var(--primary-color);
+
+  /* Layout sizes */
+  --sidebar-width: #{$sidebar-width};
+  --sidebar-collapsed-width: #{$sidebar-collapsed-width};
+  --header-height: #{$header-height};
+  --content-max-width: #{$content-max-width};
+  --container-md: #{$container-md};
+  --container-sm: #{$container-sm};
+  --container-xs: #{$container-xs};
+  --form-max-width: #{$form-max-width};
+  --card-max-width: #{$card-max-width};
+  --mobile-max-width: #{$mobile-max-width};
+
+  /* Border Radius */
+  --border-radius-sm: #{$border-radius-sm};
+  --border-radius-md: #{$border-radius-md};
+  --border-radius-lg: #{$border-radius-lg};
+  --border-radius-xl: #{$border-radius-xl};
+
+  /* Spacing Tokens */
+  --space-xs: #{$space-xs};
+  --space-sm: #{$space-sm};
+  --space-md: #{$space-md};
+  --space-lg: #{$space-lg};
+  --space-xl: #{$space-xl};
+  --space-2xl: #{$space-2xl};
+  --space-3xl: #{$space-3xl};
+
+  /* Effects */
+  --glass-blur: 1.2rem;
+
+  /* Font Sizes */
+  --font-xs: #{$font-xs};
+  --font-sm: #{$font-sm};
+  --font-md: #{$font-md};
+  --font-lg: #{$font-lg};
+  --font-xl: #{$font-xl};
+  --font-2xl: #{$font-2xl};
+  --font-3xl: #{$font-3xl};
+  --font-4xl: #{$font-4xl};
+
+  /* Global Typography Scale */
+  --fs-display: #{$fs-display};
+  --lh-display: #{$lh-display};
+
+  --fs-large-title: #{$fs-large-title};
+  --lh-large-title: #{$lh-large-title};
+
+  --fs-title-1: #{$fs-title-1};
+  --lh-title-1: #{$lh-title-1};
+
+  --fs-title-2: #{$fs-title-2};
+  --lh-title-2: #{$lh-title-2};
+
+  --fs-title-3: #{$fs-title-3};
+  --lh-title-3: #{$lh-title-3};
+
+  --fs-subtitle-1: #{$fs-subtitle-1};
+  --lh-subtitle-1: #{$lh-subtitle-1};
+
+  --fs-subtitle-2: #{$fs-subtitle-2};
+  --lh-subtitle-2: #{$lh-subtitle-2};
+
+  --fs-body-1: #{$fs-body-1};
+  --lh-body-1: #{$lh-body-1};
+
+  --fs-body-2: #{$fs-body-2};
+  --lh-body-2: #{$lh-body-2};
+
+  --fs-caption-1: #{$fs-caption-1};
+  --lh-caption-1: #{$lh-caption-1};
+
+  --fs-caption-2: #{$fs-caption-2};
+  --lh-caption-2: #{$lh-caption-2};
+
+  --weight-normal: #{$weight-normal};
+  --weight-medium: #{$weight-medium};
+  --weight-semibold: #{$weight-semibold};
+  --weight-bold: #{$weight-bold};
+}
+
+body[data-theme="light"] {
+  --bg-dark: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-sidebar: #f1f5f9;
+  --bg-input: rgba(0, 0, 0, 0.02);
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --border-color: rgba(0, 0, 0, 0.06);
+  --border-glass: rgba(0, 0, 0, 0.03);
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --shadow-main: 0 1rem 3rem -1.5rem rgba(0, 0, 0, 0.1);
+}

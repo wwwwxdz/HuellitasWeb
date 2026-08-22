@@ -1,0 +1,76 @@
+@use "../../../../styles/variables" as *;
+@use "../../../../styles/breakpoints" as *;
+
+/* El host element (app-topbar) es el que colapsa */
+:host {
+  display: block;
+  overflow: hidden;
+  max-height: 60px;
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &.is-hidden {
+    max-height: 0;
+  }
+}
+
+.topbar {
+  background-color: var(--primary-color);
+  color: #ffffff;
+  font-size: var(--font-sm);
+  font-family: var(--font-main);
+  width: 100%;
+}
+
+.topbar-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-sm) 0;
+
+  @include mobile {
+    justify-content: center;
+  }
+}
+
+.topbar-socials {
+  display: flex;
+  gap: var(--space-md);
+  align-items: center;
+
+  .social-link {
+    color: rgba(255, 255, 255, 0.85);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--theme-transition);
+
+    &:hover {
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+
+    svg {
+      display: block;
+    }
+  }
+}
+
+.topbar-nav {
+  display: flex;
+  gap: var(--space-lg);
+  align-items: center;
+
+  @include mobile {
+    display: none;
+  }
+
+  .topbar-link {
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: var(--weight-medium);
+    transition: var(--theme-transition);
+
+    &:hover {
+      color: #ffffff;
+    }
+  }
+}

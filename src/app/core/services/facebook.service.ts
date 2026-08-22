@@ -30,7 +30,7 @@ export class FacebookService {
 
   /**
    * Publica un reporte de mascota en la página de Facebook de la organización.
-   * Si incluye varias imágenes, las sube sin publicar primero (published: false) 
+   * Si incluye varias imágenes, las sube sin publicar primero (published: false)
    * y luego las vincula en una única publicación (feed con attached_media).
    */
   async publicarReporte(datos: FacebookPostData): Promise<FacebookPublishResponse | null> {
@@ -43,9 +43,12 @@ export class FacebookService {
     }
 
     const mensaje = this.construirMensaje(datos);
-    const listaImagenes = datos.imagenesUrls && datos.imagenesUrls.length > 0 
-      ? datos.imagenesUrls 
-      : (datos.imagenUrl ? [datos.imagenUrl] : []);
+    const listaImagenes =
+      datos.imagenesUrls && datos.imagenesUrls.length > 0
+        ? datos.imagenesUrls
+        : datos.imagenUrl
+          ? [datos.imagenUrl]
+          : [];
 
     try {
       if (listaImagenes.length === 0) {
@@ -53,7 +56,12 @@ export class FacebookService {
       } else if (listaImagenes.length === 1) {
         return await this.publicarConFotoUnica(pageId, pageAccessToken, mensaje, listaImagenes[0]);
       } else {
-        return await this.publicarConMultiplesFotos(pageId, pageAccessToken, mensaje, listaImagenes);
+        return await this.publicarConMultiplesFotos(
+          pageId,
+          pageAccessToken,
+          mensaje,
+          listaImagenes,
+        );
       }
     } catch (error) {
       console.error('[FACEBOOK SERVICE] Error al publicar en la página de Facebook:', error);
@@ -69,12 +77,14 @@ export class FacebookService {
     pageId: string,
     accessToken: string,
     caption: string,
-    urlFoto: string
+    urlFoto: string,
   ): Promise<FacebookPublishResponse> {
     const endpoint = `${this.BASE_GRAPH_URL}/${pageId}/photos`;
     const payload = {
       url: urlFoto,
       caption: caption,
+      published: true,
+      privacy: JSON.stringify({ value: 'EVERYONE' }),
       access_token: accessToken,
     };
 
@@ -91,9 +101,11 @@ export class FacebookService {
     pageId: string,
     accessToken: string,
     message: string,
-    urlsFotos: string[]
+    urlsFotos: string[],
   ): Promise<FacebookPublishResponse> {
-    console.info(`[FACEBOOK SERVICE] Subiendo ${urlsFotos.length} fotos desvinculadas a Facebook...`);
+    console.info(
+      `[FACEBOOK SERVICE] Subiendo ${urlsFotos.length} fotos desvinculadas a Facebook...`,
+    );
 
     // 1. Subir cada foto de forma oculta (published: false)
     const mediaFbids: string[] = [];
@@ -117,10 +129,14 @@ export class FacebookService {
     const payloadFeed = {
       message: message,
       attached_media: JSON.stringify(attachedMedia),
+      published: true,
+      privacy: JSON.stringify({ value: 'EVERYONE' }),
       access_token: accessToken,
     };
 
-    console.info(`[FACEBOOK SERVICE] Publicando post con ${mediaFbids.length} fotos en el feed de Facebook Page (${pageId})...`);
+    console.info(
+      `[FACEBOOK SERVICE] Publicando post con ${mediaFbids.length} fotos en el feed de Facebook Page (${pageId})...`,
+    );
     return await firstValueFrom(this.http.post<FacebookPublishResponse>(endpointFeed, payloadFeed));
   }
 
@@ -130,11 +146,13 @@ export class FacebookService {
   private async publicarSoloTexto(
     pageId: string,
     accessToken: string,
-    message: string
+    message: string,
   ): Promise<FacebookPublishResponse> {
     const endpoint = `${this.BASE_GRAPH_URL}/${pageId}/feed`;
     const payload = {
       message: message,
+      published: true,
+      privacy: JSON.stringify({ value: 'EVERYONE' }),
       access_token: accessToken,
     };
 
@@ -168,7 +186,12 @@ export class FacebookService {
     }
 
     partes.push('');
-    partes.push('💬 Si tienes información o reconoces a la mascota, ingresa a nuestra app o contáctanos.');
+    if (datos.reportId) {
+      partes.push(
+        `🌐 Ver reporte completo en la web: https://huellitas.pe/pets/detail/${datos.reportId}`,
+      );
+    }
+    partes.push('💬 Si tienes información o reconoces a la mascota, ingresa a nuestra plataforma.');
     partes.push('🔁 ¡Comparte esta publicación para ayudar!');
 
     return partes.join('\n');

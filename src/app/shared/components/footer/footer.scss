@@ -1,3 +1,5 @@
+@use "../../../../styles/breakpoints" as *;
+
 .footer {
   background-color: var(--bg-card);
   color: var(--text-muted);
@@ -10,15 +12,18 @@
 
 .footer-inner {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 3rem;
+  grid-template-columns: 1.8fr 1fr 1fr 1fr;
+  gap: 4rem;
   padding-bottom: 3rem;
-}
 
-@media (min-width: 768px) {
-  .footer-inner {
-    grid-template-columns: 1.8fr 1fr 1fr 1fr;
-    gap: 4rem;
+  @include tablet {
+    grid-template-columns: 1fr 1fr;
+    gap: 2.5rem;
+  }
+
+  @include mobile {
+    grid-template-columns: 1fr;
+    gap: 2rem;
   }
 }
 
@@ -117,23 +122,21 @@
   color: var(--primary-color);
 }
 
-/* --- Copyright bar --- */
 .footer-bottom {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
   gap: 0.25rem;
-  text-align: center;
   padding: 1.5rem 0;
   border-top: 1px solid var(--border-color);
   font-size: 0.78rem;
   color: var(--text-muted);
   transition: var(--theme-transition);
-}
 
-@media (min-width: 576px) {
-  .footer-bottom {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
+  @include mobile {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
   }
 }

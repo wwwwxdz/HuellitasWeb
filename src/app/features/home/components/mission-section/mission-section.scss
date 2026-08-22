@@ -1,28 +1,25 @@
+@use "../../../../../styles/breakpoints" as *;
+
 /* --- Mission Section --- */
 .mission-section {
-  padding: 4rem 1rem;
+  padding: 6rem 1rem;
   overflow: hidden;
-}
 
-@media (min-width: 768px) {
-  .mission-section {
-    padding: 6rem 1rem;
+  @include mobile {
+    padding: 4rem 1rem;
   }
 }
 
 .mission-container {
   display: flex;
-  flex-direction: column;
-  gap: 3.5rem;
+  flex-direction: row;
+  gap: 5rem;
   align-items: center;
   width: 100%;
-}
 
-@media (min-width: 768px) {
-  .mission-container {
-    flex-direction: row;
-    gap: 5rem;
-    align-items: center;
+  @include mobile {
+    flex-direction: column;
+    gap: 3.5rem;
   }
 }
 
@@ -68,10 +65,8 @@
   gap: 0.35rem;
   backdrop-filter: blur(12px);
   transition: var(--theme-transition);
-}
 
-@media (max-width: 575px) {
-  .mission-media .floating-badge {
+  @include mobile {
     bottom: -15px;
     right: 5px;
     max-width: 220px;
@@ -113,18 +108,16 @@
 
 .mission-content h2 {
   font-family: var(--font-brand);
-  font-size: 2.25rem;
+  font-size: 2.75rem;
   font-weight: 700;
   color: var(--text-main);
   line-height: 1.2;
   letter-spacing: -0.02em;
   margin: 0;
   transition: var(--theme-transition);
-}
 
-@media (min-width: 768px) {
-  .mission-content h2 {
-    font-size: 2.75rem;
+  @include mobile {
+    font-size: 2.25rem;
   }
 }
 

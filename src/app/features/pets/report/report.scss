@@ -1,3 +1,5 @@
+@use "../../../../styles/breakpoints" as *;
+
 .report-page {
   min-height: calc(100vh - 70px);
   padding: 4rem 1.5rem;
@@ -30,18 +32,16 @@
   grid-template-columns: 1.1fr 1fr;
   gap: 3rem;
   align-items: start;
+
+  @include tablet {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
 }
 
 .form-column {
   display: flex;
   flex-direction: column;
-}
-
-@media (max-width: 992px) {
-  .form-columns-grid {
-    grid-template-columns: 1fr;
-    gap: 2rem;
-  }
 }
 
 @keyframes formEntrance {
@@ -83,10 +83,8 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 2rem;
-}
 
-@media (max-width: 640px) {
-  .form-row {
+  @include mobile {
     grid-template-columns: 1fr;
     gap: 0;
   }
@@ -526,16 +524,16 @@ textarea.form-control {
 /* --- Adaptación responsiva del selector de estado --- */
 .desktop-only-tabs {
   display: block;
-}
-.mobile-only-select {
-  display: none;
-}
 
-@media (max-width: 640px) {
-  .desktop-only-tabs {
+  @include mobile {
     display: none;
   }
-  .mobile-only-select {
+}
+
+.mobile-only-select {
+  display: none;
+
+  @include mobile {
     display: block;
   }
 }

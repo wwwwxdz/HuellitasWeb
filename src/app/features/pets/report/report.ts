@@ -444,6 +444,8 @@ export class ReportComponent implements OnInit {
       this.toastService.success('¡Alerta de mascota publicada exitosamente!');
 
       // Publicar en la página de Facebook en segundo plano
+      const idReporteCreado = nuevoReporte?.id_reporte_mascota || (nuevoReporte as any)?.data?.id_reporte_mascota;
+
       this.facebookService.publicarReporte({
         nombre: this.nombre().trim() || undefined,
         estado: this.estado(),
@@ -451,6 +453,7 @@ export class ReportComponent implements OnInit {
         ubicacion: this.direccion().trim() || 'Ubicación registrada',
         imagenesUrls: imageUrls,
         imagenUrl: imageUrls.length > 0 ? imageUrls[0] : undefined,
+        reportId: idReporteCreado,
       });
     } catch (err) {
       console.error('Error al guardar reporte:', err);

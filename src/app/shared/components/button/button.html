@@ -1,12 +1,13 @@
 <button
   [type]="type()"
   [disabled]="disabled() || loading()"
-  [class]="'btn btn-' + variant() + ' btn-' + size()"
+  [class]="'btn btn-' + variant() + ' btn-' + size() + ' btn-' + shape() + (fullWidth() ? ' btn-block' : '')"
   (click)="onClick($event)"
 >
   @if (loading()) {
     <span class="spinner"></span>
   } @else {
+    <ng-content select="[icon-left], img, svg"></ng-content>
     @if (icon() && iconPosition() === 'left') {
       <span class="material-icons btn-icon">{{ icon() }}</span>
     }
@@ -16,7 +17,10 @@
     <ng-content></ng-content>
   </span>
 
-  @if (!loading() && icon() && iconPosition() === 'right') {
-    <span class="material-icons btn-icon">{{ icon() }}</span>
+  @if (!loading()) {
+    <ng-content select="[icon-right]"></ng-content>
+    @if (icon() && iconPosition() === 'right') {
+      <span class="material-icons btn-icon">{{ icon() }}</span>
+    }
   }
 </button>

@@ -2,36 +2,36 @@
   <div class="nav-container container">
     <!-- Logo -->
     <a routerLink="/" class="logo" (click)="closeMobileMenu()">
-      <img 
-        src="/images/HUELLITAS_LOGO.png" 
-        alt="Huellitas Logo" 
-      />
+      <img src="/icons/Logo.svg" alt="Huellitas Logo" />
     </a>
 
     <!-- Links principales para Escritorio -->
     <div class="nav-links-desktop">
-      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Inicio</a>
-      <a routerLink="/pets/reports" routerLinkActive="active">Explorar Alertas</a>
       <a routerLink="/pets/lost" routerLinkActive="active">Mascotas Perdidas</a>
       <a routerLink="/pets/found" routerLinkActive="active">Mascotas Encontradas</a>
+      <a routerLink="/adoptions" routerLinkActive="active">Adopciones</a>
       <a routerLink="/pets/map" routerLinkActive="active">Mapa</a>
+      <a routerLink="/reencuentros" routerLinkActive="active">Reencuentros</a>
     </div>
 
     <!-- Botones de acción para Escritorio -->
     <div class="nav-actions-desktop">
-      <a 
-        routerLink="/pets/report" 
-        class="btn btn-primary"
-        style="display: flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 12px; font-weight: 700; font-size: 0.85rem;"
-      >
-        <i class="material-icons" style="font-size: 1.1rem;">add_circle</i>
-        Reportar
-      </a>
+      <div class="nav-divider-vertical"></div>
+
+      <app-button routerLink="/pets/report" variant="primary" size="md" shape="pill">
+        <img src="/icons/HuellaIcon.svg" alt="Huella" />
+        Reportar Mascota
+      </app-button>
 
       @if (auth.isAuthenticated()) {
         <!-- Cápsula Unificada y Contenedor de Dropdowns -->
         <div class="nav-badge-container">
-          <div class="nav-capsule-badge" [class.has-unread]="chatService.unreadChatsCount() > 0 || notificationService.unreadCount() > 0">
+          <div
+            class="nav-capsule-badge"
+            [class.has-unread]="
+              chatService.unreadChatsCount() > 0 || notificationService.unreadCount() > 0
+            "
+          >
             <button class="capsule-item" (click)="toggleChats()" title="Mensajes privados">
               <i class="material-icons">chat_bubble</i>
               <span>{{ chatService.unreadChatsCount() }}</span>
@@ -45,11 +45,17 @@
 
           <!-- Dropdown de Chats/Mensajes -->
           @if (showChats()) {
-            <div class="chats-dropdown glass-card shadow-lg" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" tabindex="-1" role="menu">
+            <div
+              class="chats-dropdown glass-card shadow-lg"
+              (click)="$event.stopPropagation()"
+              (keydown.enter)="$event.stopPropagation()"
+              tabindex="-1"
+              role="menu"
+            >
               <div class="chats-header">
                 <h3>Mensajes Recientes</h3>
               </div>
-              
+
               <div class="chats-list custom-scroll">
                 @if (chatService.isLoading() && chatService.totalChats() === 0) {
                   <div class="chats-loading">
@@ -60,8 +66,8 @@
 
                 @for (chat of chatService.chats(); track trackByChat($index, chat)) {
                   @let other = getOtherUser(chat);
-                  <div 
-                    class="dropdown-chat-item" 
+                  <div
+                    class="dropdown-chat-item"
                     [class.unread]="chat.mensajes_sin_leer > 0"
                     (click)="handleChatClick(chat)"
                     (keydown.enter)="handleChatClick(chat)"
@@ -69,7 +75,10 @@
                     role="button"
                   >
                     <div class="dropdown-chat-avatar">
-                      <img [src]="getAvatar(other.nombre, other.foto_perfil)" [alt]="other.nombre" />
+                      <img
+                        [src]="getAvatar(other.nombre, other.foto_perfil)"
+                        [alt]="other.nombre"
+                      />
                       <div class="type-badge chat-icon">
                         <i class="material-icons">chat_bubble</i>
                       </div>
@@ -89,8 +98,7 @@
                       </div>
                     </div>
                   </div>
-                }
-                @empty {
+                } @empty {
                   @if (!chatService.isLoading()) {
                     <div class="chats-empty">
                       <i class="material-icons">chat_bubble_outline</i>
@@ -99,7 +107,7 @@
                   }
                 }
               </div>
-              
+
               <div class="chats-footer">
                 <a routerLink="/chats" (click)="showChats.set(false)">Ver todos los mensajes</a>
               </div>
@@ -108,15 +116,21 @@
 
           <!-- Dropdown de Notificaciones -->
           @if (showNotifications()) {
-            <div class="notification-dropdown glass-card shadow-lg" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" tabindex="-1" role="menu">
+            <div
+              class="notification-dropdown glass-card shadow-lg"
+              (click)="$event.stopPropagation()"
+              (keydown.enter)="$event.stopPropagation()"
+              tabindex="-1"
+              role="menu"
+            >
               <div class="notif-header">
                 <h3>Notificaciones</h3>
-                <div style="display: flex; gap: 12px; align-items: center;">
+                <div style="display: flex; gap: 12px; align-items: center">
                   <button class="mark-all-btn" (click)="markAllRead()">Marcar leído</button>
                   <button class="clear-all-btn" (click)="clearAll()">Borrar todas</button>
                 </div>
               </div>
-              
+
               <div class="notif-list custom-scroll">
                 @if (notificationService.isLoading() && !notificationService.hasNotifications()) {
                   <div class="notif-loading">
@@ -133,8 +147,7 @@
                     (clicked)="handleNotificationClick($event)"
                     (delete)="hideNotification($event)"
                   />
-                }
-                @empty {
+                } @empty {
                   @if (!notificationService.isLoading()) {
                     <div class="notif-empty">
                       <i class="material-icons">notifications_off</i>
@@ -143,9 +156,11 @@
                   }
                 }
               </div>
-              
+
               <div class="notif-footer">
-                <a routerLink="/notifications" (click)="showNotifications.set(false)">Ver todas las notificaciones</a>
+                <a routerLink="/notifications" (click)="showNotifications.set(false)"
+                  >Ver todas las notificaciones</a
+                >
               </div>
             </div>
           }
@@ -153,34 +168,19 @@
 
         <app-profile-dropdown></app-profile-dropdown>
       } @else {
-        <!-- Conmutador de Tema Día/Noche (sólo si no está autenticado) -->
-        <button 
-          (click)="themeService.toggleTheme()" 
-          class="theme-toggle-btn"
-          aria-label="Cambiar tema de color"
-        >
-          <i class="material-icons">
-            {{ themeService.theme() === 'light' ? 'dark_mode' : 'light_mode' }}
-          </i>
-        </button>
-        <a routerLink="/login" class="btn btn-text">
-          Ingresar
-        </a>
-        <a routerLink="/register" class="btn btn-primary">
-          Registrarse
-        </a>
+        <a routerLink="/login" class="btn-iniciar-sesion"> Iniciar Sesión </a>
       }
     </div>
 
     <!-- Botón de Menú Móvil (Hamburguesa) -->
-    <button 
-      class="mobile-menu-toggle" 
+    <button
+      class="mobile-menu-toggle"
       (click)="toggleMobileMenu()"
       [attr.aria-expanded]="isMobileMenuOpen()"
       aria-label="Abrir menú de navegación"
     >
       <span class="bar" [class.bar-open-1]="isMobileMenuOpen()"></span>
-      <span class="bar" [class.bar-open-2]="isMobileMenuOpen()" style="margin: 4px 0;"></span>
+      <span class="bar" [class.bar-open-2]="isMobileMenuOpen()" style="margin: 4px 0"></span>
       <span class="bar" [class.bar-open-3]="isMobileMenuOpen()"></span>
     </button>
   </div>
@@ -188,27 +188,32 @@
   <!-- Menú Desplegable Móvil -->
   <div class="mobile-menu" [class.mobile-menu-open]="isMobileMenuOpen()">
     <div class="mobile-links">
-      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" (click)="closeMobileMenu()">Inicio</a>
-      <a routerLink="/pets/reports" routerLinkActive="active" (click)="closeMobileMenu()">Explorar Alertas</a>
-      <a routerLink="/pets/lost" routerLinkActive="active" (click)="closeMobileMenu()">Mascotas Perdidas</a>
-      <a routerLink="/pets/found" routerLinkActive="active" (click)="closeMobileMenu()">Mascotas Encontradas</a>
+      <a routerLink="/pets/lost" routerLinkActive="active" (click)="closeMobileMenu()"
+        >Mascotas Perdidas</a
+      >
+      <a routerLink="/pets/found" routerLinkActive="active" (click)="closeMobileMenu()"
+        >Mascotas Encontradas</a
+      >
+      <a routerLink="/adoptions" routerLinkActive="active" (click)="closeMobileMenu()"
+        >Adopciones</a
+      >
       <a routerLink="/pets/map" routerLinkActive="active" (click)="closeMobileMenu()">Mapa</a>
-      
+      <a routerLink="/reencuentros" routerLinkActive="active" (click)="closeMobileMenu()"
+        >Reencuentros</a
+      >
+
       <a
         routerLink="/pets/report"
         class="mobile-theme-toggle"
-        style="color: var(--primary-color); font-weight: 700;"
+        style="color: var(--primary-color); font-weight: 700"
         (click)="closeMobileMenu()"
       >
         <i class="material-icons">add_circle</i>
         <span>Reportar Mascota</span>
       </a>
-      
+
       <!-- Conmutador de Tema Móvil -->
-      <button 
-        (click)="themeService.toggleTheme(); closeMobileMenu();" 
-        class="mobile-theme-toggle"
-      >
+      <button (click)="themeService.toggleTheme(); closeMobileMenu()" class="mobile-theme-toggle">
         <i class="material-icons">
           {{ themeService.theme() === 'light' ? 'dark_mode' : 'light_mode' }}
         </i>
@@ -216,25 +221,35 @@
       </button>
 
       <hr class="divider" />
-      
+
       @if (auth.isAuthenticated()) {
-        <a routerLink="/chats" routerLinkActive="active" (click)="closeMobileMenu()" style="display: flex; align-items: center; gap: 8px;">
+        <a
+          routerLink="/chats"
+          routerLinkActive="active"
+          (click)="closeMobileMenu()"
+          style="display: flex; align-items: center; gap: 8px"
+        >
           <i class="material-icons">chat_bubble</i>
           <span>Mensajes Privados ({{ chatService.unreadChatsCount() }})</span>
         </a>
-        <a routerLink="/notifications" routerLinkActive="active" (click)="closeMobileMenu()" style="display: flex; align-items: center; gap: 8px;">
+        <a
+          routerLink="/notifications"
+          routerLinkActive="active"
+          (click)="closeMobileMenu()"
+          style="display: flex; align-items: center; gap: 8px"
+        >
           <i class="material-icons">notifications</i>
           <span>Notificaciones ({{ notificationService.unreadCount() }})</span>
         </a>
-        
+
         <hr class="divider" />
 
         <div class="mobile-auth-actions">
           <div class="mobile-user-name">Sesión: {{ auth.usuario()?.nombre }}</div>
-          <button 
-            (click)="auth.logout(); closeMobileMenu();" 
+          <button
+            (click)="auth.logout(); closeMobileMenu()"
             class="btn btn-outline"
-            style="width: 100%;"
+            style="width: 100%"
           >
             Cerrar Sesión
           </button>
@@ -242,10 +257,7 @@
       } @else {
         <div class="mobile-auth-actions">
           <a routerLink="/login" class="btn btn-outline" (click)="closeMobileMenu()">
-            Ingresar
-          </a>
-          <a routerLink="/register" class="btn btn-primary" (click)="closeMobileMenu()">
-            Registrarse
+            Iniciar Sesión
           </a>
         </div>
       }

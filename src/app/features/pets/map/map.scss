@@ -1,3 +1,5 @@
+@use "../../../../styles/breakpoints" as *;
+
 .map-page {
   min-height: calc(100vh - 70px);
   background-color: var(--bg-dark);
@@ -13,16 +15,12 @@
   height: calc(100vh - 70px);
   overflow-x: hidden;
   overflow-y: visible;
-}
 
-@media (max-width: 1200px) {
-  .map-layout {
+  @include tablet {
     grid-template-columns: 280px 1fr;
   }
-}
 
-@media (max-width: 900px) {
-  .map-layout {
+  @include mobile {
     grid-template-columns: 1fr;
     height: auto;
     overflow: visible;

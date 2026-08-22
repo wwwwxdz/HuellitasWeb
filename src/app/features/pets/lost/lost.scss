@@ -1,3 +1,5 @@
+@use "../../../../styles/breakpoints" as *;
+
 .lost-page {
   min-height: 100vh;
   padding: 2rem 0 5rem;
@@ -7,17 +9,16 @@
 
 .page-header {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-end;
   gap: 0.5rem;
   margin-bottom: 1rem;
   font-family: var(--font-main), sans-serif;
-}
 
-@media (min-width: 576px) {
-  .page-header {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: flex-end;
+  @include mobile {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 
@@ -48,16 +49,12 @@
 
 .main-layout {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 2rem;
   align-items: flex-start;
-}
 
-@media (min-width: 992px) {
-  .main-layout {
-    flex-direction: row;
-    gap: 2rem;
-    align-items: flex-start;
+  @include tablet {
+    flex-direction: column;
   }
 }
 
@@ -72,20 +69,12 @@
 
 .pets-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(2, 1fr);
   gap: 1.5rem;
   width: 100%;
-}
 
-@media (min-width: 576px) {
-  .pets-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (min-width: 1200px) {
-  .pets-grid {
-    grid-template-columns: repeat(2, 1fr);
+  @include mobile {
+    grid-template-columns: 1fr;
   }
 }
 

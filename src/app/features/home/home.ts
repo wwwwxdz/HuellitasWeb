@@ -1,4 +1,5 @@
 import { Component, inject, OnInit } from '@angular/core';
+import { TopbarComponent } from '../../shared/components/topbar/topbar';
 import { Navbar } from '../../shared/components/navbar/navbar';
 import { Footer } from '../../shared/components/footer/footer';
 import { AuthService } from '../../core/auth/auth.service';
@@ -13,6 +14,7 @@ import { TestimonialsCtaComponent } from './components/testimonials-cta/testimon
   selector: 'app-home',
   standalone: true,
   imports: [
+    TopbarComponent,
     Navbar, 
     Footer, 
     HeroSectionComponent, 

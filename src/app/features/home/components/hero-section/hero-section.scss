@@ -17,7 +17,7 @@
   color: #ffffff;
 }
 
-/* Ola de transición hero → siguiente sección */
+/* Curva sutil de transición hero → siguiente sección */
 .hero-wave {
   position: absolute;
   bottom: -1px; /* -1px para evitar línea blanca entre sección y ola */
@@ -29,10 +29,10 @@
   svg {
     display: block;
     width: 100%;
-    height: 80px;
+    height: 90px;
 
     @include mobile {
-      height: 50px;
+      height: 55px;
     }
   }
 }

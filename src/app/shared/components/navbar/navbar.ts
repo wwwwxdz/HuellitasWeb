@@ -19,6 +19,9 @@ import { ButtonComponent } from '../button/button';
   imports: [RouterLink, RouterLinkActive, ProfileDropdown, NotificationItemComponent, TimeAgoPipe, AuthModalComponent, ButtonComponent],
   templateUrl: './navbar.html',
   styleUrl: './navbar.scss',
+  host: {
+    '[class.is-scrolled]': 'isScrolled()',
+  }
 })
 export class Navbar {
   protected readonly auth = inject(AuthService);
@@ -31,6 +34,14 @@ export class Navbar {
   isMobileMenuOpen = signal<boolean>(false);
   showNotifications = signal<boolean>(false);
   showChats = signal<boolean>(false);
+  isScrolled = signal<boolean>(false);
+
+  @HostListener('window:scroll', [])
+  onWindowScroll() {
+    if (typeof window !== 'undefined') {
+      this.isScrolled.set(window.scrollY > 5);
+    }
+  }
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
